@@ -4,35 +4,13 @@
 
 import numpy as np
 
-# 从世界坐标系转换到屏幕坐标，注意传入行向量
-def worldCoord2ScreenCoord(worldCoord,screenSize, res):
-    wc = np.append(worldCoord,1.0)
-    # 要翻转y轴
-    mirrorMat = np.matrix([
-        [1, 0, 0],
-        [0, -1, 0],
-        [0, 0, 1]
-    ])
-    scaleMat = np.matrix([
-        [res,0.0,0.0],
-        [0.0,res,0.0],
-        [0.0,0.0,1.0]
-    ])
-    transMat = np.matrix([
-        [1.0,0.0,0.0],
-        [0.0,1.0,0.0],
-        [0.0,screenSize[1],1.0]
-    ])
-    result = wc*scaleMat*mirrorMat*transMat
-    return np.array(np.round(result.tolist()[0][:2]),dtype=int)
-
-
 def normalize(v):
     norm=np.linalg.norm(v)
     if norm==0:
        return v
     return v/norm
 
+# g(x) is wrong! Why?
 def g(x):
     return np.max(x, 0)
     
@@ -56,7 +34,7 @@ def vectorAngleCos(x,y):
     
     
 def GeneralEquation(first_x,first_y,second_x,second_y):
-    # 一般式 Ax+By+C=0
+    # The general equation: Ax+By+C=0
     # from http://www.cnblogs.com/DHUtoBUAA/
     A=second_y-first_y
     B=first_x-second_x
@@ -70,18 +48,19 @@ def GetIntersectPointofLines(p1, p2, p3, p4):
     A2,B2,C2 = GeneralEquation(p3[0], p3[1], p4[0], p4[1])
     m=A1*B2-A2*B1
     if m==0:
-        print("无交点")
+        print("No intersection point")
         return None
     else:
         x=(C2*B1-C1*B2)/m
         y=(C1*A2-C2*A1)/m
-        #print '有交点', [x, y]
+        #print 'Get intersection point:', [x, y]
         return [x, y]
 
 
-def crossPoint(p1, p2, p3, p4):#计算交点函数
-    
-    x1=p1[0]#取四点坐标
+def crossPoint(p1, p2, p3, p4): 
+
+    # Get coordinates of four points
+    x1=p1[0]
     y1=p1[1]
     x2=p2[0]
     y2=p2[1]
@@ -91,15 +70,15 @@ def crossPoint(p1, p2, p3, p4):#计算交点函数
     x4=p4[0]
     y4=p4[1]
     
-    k1=(y2-y1)*1.0/((x2-x1)*1.0) #计算k1,由于点均为整数，需要进行浮点数转化
+    k1=(y2-y1)*1.0/((x2-x1)*1.0) # Calculate k1 as float
     
-    b1=y1*1.0-x1*k1*1.0 #整型转浮点型是关键
+    b1=y1*1.0-x1*k1*1.0 #From integer to float
     
-    if (x4-x3)==0: #L2直线斜率不存在操作
+    if (x4-x3)==0: #L2: slope k2 does not exist
         k2=None
         b2=0
     else:
-        k2=(y4-y3)*1.0/(x4-x3) #斜率存在操作
+        k2=(y4-y3)*1.0/(x4-x3) #L2: slope k2 exists
         b2=y3*1.0-x3*k2*1.0
     if k2==None:
         x=x3
@@ -147,12 +126,6 @@ def lineIntersection(p1, p2, w1, w2, fuzP=0.0, fuzW=0.0): #wall):
         result = None
     
     return result, flag
-
-
-# 计算点到线段的距离，并计算由点到与线段交点的单位向量
-#def distanceP2W(point, wall):
-    #p0 = np.array([wall[0],wall[1]])
-    #p1 = np.array([wall[2],wall[3]])
 
 
 def distanceP2L(point, p0, p1):

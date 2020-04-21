@@ -127,7 +127,7 @@ def readFloatArray(tableFeatures, NRow, NColomn):
 
 
 # The file to record the some output data of the simulation
-f = open("out.txt", "w+")
+# f = open("outData.txt", "w+")
 
 def readAgents(FileName, marginTitle=1, ini=1):
 
