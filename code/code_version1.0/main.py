@@ -1,6 +1,6 @@
 # -*-coding:utf-8-*-
-# Author: WP and SS
-# Email: wp2204@126.com
+# Author: WP
+# Email: wp2204@gmail.com
 
 import pygame
 import pygame.draw
@@ -43,7 +43,7 @@ xSpace=10.0
 ySpace=10.0
 xyShift = np.array([xSpace, ySpace])
 
-# Below are boolean variables for users to set up the simulation
+# Below are global variables to set up the simulation
 ################################################################
 TIMECOUNT = True
 THREECIRCLES = False  	# Use 3 circles to draw agents
@@ -52,7 +52,7 @@ SHOWINDEX = True        # Show index of agents
 SHOWTIME = True         # Show a clock on the screen
 SHOWINTELINE = True     # Draw a line between interacting agents
 MODETRAJ = False        # Draw trajectory of agents' movement
-COHESION = False	    # Enable the cohesive social force
+COHESION = False	    # Enable the group social force
 SELFREPULSION = False	# Enable self repulsion
 WALLBLOCKHERDING = True
 TPREMODE = 3        ### Instructinn: 1 -- DesiredV = 0  2 -- Motive Force =0: 
@@ -66,6 +66,8 @@ DRAWWALLFORCE = True
 DRAWDOORFORCE = True
 DRAWGROUPFORCE = False
 DRAWSELFREPULSION = False
+GROUPBEHAVIOR = False
+TESTMODE = False #True
 #STARTPAGE = False
 
 # No Need to Use StartPage
@@ -99,14 +101,16 @@ if os.path.exists("outData.txt"):
             temp =  line.split('=')
             FN_EVAC = temp[1].strip()
 
-print FN_FDS
-print FN_EVAC
-raw_input('Input File Selection from Last Run.')
+if TESTMODE: 
+    print FN_FDS
+    print FN_EVAC
+    print "As above is the input file selected in your last run!"
+    raw_input('Input File Selection from Last Run.')
 
 from startPage import*
 [FN_FDS, FN_EVAC] = startPage(FN_FDS, FN_EVAC)
 
-# The file to record the some output data of the simulation
+# The file to record the some output data of simulation
 f = open("outData.txt", "w+")
 
 print >> f, 'FN_FDS=', FN_FDS
@@ -158,69 +162,51 @@ if np.shape(exit2door)!= (Num_Exits, Num_Doors):
     raw_input('Error on input data: exits or exit2door!  Please check')
     inputDataCorrect = False
 
-# Initialize Desired Interpersonal Distance
-tableFeatures, LowerIndex, UpperIndex = getData(FN_EVAC, '&groupD')
-DFactor_Init = readFloatArray(tableFeatures, len(agents), len(agents))
-#DFactor_Init = readCSV("D_Data2018.csv", 'float')
+if GROUPBEHAVIOR: 
+    # Initialize Desired Interpersonal Distance
+    tableFeatures, LowerIndex, UpperIndex = getData(FN_EVAC, '&groupD')
+    DFactor_Init = readFloatArray(tableFeatures, len(agents), len(agents))
+    #DFactor_Init = readCSV("D_Data2018.csv", 'float')
 
-tableFeatures, LowerIndex, UpperIndex = getData(FN_EVAC, '&groupA')
-AFactor_Init = readFloatArray(tableFeatures, len(agents), len(agents))
-#AFactor_Init = readCSV("A_Data2018.csv", 'float')
+    tableFeatures, LowerIndex, UpperIndex = getData(FN_EVAC, '&groupA')
+    AFactor_Init = readFloatArray(tableFeatures, len(agents), len(agents))
+    #AFactor_Init = readCSV("A_Data2018.csv", 'float')
 
-tableFeatures, LowerIndex, UpperIndex = getData(FN_EVAC, '&groupB')
-BFactor_Init = readFloatArray(tableFeatures, len(agents), len(agents))
-#BFactor_Init = readCSV("B_Data2018.csv", 'float')
+    tableFeatures, LowerIndex, UpperIndex = getData(FN_EVAC, '&groupB')
+    BFactor_Init = readFloatArray(tableFeatures, len(agents), len(agents))
+    #BFactor_Init = readCSV("B_Data2018.csv", 'float')
 
-print >> f, "Wall Matrix\n", walls, "\n"
-print >> f, "D Matrix\n", DFactor_Init, "\n"
-print >> f, "A Matrix\n", AFactor_Init, "\n"
-print >> f, "B Matrix\n", BFactor_Init, "\n"
+    print >> f, "Wall Matrix\n", walls, "\n"
+    print >> f, "D Matrix\n", DFactor_Init, "\n"
+    print >> f, "A Matrix\n", AFactor_Init, "\n"
+    print >> f, "B Matrix\n", BFactor_Init, "\n"
 
-#DFactor_Init = np.array(
-#[[0.0, 0.3, 0.9, 1.3, 1.6, 1.0], 
-#[0.3, 0.0, 0.3, 1.6, 1.0, 1.2], 
-#[0.9, 0.3, 0.0, 1.3, 1.3, 1.3],
-#[1.3, 0.6, 1.3, 0.0, 1.7, 1.1],
-#[1.6, 1.0, 1.3, 1.7, 0.0, 1.8],
-#[1.0, 1.2, 0.3, 2.1, 1.8, 0.0]])
+    if np.shape(DFactor_Init)!= (Num_Agents, Num_Agents):
+        print '\nError on input data: DFactor_Init\n'
+        print >>f, '\nError on input data: DFactor_Init\n'
+        raw_input('Error on input data: DFactor_Init!  Please check')
+        inputDataCorrect = False
+        
+    if np.shape(AFactor_Init)!= (Num_Agents, Num_Agents): 
+        print '\nError on input data: AFactor_Init\n'
+        print >>f, '\nError on input data: AFactor_Init\n'
+        raw_input('Error on input data: AFactor_Init!  Please check')
+        inputDataCorrect = False
 
-#AFactor_Init = np.array(
-#[[0.0, 0.3, 0.9, 1.3, 1.6, 1.0], 
-#[0.3, 0.0, 0.3, 1.6, 1.0, 1.2], 
-#[0.9, 0.3, 0.0, 1.3, 1.3, 1.3],
-#[1.3, 1.6, 1.3, 0.0, 1.7, 1.1],
-#[1.6, 1.0, 1.3, 1.7, 0.0, 1.8],
-#[1.0, 1.2, 1.2, 2.1, 1.8, 0.0]])
-
-#BFactor_Init = np.array(
-#[[0.0, 0.3, 0.9, 2.3, 2.6, 1.0], 
-#[1.3, 0.0, 3.3, 1.6, 3.0, 1.2], 
-#[0.9, 0.3, 0.0, 1.3, 1.3, 1.3],
-#[1.3, 18.6, 1.3, 0.0, 1.7, 1.1],
-#[1.6, 1.0, 1.3, 12.7, 0.0, 1.8],
-#[1.0, 1.2, 18.8, 2.1, 1.8, 0.0]])
-
-if np.shape(DFactor_Init)!= (Num_Agents, Num_Agents):
-    print '\nError on input data: DFactor_Init\n'
-    print >>f, '\nError on input data: DFactor_Init\n'
-    raw_input('Error on input data: DFactor_Init!  Please check')
-    inputDataCorrect = False
+    if np.shape(BFactor_Init)!= (Num_Agents, Num_Agents): 
+        print '\nError on input data: BFactor_Init\n'
+        print >>f, '\nError on input data: BFactor_Init\n'
+        raw_input('Error on input data: BFactor_Init!  Please check')
+        inputDataCorrect = False
     
-if np.shape(AFactor_Init)!= (Num_Agents, Num_Agents): 
-    print '\nError on input data: AFactor_Init\n'
-    print >>f, '\nError on input data: AFactor_Init\n'
-    raw_input('Error on input data: AFactor_Init!  Please check')
-    inputDataCorrect = False
+    DFactor = DFactor_Init
+    AFactor = AFactor_Init
+    BFactor = BFactor_Init
+else:
+    DFactor = np.ones((Num_Agents, Num_Agents))
+    AFactor = np.ones((Num_Agents, Num_Agents))
+    BFactor = np.ones((Num_Agents, Num_Agents))
 
-if np.shape(BFactor_Init)!= (Num_Agents, Num_Agents): 
-    print '\nError on input data: BFactor_Init\n'
-    print >>f, '\nError on input data: BFactor_Init\n'
-    raw_input('Error on input data: BFactor_Init!  Please check')
-    inputDataCorrect = False
-    
-DFactor = DFactor_Init
-AFactor = AFactor_Init
-BFactor = BFactor_Init
 
 comm = np.zeros((Num_Agents, Num_Agents))
 talk = np.zeros((Num_Agents, Num_Agents))
@@ -237,9 +223,12 @@ print 'number of walls: ', Num_Walls
 print 'number of doors: ', Num_Doors
 print 'number of exits: ', Num_Exits
 print '\n'
-#UserInput = raw_input('Check Input Data Here!')
 
-    
+if TESTMODE:
+    print "Now you can check if the input data is correct or not!"
+    print "If everything is OK, please press ENTER to continue!"
+    UserInput = raw_input('Check Input Data Here!')
+
 #===================================================
 #==========Preprocessing the Geom Data =====================
 #========= Find Relationship of Door and Wall ==================
@@ -317,7 +306,7 @@ menu_left = False
 change_arrows = False
 draw_state = False
 running = True
-while running: #and inputDataCorrect:
+while running and inputDataCorrect:
     screen.fill(black)
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -473,7 +462,7 @@ while running: #and inputDataCorrect:
                 xSpace=xSpace-10
             elif event.key == pygame.K_RIGHT:
                 xSpace=xSpace+10
-
+                
 
     ####################################
     # Drawing the geometries: walls, doors, exits
@@ -584,8 +573,9 @@ while running: #and inputDataCorrect:
             
     pygame.display.flip()
     #clock.tick(20)
-
-#start = raw_input("Start simulation now?")
+    
+if TESTMODE:
+    start = raw_input("Start simulation now?")
 
 ##########################################
 ### Simulation starts here with Pygame
