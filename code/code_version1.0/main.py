@@ -127,7 +127,7 @@ Num_Exits = len(exits)
 #doors = readDoors('hole_test.csv')
 #exits = readExits('exit_test.csv')
 
-if FN_FDS != None:
+if FN_FDS and FN_FDS is not None:
     walls = readOBST(FN_FDS, 'obst_test.csv')
     doors = readHOLE(FN_FDS, 'hole_test.csv')
     #exits = readEXIT(FN_FDS, 'exit_test.csv')
@@ -254,7 +254,7 @@ for door in doors:
 agents[1].desiredSpeed = 1.8
 #agents[1].desiredV = agents[1].desiredSpeed*agents[1].direction
 agents[1].p = 0.2
-agents[1].dest = doors[1].pos
+#agents[1].dest = doors[1].pos
 
 #agents[2].pos = np.array([60, 12])    
 #agents[2].direction = normalize(agents[2].dest - agents[2].pos)
@@ -264,7 +264,7 @@ agents[2].desiredSpeed = 1.8
 agents[2].p = 0.6 #0.1
 agents[2].pMode = 'fixed'
 agents[2].interactionRange = 6.0
-agents[2].dest = doors[1].pos
+#agents[2].dest = doors[1].pos
 
 #agents[0].changeAttr(32, 22, 0, 0)
 agents[0].pMode = 'fixed'
@@ -333,22 +333,21 @@ while running and inputDataCorrect:
             if mouseX<60 and mouseX>0 and mouseY<20 and mouseY>3:
                 menu_01 = not menu_01
             else:
-                 #menu_01 =False
                  if  menu_01:
                       if mouseX<120 and mouseX>0 and mouseY<40 and mouseY>23:
-                         # Show Door Info
-                         SHOWWALLDATA= not SHOWWALLDATA
-                         updateDoorData(doors, 'doorDataRev.csv')
+                         # dump door direction data
+                         print "Output door direction data into doorDataRev.csv! Please check!"
+                         updateDoorData(self.doors, 'doorDataRev.csv')
                          menu_01 =False
                       elif mouseX<120 and mouseX>0 and mouseY<60 and mouseY>43:
-                         # Show Door Info
-                         SHOWDOORDATA= not SHOWDOORDATA
-                         updateExit2Doors(exit2door, 'Exit2DoorRev.csv')
+                         # dump exit2door data
+                         print "Output exit2door data into Exit2DoorRev.csv! Please check!"
+                         updateExit2Doors(self.exit2door, 'Exit2DoorRev.csv')
                          menu_01 =False
-                      elif mouseX<120 and mouseX>0 and mouseY<80 and mouseY>63:
-                         # Show Door Info
-                         SHOWEXITDATA= not SHOWEXITDATA
-                         menu_01 =False
+                      #elif mouseX<120 and mouseX>0 and mouseY<80 and mouseY>63:
+                         # To add something else in future
+                      #   self.SHOWEXITDATA= not self.SHOWEXITDATA
+                      #   menu_01 =False
                       else:
                          menu_01 =False
 
@@ -359,7 +358,7 @@ while running and inputDataCorrect:
                  #menu_02 =False
                  if  menu_02:
                       if mouseX<200 and mouseX>80 and mouseY<40 and mouseY>23:
-                         # Show Door Info
+                         # Show Wall Info
                          SHOWWALLDATA= not SHOWWALLDATA
                          menu_02 =False
                       elif mouseX<200 and mouseX>80 and mouseY<60 and mouseY>43:
@@ -367,7 +366,7 @@ while running and inputDataCorrect:
                          SHOWDOORDATA= not SHOWDOORDATA
                          menu_02 =False
                       elif mouseX<200 and mouseX>80 and mouseY<80 and mouseY>63:
-                         # Show Door Info
+                         # Show Exit Info
                          SHOWEXITDATA= not SHOWEXITDATA
                          menu_02 =False
                       else:
@@ -648,7 +647,7 @@ while running and inputDataCorrect:
 	
 	#Pre-evacuation Time Effect
         tt = pygame.time.get_ticks()/1000 - t_pause
-        if (tt < ai.tpre):
+        if (t_sim < ai.tpre):
             ai.desiredSpeed = random.uniform(0.3,1.6)
         else: 
             ai.desiredSpeed = random.uniform(2.0,3.0)
@@ -796,7 +795,7 @@ while running and inputDataCorrect:
             print '=== ai id ===::', idai
             print 'ai.others len:', len(ai.others)
             
-            if len(ai.others)!=0: #and tt>ai.tpre:
+            if len(ai.others)!=0: #and t_sim>ai.tpre:
                 otherDir, otherSpeed = ai.opinionDynamics()
                 ai.direction = (1-ai.p)*ai.direction + ai.p*otherDir
                 ai.desiredSpeed = (1-ai.p)*ai.desiredSpeed + ai.p*otherSpeed
@@ -899,7 +898,7 @@ while running and inputDataCorrect:
         # Consider TPRE features
         #############################################	
         #tt = pygame.time.get_ticks()/1000-t_pause
-        if (tt < ai.tpre and TPREMODE == 1):
+        if (t_sim < ai.tpre and TPREMODE == 1):
             ai.desiredV = ai.direction*0.0
             ai.desiredSpeed = 0.0
             #ai.dest = ai.pos
@@ -909,7 +908,7 @@ while running and inputDataCorrect:
         #ai.sumAdapt += motiveForce*0.2  #PID: Integration Test Here
         
         #tt = pygame.time.get_ticks()/1000-t_pause
-        if (tt < ai.tpre and TPREMODE == 2):
+        if (t_sim < ai.tpre and TPREMODE == 2):
             motiveForce = np.array([0.0, 0.0])
 
         if (tt < ai.tpre and TPREMODE == 3):
@@ -946,7 +945,7 @@ while running and inputDataCorrect:
         #	wallDirection = np.array([wall[0],wall[1]]) - np.array([wall[2],wall[3]])
         #	closeWall = wall
 	
-        if (tt >= ai.tpre):
+        if (t_sim >= ai.tpre):
         #################################
         # Wall Effect Computed: 
         # Is There Any Wall Nearby On The Route?
@@ -1001,7 +1000,7 @@ while running and inputDataCorrect:
             # Interaction with enviroment
             # Search for wall on the route
             # temp = 0.0
-            closeWall = walls[0] #None #walls[0]
+            closeWall = None #None #walls[0]
             closeWallDist = 10.0 # Define how close the wall is
             for wall in walls:
                 if wall.inComp ==0:
@@ -1271,7 +1270,7 @@ while running and inputDataCorrect:
         if SHOWINDEX:
             tt = pygame.time.get_ticks()/1000-t_pause
             myfont=pygame.font.SysFont("arial",14)
-            if tt < agent.tpre:
+            if t_sim < agent.tpre:
                 text_surface=myfont.render(str(idai), True, (255,0,0), (255,255,255))
             else: 
                 text_surface=myfont.render(str(idai), True, (0,0,0), (255,255,255))

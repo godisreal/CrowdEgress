@@ -1,5 +1,5 @@
 # -*-coding:utf-8-*-
-# Author: WP and SS
+# Author: WP
 # Email: wp2204@gmail.com
 
 
@@ -9,7 +9,7 @@ from math import *
 import random
 #from stack import *
 
-class Agent(object):
+class Pedestrian(object):
     def __init__(self, x=1, y=1):
         # random initialize a agent
         #self.memory = np.array([0.0, 0.0], [0.0, 0.0], [0.0, 0.0])
@@ -399,6 +399,9 @@ class Agent(object):
 	
         # The time interval to look ahead is an important issue
         # It is a major issue to use whether actualV or desiredV
+
+        if wall is None:
+            return None, None, None
         
         if wall.mode == 'line':
             w1 = np.array([wall.params[0],wall.params[1]])

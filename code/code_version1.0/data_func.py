@@ -142,7 +142,7 @@ def readAgents(FileName, marginTitle=1, ini=1):
 
     agents = []
     for agentFeature in agentFeatures[marginTitle:]:
-        agent = Agent()
+        agent = Pedestrian()
         agent.pos = np.array([float(agentFeature[ini+0]), float(agentFeature[ini+1])])
         agent.dest= np.array([float(agentFeature[ini+2]), float(agentFeature[ini+3])])
         agent.tau = float(agentFeature[ini+4])
