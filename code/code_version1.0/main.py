@@ -311,6 +311,7 @@ while running and inputDataCorrect:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
+            pygame.display.quit()
             t_pause = pygame.time.get_ticks()/1000
 
         elif event.type == pygame.MOUSEBUTTONDOWN:
@@ -598,6 +599,7 @@ while running and inputDataCorrect:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
+            pygame.display.quit()
         elif event.type == pygame.MOUSEBUTTONDOWN:
             (mouseX, mouseY) = pygame.mouse.get_pos()
             #button = pygame.mouse.get_pressed()            
@@ -621,6 +623,8 @@ while running and inputDataCorrect:
                 SHOWDOORDATA = not SHOWDOORDATA
             elif event.key == pygame.K_KP3:
                 SHOWEXITDATA = not SHOWEXITDATA
+            elif event.key == pygame.K_s:
+                SHOWSTRESS = not SHOWSTRESS
             elif event.key == pygame.K_UP:
                 ySpace=ySpace-10
             elif event.key == pygame.K_DOWN:
@@ -794,13 +798,6 @@ while running and inputDataCorrect:
             
             print '=== ai id ===::', idai
             print 'ai.others len:', len(ai.others)
-            
-            if len(ai.others)!=0: #and t_sim>ai.tpre:
-                otherDir, otherSpeed = ai.opinionDynamics()
-                ai.direction = (1-ai.p)*ai.direction + ai.p*otherDir
-                ai.desiredSpeed = (1-ai.p)*ai.desiredSpeed + ai.p*otherSpeed
-                ai.desiredV = ai.desiredSpeed*ai.direction
-
             tt_OtherList = t_sim+DT_OtherList
             
         
@@ -840,7 +837,7 @@ while running and inputDataCorrect:
                 ai.tau = ai.moving_tau
                 talk[idai, idaj]=0
 
-            peopleInter += ai.agentForce(aj)*anisoF
+            #peopleInter += ai.agentForce(aj)*anisoF
 
             if COHESION:
                 peopleInter += ai.cohesiveForce(aj, DFactor[idai, idaj], AFactor[idai, idaj], BFactor[idai, idaj])*anisoF
@@ -853,12 +850,20 @@ while running and inputDataCorrect:
         #ai.others=list(set(ai.others))
         #################################
         # Herding Effect Computed
+        # Also known as opinion dynamics
+        #################################
         #if otherMovingNum != 0:
             #ai.direction = (1-ai.p)*ai.direction + ai.p*otherMovingDir
             #ai.desiredSpeed = (1-ai.p)*ai.desiredSpeed + #ai.p*otherMovingSpeed/otherMovingNum
             #ai.desiredV = ai.desiredSpeed*ai.direction
 
             #ai.desiredV = (1-ai.p)*ai.desiredV + ai.p*otherMovingDir
+        
+        if len(ai.others)!=0: #and t_sim>ai.tpre:
+            otherDir, otherSpeed = ai.opinionDynamics()
+            ai.direction = (1-ai.p)*ai.direction + ai.p*otherDir
+            ai.desiredSpeed = (1-ai.p)*ai.desiredSpeed + ai.p*otherSpeed
+            ai.desiredV = ai.desiredSpeed*ai.direction
 
         ########################################################
         # Turn on or off self-repulsion by boolean variable SELFREPULSION
