@@ -127,7 +127,7 @@ Num_Exits = len(exits)
 #doors = readDoors('hole_test.csv')
 #exits = readExits('exit_test.csv')
 
-if FN_FDS and FN_FDS is not None:
+if FN_FDS and FN_FDS!="None" and FN_FDS is not None:
     walls = readOBST(FN_FDS, 'obst_test.csv')
     doors = readHOLE(FN_FDS, 'hole_test.csv')
     #exits = readEXIT(FN_FDS, 'exit_test.csv')

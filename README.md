@@ -6,6 +6,8 @@ How-To: python main.py --> user interface (GUI) --> select input files --> visul
 
 Group Social Force is implemented with Interactive Opinion Dynamics. This model is an extension of the social force model introduced by Helbing and Molnár (1995) and Helbing, Farkas, and Vicsek (2000). The model aims at investigating protypes of pedestrian behavior in crowd evacuation. 
 
+The program computes how each agent interacts with other entities including surrounding agents, walls, doors and exits.  Please refer to .csv file for details in specification of agents, walls, doors and exits.  
+
 ### Collaborators are needed and your ideas are much valued!  
 
 
