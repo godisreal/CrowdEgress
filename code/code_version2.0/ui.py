@@ -93,7 +93,7 @@ class GUI(object):
         myTest = simulation()
         myTest.select_file(self.FN[1], None, "non-gui")
         #myTest.read_data()
-        sunpro1 = mp.Process(target=show_geom(myTest))
+        sunpro1 = mp.Process(target=show_simu(myTest))
         sunpro1.start()
         sunpro1.join()
         #show_geom(myTest)
@@ -140,15 +140,6 @@ def startPage(FN_FDS=None, FN_EVAC=None):
     #def quit_botton(event):
         
     def selectFile(index):
-        #tk.messagebox.showinfo(title='Hi', message='hahahaha') # return 'ok'
-        #tk.messagebox.showwarning(title='Hi', message='nononono') # return 'ok'
-        #tk.messagebox.showerror(title='Hi', message='No!! never') # return 'ok'
-        #print(tk.messagebox.askquestion(title='Hi', message='hahahaha')) # return 'yes' , 'no'
-        #print(tk.messagebox.askyesno(title='Hi', message='hahahaha')) # return True, False
-        #print(tk.messagebox.asktrycancel(title='Hi', message='hahahaha')) # return True, False
-        #print(tk.messagebox.askokcancel(title='Hi', message='hahahaha')) # return True, False
-        #print(tk.messagebox.askyesnocancel(title="Hi", message="haha")) # return, True, False, None
-        #from Tkinter.tkFileDialog import askopenfilename
         FN[index] = tkFileDialog.askopenfilename(filetypes=(("All files", "*.*"), ("csv files", "*.csv") ))
         if index ==0:
             lb0.config(text = "The FDS data file selected: "+str(FN[index])+"\n")

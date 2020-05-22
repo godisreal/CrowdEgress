@@ -736,8 +736,8 @@ def show_simu(simu):
         if simu.SHOWTIME:
             tt = pygame.time.get_ticks()/1000-simu.t_pause
             myfont=pygame.font.SysFont("arial",14)
-            time_surface=myfont.render("Physics Time:" + str(tt), True, (0,0,0), (255,255,255))
-            screen.blit(time_surface, [470,370]) #[750,350]*ZOOMFACTOR)
+            #time_surface=myfont.render("Physics Time:" + str(tt), True, (0,0,0), (255,255,255))
+            #screen.blit(time_surface, [470,370]) #[750,350]*ZOOMFACTOR)
             time_surface=myfont.render("Simulation Time:" + str(simu.t_sim), True, (0,0,0), (255,255,255))
             screen.blit(time_surface, [630,370]) #[750,350]*ZOOMFACTOR)
 
