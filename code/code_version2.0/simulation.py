@@ -1,7 +1,5 @@
 
 import os, sys
-import multiprocessing as mp
-
 from random import randint, choice, normalvariate
 from math import sin, cos, radians
 #from math import *
@@ -10,18 +8,12 @@ import re
 import random
 #from random import *
 
-import pygame
-import pygame.draw
-#from pygame import Rect
-from pygame.locals import *
-
-from agent import*
-#from agent_model_obst3 import *
+from agent import *
 from obst import *
 from math_func import *
 from data_func import *
 from draw_func import *
-from ui import*
+from startPage import*
 
 class simulation(object):
 
@@ -60,11 +52,12 @@ class simulation(object):
     DRAWSELFREPULSION = False
     
         
-    def __init__(self, inputFileName=None, outputFileName=None, params=None):
+    def __init__(self, outputFileName=None, params=None):
 
         self.DT = 0.3
         self.t_sim=0.0
         self.t_end=0.0
+        self.t_pause=0.0
         
         self.DT_OtherList = 3.0
         self.tt_OtherList = 0.0
@@ -78,7 +71,7 @@ class simulation(object):
         self.SELFREPULSION = False	# Enable self repulsion
         self.WALLBLOCKHERDING = True
         self.TPREMODE = 3        ### Instructinn: 1 -- DesiredV = 0  2 -- Motive Force =0: 
-        self.TESTFORCE = False
+        self.TESTFORCE = True
         self.GROUPBEHAVIOR = True     # Enable the group social force
         self.TESTMODE = False #True
         #self.GUI = True
@@ -98,24 +91,21 @@ class simulation(object):
         
         self.inputDataCorrect = True
         self.FN_FDS=None
-        self.FN_EVAC =inputFileName
+        self.FN_EVAC = None
         self.outDataName =outputFileName
 		
         if self.outDataName is None:
             self.outDataName ="outData"
 
         #self.t_now =0.0
-        self.t_pause = 0.0
+        #self.t_pause = 0.0
         
 
-    def select_file(self, mode='GUI'):
-
-        FN_FDS=None
-        FN_EVAC=None
+    def select_file(self, FN_EVAC=None, FN_FDS=None, mode='GUI'):
 		
         FN_Temp = self.outDataName + ".txt"
         
-        if os.path.exists(FN_Temp) and self.FN_EVAC is None:
+        if os.path.exists(FN_Temp) and self.FN_EVAC is None and mode=='GUI':
             for line in open(FN_Temp, "r"):
                 if re.match('FN_FDS', line):
                     temp =  line.split('=')
@@ -124,17 +114,20 @@ class simulation(object):
                     temp =  line.split('=')
                     FN_EVAC = temp[1].strip()
 
+        # This is used for debug mode
         if self.TESTMODE: 
             print FN_FDS
             print FN_EVAC
             print "As above is the input file selected in your last run!"
             raw_input('Input File Selection from Last Run.')
 
+        # This is a simple user interface to select input files
         if mode=="GUI":
             [FN_FDS, FN_EVAC] = startPage(FN_FDS, FN_EVAC)
-            
-            self.FN_FDS = FN_FDS
-            self.FN_EVAC = FN_EVAC
+
+        # Update the data in simulation class
+        self.FN_FDS = FN_FDS
+        self.FN_EVAC = FN_EVAC
 
         # The file to record the output data of simulation
         FN_Temp = self.outDataName + ".txt"
@@ -144,8 +137,8 @@ class simulation(object):
         print >> f, 'FN_FDS=', self.FN_FDS
         print >> f, 'FN_EVAC=', self.FN_EVAC #,'\n'
 
-        FN_FDS=self.FN_FDS
-        FN_EVAC=self.FN_EVAC
+        #FN_FDS=self.FN_FDS
+        #FN_EVAC=self.FN_EVAC
 
         ###  Read in Data from .CSV File ###
         self.agents = readAgents(FN_EVAC)
@@ -784,4 +777,3 @@ if __name__=="__main__":
     show_simu(myTest)
     #myTest.quit()
 
-    

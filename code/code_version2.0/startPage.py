@@ -73,6 +73,151 @@ class ctrlVar(object):
                     if re.match('SHOWINDEX', line):
                         temp =  line.split('=')
                         self.SHOWINDEX = int(temp[1].strip())
+
+
+import os, sys
+import multiprocessing as mp
+from simulation import *
+
+# Version Check
+if sys.version_info[0] == 3: # Python 3
+    from tkinter import *
+    from tkinter.ttk import Notebook
+else:
+    # Python 2
+    from Tkinter import *
+    from ttk import Notebook
+    import tkFileDialog
+    
+class GUI(object):
+
+    def __init__(self, FN_FDS=None, FN_EVAC=None):
+
+        #self.FN_Info = ['FDS', 'EVAC'] #, 'Doors']
+        #self.FN=[None, None] #, None]
+        #self.FN[0]=FN_FDS
+        #self.FN[1]=FN_EVAC
+
+        self.fname_FDS = FN_FDS
+        self.fname_EVAC = FN_EVAC
+        self.currentSimu = None
+        
+        self.window = Tk()
+        self.window.title('crowd egress simulator')
+        self.window.geometry('760x300')
+
+        self.notebook = Notebook(self.window)      
+        self.notebook.pack(side=TOP, padx=2, pady=2)
+        
+        # added "self.rootWindow" by Hiroki Sayama 10/09/2018
+        self.frameRun = Frame(self.window)
+        #self.frameSettings = Frame(self.window)
+        self.frameParameters = Frame(self.window)
+        self.frameInformation = Frame(self.window)
+
+
+        self.notebook.add(self.frameRun,text="Run")
+        #self.notebook.add(self.frameSettings,text="Settings")
+        self.notebook.add(self.frameParameters,text="Parameters")
+        self.notebook.add(self.frameInformation,text="Info")
+        self.notebook.pack(expand=NO, fill=BOTH, padx=5, pady=5 ,side=TOP)
+        # self.notebook.grid(row=0, column=0, padx=5, pady=5, sticky='nswe')   # commented out by toshi on 2016-06-21(Tue) 18:31:02
+        
+        #self.status = Label(window, width=40,height=3, relief=SUNKEN, bd=1, textvariable=self.statusText)
+        # self.status.grid(row=1,column=0,padx=5,pady=5,sticky='nswe') # commented out by toshi on 2016-06-21(Tue) 18:31:17
+        #self.status.pack(side=TOP, fill=X, padx=5, pady=5, expand=NO)
+
+        #from Tkinter.tkFileDialog import askopenfilename
+        #fname = tkFileDialog.askopenfilename(filetypes=(("Template files", "*.tplate"), ("HTML files", "*.html;*.htm"), ("All files", "*.*") )) 
+        #def quit_botton(event):
+
+        self.lb_guide = Label(self.frameRun, text =  "Please select the input files of the simulation\n" + "Geom: Use .fds or .csv  Evac: Use .csv")
+        self.lb_guide.pack()
+
+        self.lb0 = Label(self.frameRun,text =  "The FDS data file selected: "+str(self.fname_FDS)+"\n")
+        self.lb0.pack()
+
+        self.lb1 = Label(self.frameRun,text =  "The EVAC data file selected: "+str(self.fname_EVAC)+"\n")
+        self.lb1.pack()
+
+        #self.lb2 = Label(frameRun,text =  "The exit data file selected: "+str(FN[2])+"\n")
+        #self.lb2.pack()
+
+        self.buttonSelectFDS =Button(self.frameRun, text='choose fds file for FDS data', command=self.selectFDSFile)
+        self.buttonSelectFDS.pack()
+        self.buttonSelectCSV =Button(self.frameRun, text='choose csv file for EVAC data', command=self.selectEvacFile)
+        self.buttonSelectCSV.pack()
+        #Button(window, text='choose csv file for door data', command=lambda: selectFile(2)).pack()
+
+        #if CheckVar1.get():
+        #    buttonSelectFDS.configure(state=DISABLED)
+        #TestV=CheckVar1.get()
+        
+        #self.buttonRead = Button(self.frameRun, text='read now: read in data', command=self.readData)
+        #self.buttonRead.pack()
+        #self.buttonGeom = Button(self.frameRun, text='read now: test geom', command=self.testGeom)
+        #self.buttonGeom.pack()
+        
+        self.buttonStart = Button(self.frameRun, text='start now: start simulation', command=self.startSim)
+        self.buttonStart.pack()
+        #buttonStart.place(x=5,y=220)
+        print self.fname_FDS, self.fname_EVAC
+
+        timeVar = IntVar()
+        timeVar.set(0)
+        self.CB1=Checkbutton(self.frameParameters, text= 'Show Time in Simulation', variable=timeVar, onvalue=1, offvalue=0)
+        self.CB1.pack(side=TOP, padx=2, pady=2)
+
+        # --------------------------------------------
+        # frameInformation
+        # --------------------------------------------
+        scrollInfo = Scrollbar(self.frameInformation)
+        self.textInformation = Text(self.frameInformation, width=45,height=13,bg='lightgray',wrap=WORD,font=("Courier",10))
+        scrollInfo.pack(side=RIGHT, fill=Y)
+        self.textInformation.pack(side=LEFT,fill=BOTH,expand=YES)
+        scrollInfo.config(command=self.textInformation.yview)
+        self.textInformation.config(yscrollcommand=scrollInfo.set)
+
+
+    def start(self):
+        self.window.mainloop()
+
+    def selectFDSFile(self):
+        self.fname_FDS = tkFileDialog.askopenfilename(filetypes=(("All files", "*.*"), ("csv files", "*.csv") ))
+        self.lb0.config(text = "The FDS data file selected: "+str(self.fname_FDS)+"\n")
+        print 'fname_FDS:', self.fname_FDS
+
+    def selectEvacFile(self):
+        self.fname_EVAC = tkFileDialog.askopenfilename(filetypes=(("All files", "*.*"), ("csv files", "*.csv") ))
+        self.lb1.config(text = "The EVAC data file selected: "+str(self.fname_EVAC)+"\n")
+        print 'fname', self.fname_EVAC
+
+    #def readData(self):
+    #    self.currentSimu = simulation()
+    #    self.currentSimu.select_file(self.fname_EVAC, self.fname_FDS, "non-gui")
+    #    #myTest.read_data()
+
+    def testGeom(self):
+        self.currentSimu = simulation()
+        self.currentSimu.select_file(self.fname_EVAC, self.fname_FDS, "non-gui")
+        sunpro1 = mp.Process(target=show_geom(self.currentSimu))        
+        sunpro1.start()
+        sunpro1.join()
+        #show_geom(myTest)
+        #myTest.show_simulation()
+        self.currentSimu.quit()
+
+    def startSim(self):
+        self.currentSimu = simulation()
+        self.currentSimu.select_file(self.fname_EVAC, self.fname_FDS, "non-gui")
+        self.textInformation.insert(END, "Start Simulation Now!")
+        sunpro1 = mp.Process(target=show_simu(self.currentSimu))        
+        sunpro1.start()
+        sunpro1.join()
+        #show_geom(myTest)
+        #myTest.show_simulation()
+        self.currentSimu.quit()
+
         
     
 def startPage(FN_FDS=None, FN_EVAC=None):
@@ -185,7 +330,8 @@ def startPage(FN_FDS=None, FN_EVAC=None):
     return FN
 
 if __name__ == '__main__':
-    startPage()
+    myGUI=GUI()
+    myGUI.start()
 
 
     
