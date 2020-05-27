@@ -254,6 +254,40 @@ class simulation(object):
         # Return a boolean variable to check if the input data format is correct or not
 
 
+
+    def preprocessGeom(self):
+        #===================================================
+        #==========Preprocessing the Geom Data =====================
+        #========= Find Relationship of Door and Wall ==================
+        for wall in self.walls:
+            wall.findAttachedDoors(self.doors)
+            print "wall #No:", wall.id, 'isSingle:', wall.isSingleWall
+            for door in wall.attachedDoors:
+                print "attached door #No. :", door.id
+
+        for door in self.doors:
+            door.findAttachedWalls(self.walls)
+            print "door #No:", door.id, 'isSingle:', door.isSingleDoor
+            for wall in door.attachedWalls:
+                print "attached wall #No. :", wall.id
+
+
+
+    def preprocessAgent(self):
+        # Assign destinations of agents
+        # This is not yet used in the door selection routine
+        for idai,ai in enumerate(self.agents):
+            temp = np.random.multinomial(1, self.agent2exit[ai.ID, :], size=1)
+            print self.agent2exit[ai.ID, :]
+            print temp
+            exit_index = np.argmax(temp)
+            ai.dest = self.exits[exit_index].pos
+            ai.pathMap = self.exit2door[exit_index]
+            ai.exitInMind = self.exits[exit_index]   # This is the exit in one's original mind
+            print 'ai:', ai.ID, '--- exit:', exit_index
+            
+
+
     def simulation_step(self):
         
         # Compute the agents in single step
@@ -745,7 +779,7 @@ class simulation(object):
                 ai.timeOut = pygame.time.get_ticks()
                 #ai.timeOut = clock.get_time()/1000.0
                 print 'Time to Reach the Goal:', ai.timeOut
-                print >> f, 'Time to Reach the Goal:', ai.timeOut
+                #print >> f, 'Time to Reach the Goal:', ai.timeOut
             
             ###########################################
             ## Remove agent when agent reaches the destination    

@@ -116,10 +116,10 @@ class GUI(object):
         self.frameInformation = Frame(self.window)
 
 
-        self.notebook.add(self.frameRun,text="Run")
+        self.notebook.add(self.frameRun,text="RunSimulation")
         #self.notebook.add(self.frameSettings,text="Settings")
         self.notebook.add(self.frameParameters,text="Parameters")
-        self.notebook.add(self.frameInformation,text="Info")
+        self.notebook.add(self.frameInformation,text="Information")
         self.notebook.pack(expand=NO, fill=BOTH, padx=5, pady=5 ,side=TOP)
         # self.notebook.grid(row=0, column=0, padx=5, pady=5, sticky='nswe')   # commented out by toshi on 2016-06-21(Tue) 18:31:02
         
@@ -211,6 +211,8 @@ class GUI(object):
         self.currentSimu = simulation()
         self.currentSimu.select_file(self.fname_EVAC, self.fname_FDS, "non-gui")
         self.textInformation.insert(END, "Start Simulation Now!")
+        #self.currentSimu.preprocessGeom()
+        self.currentSimu.preprocessAgent()
         sunpro1 = mp.Process(target=show_simu(self.currentSimu))        
         sunpro1.start()
         sunpro1.join()

@@ -71,7 +71,7 @@ class GUI(object):
         #    buttonSelectFDS.configure(state=DISABLED)
         #TestV=CheckVar1.get()
 
-        self.buttonStart = Button(self.frameRun, text='start now: read in data', command=self.startSim).pack()
+        self.buttonStart = Button(self.frameRun, text='start simulation', command=self.startSim).pack()
         #buttonStart.place(x=5,y=220)
         print self.FN[0], self.FN[1]
 
