@@ -131,14 +131,14 @@ class GUI(object):
         #fname = tkFileDialog.askopenfilename(filetypes=(("Template files", "*.tplate"), ("HTML files", "*.html;*.htm"), ("All files", "*.*") )) 
         #def quit_botton(event):
 
-        self.lb_guide = Label(self.frameRun, text =  "Please select the input files of the simulation\n" + "Geom: Use .fds or .csv  Evac: Use .csv")
+        self.lb_guide = Label(self.frameRun, text =  "Please select the input files of the simulation\n" + "Use a single .csv  file to create compartment geometry and agents\n" + "Please check the examples for details")
         self.lb_guide.pack()
 
-        self.lb0 = Label(self.frameRun,text =  "The FDS data file selected: "+str(self.fname_FDS)+"\n")
-        self.lb0.pack()
-
-        self.lb1 = Label(self.frameRun,text =  "The EVAC data file selected: "+str(self.fname_EVAC)+"\n")
+        self.lb1 = Label(self.frameRun,text =  "The input .csv file selected: "+str(self.fname_EVAC)+"\n")
         self.lb1.pack()
+
+        self.lb0 = Label(self.frameRun,text =  "Optional: If .fds is selected, the compartment geometry is created by .fds file. \n"  "The FDS file selected: "+str(self.fname_FDS)+"\n")
+        self.lb0.pack()
 
         #self.lb2 = Label(frameRun,text =  "The exit data file selected: "+str(FN[2])+"\n")
         #self.lb2.pack()
@@ -273,9 +273,9 @@ def startPage(FN_FDS=None, FN_EVAC=None):
         #from Tkinter.tkFileDialog import askopenfilename
         FN[index] = tkFileDialog.askopenfilename(filetypes=(("All files", "*.*"), ("csv files", "*.csv") ))
         if index ==0:
-            lb0.config(text = "The FDS data file selected: "+str(FN[index])+"\n")
+            lb0.config(text = "Optional: The fds file selected: "+str(FN[index])+"\n")
         elif index ==1:
-            lb1.config(text = "The EVAC data file selected: "+str(FN[index])+"\n")
+            lb1.config(text = "The input csv file selected: "+str(FN[index])+"\n")
         #elif index ==2:
         #    lb2.config(text = "The exit data file selected: "+str(FN[index])+"\n")
         print 'fname', FN[index]
@@ -298,10 +298,10 @@ def startPage(FN_FDS=None, FN_EVAC=None):
     lb_guide = Label(frameRun,text =  "Please select the input files of the simulation\n" + "Geom: Use .fds or .csv  Evac: Use .csv")
     lb_guide.pack()
 
-    lb0 = Label(frameRun,text =  "The FDS data file selected: "+str(FN[0])+"\n")
+    lb0 = Label(frameRun,text =  "Optional: The fds file selected: "+str(FN[0])+"\n")
     lb0.pack()
 
-    lb1 = Label(frameRun,text =  "The EVAC data file selected: "+str(FN[1])+"\n")
+    lb1 = Label(frameRun,text =  "The input csv file selected: "+str(FN[1])+"\n")
     lb1.pack()
 
     #lb2 = Label(frameRun,text =  "The exit data file selected: "+str(FN[2])+"\n")

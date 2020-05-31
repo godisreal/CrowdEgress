@@ -26,6 +26,9 @@ class person(object):
     comm = None # Non-language communication
     talk = None     # Language communication
 
+    wall_flag =None
+    see_flag = None
+    
     def __init__(self, x=1, y=1):
         # random initialize a agent
         #self.memory = np.array([0.0, 0.0], [0.0, 0.0], [0.0, 0.0])
