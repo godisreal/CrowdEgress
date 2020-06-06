@@ -577,14 +577,14 @@ class simulation(object):
                     ai.desiredV = ai.diretion*ai.desiredSpeed
                     ai.tau = random.uniform(0.6,1.6) #ai.tpre_tau
                     motiveForce = ai.adaptVel()
-                    print ('&&& In Tpre Stage:')
+                    print 'ai:', ai.ID, '&&& In Tpre Stage:'
                     print ('goSomeone:', goSomeone.ID)
                 else:
                     ai.desiredV = ai.direction*0.0
                     ai.desiredSpeed = 0.0
                     ai.tau = random.uniform(2.0,10.0) #ai.tpre_tau
                     motiveForce = ai.adaptVel()
-                    print '&&& In Tpre Stage:'
+                    print  'ai:', ai.ID, '&&& In Tpre Stage:'
                     print 'goSomeone is None.'
 
             #temp = 0.0

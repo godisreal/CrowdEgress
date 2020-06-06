@@ -336,6 +336,7 @@ def show_geom(simu):
     ZOOMFACTOR = simu.ZOOMFACTOR
     xSpace = simu.xSpace
     ySpace = simu.ySpace
+    xyShift = np.array([xSpace, ySpace])
     
     #========== Test of Geometry of Building Structure===============
     #========== Change Exit2Door Direction / Door Direction ==========
@@ -357,7 +358,6 @@ def show_geom(simu):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
-                pygame.display.quit()
                 simu.quit()
                 #simu.t_pause = pygame.time.get_ticks()/1000
 
@@ -628,6 +628,7 @@ def show_geom(simu):
     simu.ZOOMFACTOR = ZOOMFACTOR
     simu.xSpace = xSpace
     simu.ySpace = ySpace
+    pygame.display.quit()
 
 
 # Show simulation by pygame
@@ -672,7 +673,6 @@ def show_simu(simu):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
-                pygame.display.quit()
                 simu.quit()
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 (mouseX, mouseY) = pygame.mouse.get_pos()
@@ -872,6 +872,7 @@ def show_simu(simu):
     simu.ZOOMFACTOR = ZOOMFACTOR
     simu.xSpace = xSpace
     simu.ySpace = ySpace
+    pygame.display.quit()
 
 
 
