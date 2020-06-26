@@ -84,6 +84,9 @@ class simulation(object):
         self.doors=[]
         self.exits=[]
 
+        self.agent2exit = []
+        self.exit2door = []
+
         self.num_agents=0
         self.num_walls=0
         self.num_doors=0
@@ -223,14 +226,22 @@ class simulation(object):
             person.AFactor = person.AFactor_Init
             person.BFactor = person.BFactor_Init
         else:
+            person.DFactor_Init = np.ones((self.num_agents, self.num_agents))
+            person.AFactor_Init = np.zeros((self.num_agents, self.num_agents))
+            person.BFactor_Init = np.ones((self.num_agents, self.num_agents))
+            person.PFactor_Init = np.ones((self.num_agents, self.num_agents))
+            
             person.DFactor = np.ones((self.num_agents, self.num_agents))
-            person.AFactor = np.ones((self.num_agents, self.num_agents))
+            person.AFactor = np.zeros((self.num_agents, self.num_agents))
             person.BFactor = np.ones((self.num_agents, self.num_agents))
             person.PFactor = np.ones((self.num_agents, self.num_agents))
 
         person.comm = np.zeros((self.num_agents, self.num_agents))
         person.talk = np.zeros((self.num_agents, self.num_agents))
 
+        person.wall_flag = np.zeros((self.num_agents, self.num_agents))
+        person.see_flag = np.zeros((self.num_agents, self.num_agents))
+        
         if self.inputDataCorrect:
             print("Input data format is correct!")
         else:
