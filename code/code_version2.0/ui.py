@@ -23,6 +23,15 @@ class GUI(object):
         #self.FN[0]=FN_FDS
         #self.FN[1]=FN_EVAC
 
+        if os.path.exists("outData.txt") and FN_EVAC is None and FN_FDS is None:
+            for line in open("outData.txt", "r"):
+                if re.match('FN_FDS', line):
+                    temp =  line.split('=')
+                    FN_FDS = temp[1].strip()
+                if re.match('FN_EVAC', line):
+                    temp =  line.split('=')
+                    FN_EVAC = temp[1].strip()
+
         self.fname_FDS = FN_FDS
         self.fname_EVAC = FN_EVAC
         self.currentSimu = None
@@ -223,16 +232,17 @@ class GUI(object):
 
     def testGeom(self):
         self.currentSimu = simulation()
-        self.currentSimu.select_file(self.fname_EVAC, self.fname_FDS, "non-gui")
+        self.currentSimu.select_file(self.fname_EVAC, self.fname_FDS, "non-debug")
         sunpro2 = mp.Process(target=show_geom(self.currentSimu)) 
         sunpro2.start()
         #sunpro2.join()
-        self.currentSimu.preprocessGeom()
-        self.currentSimu.preprocessAgent()
-        self.updateCtrlParam()
-        sunpro1 = mp.Process(target=show_simu(self.currentSimu))     
-        sunpro1.start()
-        #sunpro1.join()
+        if self.currentSimu.continueToSimu:
+            self.currentSimu.preprocessGeom()
+            self.currentSimu.preprocessAgent()
+            self.updateCtrlParam()
+            sunpro1 = mp.Process(target=show_simu(self.currentSimu))     
+            sunpro1.start()
+            #sunpro1.join()
 
         #show_geom(myTest)
         #myTest.show_simulation()
@@ -240,7 +250,7 @@ class GUI(object):
 
     def startSim(self):
         self.currentSimu = simulation()
-        self.currentSimu.select_file(self.fname_EVAC, self.fname_FDS, "non-gui")
+        self.currentSimu.select_file(self.fname_EVAC, self.fname_FDS, "non-debug")
         #self.textInformation.insert(END, "Start Simulation Now!")
         self.setStatusStr("Simulation starts!  GUI window is not effective when Pygame screen is displayed!")
         self.updateCtrlParam()

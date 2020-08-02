@@ -58,6 +58,9 @@ class simulation(object):
         self.t_sim=0.0
         self.t_end=0.0
         self.t_pause=0.0
+
+        # A Logical Varible to Control if TestGeom Goes to Simulation
+        self.continueToSimu=True
         
         self.DT_OtherList = 3.0
         self.tt_OtherList = 0.0
@@ -72,7 +75,7 @@ class simulation(object):
         self.WALLBLOCKHERDING = True
         self.TPREMODE = 3        ### Instructinn: 1 -- DesiredV = 0  2 -- Motive Force =0: 
         self.TESTFORCE = True
-        self.GROUPBEHAVIOR = True     # Enable the group social force
+        self.GROUPBEHAVIOR = False     # Enable the group social force
         self.TESTMODE = False #True
         #self.GUI = True
         #self.STARTPAGE = False
@@ -119,9 +122,9 @@ class simulation(object):
 
         # This is used for debug mode
         if self.TESTMODE: 
-            print FN_FDS
-            print FN_EVAC
-            print "As above is the input file selected in your last run!"
+            print(FN_FDS)
+            print(FN_EVAC)
+            print("As above is the input file selected in your last run!")
             raw_input('Input File Selection from Last Run.')
 
         # This is a simple user interface to select input files
@@ -137,8 +140,12 @@ class simulation(object):
         f = open(FN_Temp, "w+")
         #self.outFileName=f
 
-        print >> f, 'FN_FDS=', self.FN_FDS
-        print >> f, 'FN_EVAC=', self.FN_EVAC #,'\n'
+        if sys.version_info[0] == 2:
+            print >> f, 'FN_FDS=', self.FN_FDS
+            print >> f, 'FN_EVAC=', self.FN_EVAC #,'\n'
+        else:
+            f.write('FN_FDS='+str(self.FN_FDS)+'\n')
+            f.write('FN_EVAC='+str(self.FN_EVAC)+'\n')
 
         #FN_FDS=self.FN_FDS
         #FN_EVAC=self.FN_EVAC
@@ -175,13 +182,13 @@ class simulation(object):
 
         if np.shape(self.agent2exit)!= (self.num_agents, self.num_exits): #or np.shape(agent2exit)[1]!=
             print('\nError on input data: exits or agent2exit \n')
-            print >>f, '\nError on input data: exits or agent2exit \n'
+            f.write('\nError on input data: exits or agent2exit \n')
             raw_input('Error on input data: exits or agent2exit!  Please check')
             self.inputDataCorrect = False
 
         if np.shape(self.exit2door)!= (self.num_exits, self.num_doors): 
-            print '\nError on input data: exits or exit2door \n'
-            print >>f, '\nError on input data: exits or exit2door \n'
+            print('\nError on input data: exits or exit2door \n')
+            f.write('\nError on input data: exits or exit2door \n')
             raw_input('Error on input data: exits or exit2door!  Please check')
             self.inputDataCorrect = False
 
@@ -205,8 +212,8 @@ class simulation(object):
             print >> f, "B Matrix\n", person.BFactor_Init, "\n"
 
             if np.shape(person.DFactor_Init)!= (self.num_agents, self.num_agents):
-                print '\nError on input data: DFactor_Init\n'
-                print >>f, '\nError on input data: DFactor_Init\n'
+                print('\nError on input data: DFactor_Init\n')
+                f.write('\nError on input data: DFactor_Init\n')
                 raw_input('Error on input data: DFactor_Init!  Please check')
                 self.inputDataCorrect = False
                 
@@ -248,16 +255,16 @@ class simulation(object):
             print("Input data format is wrong! Please check and modify!")
 
         ### Display a summary of input data
-        print 'Display a summary of input data as below. '
-        print 'number of agents: ', self.num_agents
-        print 'number of walls: ', self.num_walls
-        print 'number of doors: ', self.num_doors
-        print 'number of exits: ', self.num_exits
-        print '\n'
+        print('Display a summary of input data as below.')
+        print('number of agents: '+str(self.num_agents))
+        print('number of walls: '+str(self.num_walls))
+        print('number of doors: '+str(self.num_doors))
+        print('number of exits: '+str(self.num_exits))
+        print('\n')
 
         if self.TESTMODE:
-            print "Now you can check if the input data is correct or not!"
-            print "If everything is OK, please press ENTER to continue!"
+            print("Now you can check if the input data is correct or not!")
+            print("If everything is OK, please press ENTER to continue!")
             UserInput = raw_input('Check Input Data Here!')
 
         f.close()
