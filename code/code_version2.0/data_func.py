@@ -29,16 +29,16 @@ def readCSV_base(fileName):
         strData.append(item)
 
     #print(strData)
-    #print 'np.shape(strData)=', np.shape(strData)
-    #print '\n'
+    #print('np.shape(strData)=', np.shape(strData))
+    #print('\n')
 
     print('\n')
     print('#=======================#')
     print(fileName)
     dataNP = np.array(strData)
-    #print dataNP
-    print 'np.shape(dataNP)', np.shape(dataNP)
-    print '\n'
+    #print (dataNP)
+    print ('np.shape(dataNP)', np.shape(dataNP))
+    print ('\n')
 
     #print(strData[1:,1:])
     csvFile.close()
@@ -80,22 +80,22 @@ def readCSV(fileName, mode='float'):
         strData.append(item)
 
     #print(strData)
-    #print 'np.shape(strData)=', np.shape(strData)
-    #print '\n'
+    #print('np.shape(strData)=', np.shape(strData))
+    #print('\n')
 
     print('\n')
     print('#=======================#')
     print(fileName)
     dataNP = np.array(strData)
-    print dataNP
-    print 'np.shape(dataNP)', np.shape(dataNP)
-    print '\n'
+    print (dataNP)
+    print('np.shape(dataNP)', np.shape(dataNP))
+    print('\n')
 
     #print(strData[1:,1:])
     csvFile.close()	
     
     if mode=='string':
-        print dataNP[1:, 1:]
+        print (dataNP[1:, 1:])
         return dataNP[1:, 1:]
 	
     if mode=='float':
@@ -111,19 +111,19 @@ def readCSV(fileName, mode='float'):
             for j in range(1,J):
                 matrix[i,j] = float(dataNP[i,j])
 
-    print matrix[1:, 1:]
+    print (matrix[1:, 1:])
     return matrix[1:, 1:]
     
 
 def readFloatArray(tableFeatures, NRow, NColomn):
 
     #tableFeatures, LowerIndex, UpperIndex = getData("newDataForm.csv", '&Ped2Exit')
-    print tableFeatures, '\n'
+    print(tableFeatures, '\n')
     matrix = np.zeros((NRow, NColomn))
     for i in range(NRow):
             for j in range(NColomn):
                 matrix[i,j] = float(tableFeatures[i+1][j+1])
-    print 'Data in Table:', '\n', matrix
+    print('Data in Table:', '\n', matrix)
     return matrix
 
 
@@ -138,8 +138,8 @@ def readAgents(FileName, marginTitle=1, ini=1):
     agentFeatures, lowerIndex, UpperIndex = getData(FileName, '&Ped')
     Num_Agents=len(agentFeatures)-marginTitle
 
-    print 'Number of Agents:', Num_Agents, '\n'
-    print "Features of Agents\n", agentFeatures, "\n"
+    print ('Number of Agents:', Num_Agents, '\n')
+    print ("Features of Agents\n", agentFeatures, "\n")
 
     agents = []
     for agentFeature in agentFeatures[marginTitle:]:
@@ -170,8 +170,8 @@ def readWalls(FileName, marginTitle=1, ini=1):
     obstFeatures, lowerIndex, UpperIndex = getData(FileName, '&Wall')
     Num_Obsts=len(obstFeatures)-marginTitle
      
-    print 'Number of Walls:', Num_Obsts, '\n'
-    print "Features of Walls\n", obstFeatures, "\n"
+    print ('Number of Walls:', Num_Obsts, '\n')
+    print ("Features of Walls\n", obstFeatures, "\n")
     
     walls = []
     for obstFeature in obstFeatures[marginTitle:]:
@@ -198,8 +198,8 @@ def readDoors(FileName, marginTitle=1, ini=1):
     doorFeatures, lowerIndex, UpperIndex = getData(FileName, '&Door')
     Num_Doors=len(doorFeatures)-marginTitle
 
-    print 'Number of Doors:', Num_Doors, '\n'
-    print 'Features of Doors\n', doorFeatures, "\n"
+    print ('Number of Doors:', Num_Doors, '\n')
+    print ('Features of Doors\n', doorFeatures, "\n")
     
     doors = []
     for doorFeature in doorFeatures[marginTitle:]:
@@ -231,8 +231,8 @@ def readExits(FileName, marginTitle=1, ini=1):
     exitFeatures, lowerIndex, UpperIndex = getData(FileName, '&Exit')
     Num_Exits=len(exitFeatures)-marginTitle
 
-    print 'Number of Exits:', Num_Exits, '\n'
-    print "Features of Exits\n", exitFeatures, "\n"
+    print ('Number of Exits:', Num_Exits, '\n')
+    print ("Features of Exits\n", exitFeatures, "\n")
     
     exits = []
     for exitFeature in exitFeatures[marginTitle:]:
@@ -269,8 +269,7 @@ def readOBST(FileName, outputFile=None, ShowData=False):
             obstFeatures.append(obstFeature)
 
             if ShowData:
-                print line
-                print obstFeature
+                print (line, '\n', obstFeature)
                 #print >>fo, line
                 #print >>fo, obstFeature
 
@@ -322,8 +321,7 @@ def readHOLE(FileName, outputFile=None, ShowData=False):
             holeFeatures.append(holeFeature)
 
             if ShowData:
-                print line
-                print holeFeature
+                print (line, '\n', holeFeature)
                 #print >>fo, line
                 #print >>fo, holeFeature
 
@@ -376,8 +374,7 @@ def readEXIT(FileName, outputFile=None, ShowData=False):
             exitFeatures.append(exitFeature)
 
             if ShowData:
-                print line
-                print exitFeature
+                print (line, '\n', exitFeature)
                 #print >>fo, line
                 #print >>fo, exitFeature
 
@@ -449,36 +446,36 @@ if __name__ == '__main__':
 
     #test = readCSV("agentData2018.csv", 'string')
     doorFeatures = getData("newDataForm.csv", '&Door')
-    print doorFeatures
-    print np.shape(doorFeatures)
+    print (doorFeatures)
+    print (np.shape(doorFeatures))
 
     pedFeatures = getData("newDataForm.csv", '&Ped')
-    print pedFeatures
-    print np.shape(pedFeatures)
+    print (pedFeatures)
+    print (np.shape(pedFeatures))
 
     agents = readAgents("newDataForm.csv")
     walls = readWalls("newDataForm.csv")
     doors = readDoors("newDataForm.csv")
     exits = readExits("newDataForm.csv")
     
-    print 'Length of agents:', len(agents)
-    print 'Length of walls:', len(walls)
+    print ('Length of agents:', len(agents))
+    print ('Length of walls:', len(walls))
 
     ped2ExitFeatures, LowerIndex, UpperIndex = getData("newDataForm.csv", '&Ped2Exit')
-    print ped2ExitFeatures
+    print (ped2ExitFeatures)
     matrix = np.zeros((len(agents), len(exits)))
     for i in range(len(agents)):
             for j in range(len(exits)):
                 matrix[i,j] = float(ped2ExitFeatures[i+1][j+1])
-    print 'matrix', matrix
+    print ('matrix', matrix)
 
     Exit2DoorFeatures, LowerIndex, UpperIndex = getData("newDataForm.csv", '&Exit2Door')
-    print Exit2DoorFeatures
+    print (Exit2DoorFeatures)
     matrix = np.zeros((len(exits), len(doors)))
     for i in range(len(exits)):
             for j in range(len(doors)):
                 matrix[i,j] = float(Exit2DoorFeatures[i+1][j+1])
-    print 'matrix', matrix
+    print ('matrix', matrix)
     
         #for index in range(Num_Data):
         #if dataFeatures[0,index]=='&Ped':
@@ -509,8 +506,8 @@ if __name__ == '__main__':
 
     #print >>f, np.shape(DFactor_Init), [Num_Agents, Num_Agents], '\n'
 
-    print '\n', 'Test Output: exit2door.csv'
+    print('\n', 'Test Output: exit2door.csv')
     exit2door=np.array([[ 1.0,  1.0,  1.0], [ 1.0,  -1.0,  -2.0], [ 1.0,  1.0,  1.0]])
-    print exit2door
+    print(exit2door)
     updateExit2Doors(exit2door, 'test_exit2door.csv')
 

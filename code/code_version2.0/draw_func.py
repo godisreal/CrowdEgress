@@ -3,6 +3,7 @@ import pygame
 import pygame.draw
 import numpy as np
 from math_func import *
+from data_func import *
 from agent import *
 
 #from math_func import *
@@ -40,7 +41,7 @@ LINEWIDTH = 2
 ####################
 # Drawing the walls
 ####################
-def drawWall(screen, walls, ZOOMFACTOR=10.0, SHOWDATA=False, xSpace=0.0, ySpace=0.0):
+def drawWalls(screen, walls, ZOOMFACTOR=10.0, SHOWDATA=False, xSpace=0.0, ySpace=0.0):
 
     xyShift = np.array([xSpace, ySpace])
     for wall in walls:
@@ -133,7 +134,7 @@ def drawSingleWall(screen, wall, ZOOMFACTOR=10.0, SHOWDATA=False, xSpace=0.0, yS
     # Drawing the doors
     ####################
 
-def drawDoor(screen, doors, ZOOMFACTOR=10.0, SHOWDATA=False, xSpace=0.0, ySpace=0.0):
+def drawDoors(screen, doors, ZOOMFACTOR=10.0, SHOWDATA=False, xSpace=0.0, ySpace=0.0):
 
     xyShift = np.array([xSpace, ySpace])
     for door in doors:
@@ -216,7 +217,7 @@ def drawSingleDoor(screen, door, ZOOMFACTOR=10.0, SHOWDATA=False, xSpace=0.0, yS
     # Drawing the exits
     ####################
 
-def drawExit(screen, exits, ZOOMFACTOR=10.0, SHOWDATA=False, xSpace=0.0, ySpace=0.0):
+def drawExits(screen, exits, ZOOMFACTOR=10.0, SHOWDATA=False, xSpace=0.0, ySpace=0.0):
 
     xyShift = np.array([xSpace, ySpace])
     for exit in exits:
@@ -325,12 +326,12 @@ def show_geom(simu):
     f = open(FN_Temp, "a+")
     #simu.outFileName=f
 
-    print >> f, "Test Geometry of Compartment."
-    #print >> f, 'FN_FDS=', simu.FN_FDS
-    #print >> f, 'FN_EVAC=', simu.FN_EVAC #,'\n'
+    f.write("Test Geometry of Compartment.")
+    # f.write('FN_FDS=', simu.FN_FDS)
+    # f.write('FN_EVAC=', simu.FN_EVAC #,'\n')
 
     if not simu.inputDataCorrect:
-        print "Input data is not correct!  Please modify input data file!"
+        print ("Input data is not correct!  Please modify input data file!")
         return
 
     ZOOMFACTOR = simu.ZOOMFACTOR
@@ -358,6 +359,8 @@ def show_geom(simu):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
+                #pygame.display.quit()
+                simu.continueToSimu=False
                 simu.quit()
                 #simu.t_pause = pygame.time.get_ticks()/1000
 
@@ -386,12 +389,12 @@ def show_geom(simu):
                      if  menu_01:
                           if mouseX<120 and mouseX>0 and mouseY<40 and mouseY>23:
                              # dump door direction data
-                             print "Output door direction data into doorDataRev.csv! Please check!"
+                             print ("Output door direction data into doorDataRev.csv! Please check!")
                              updateDoorData(simu.doors, 'doorDataRev.csv')
                              menu_01 =False
                           elif mouseX<120 and mouseX>0 and mouseY<60 and mouseY>43:
                              # dump exit2door data
-                             print "Output exit2door data into Exit2DoorRev.csv! Please check!"
+                             print ("Output exit2door data into Exit2DoorRev.csv! Please check!")
                              updateExit2Doors(simu.exit2door, 'Exit2DoorRev.csv')
                              menu_01 =False
                           #elif mouseX<120 and mouseX>0 and mouseY<80 and mouseY>63:
@@ -426,6 +429,8 @@ def show_geom(simu):
                 ### Menu No 3: Start Simulation ###
                 if mouseX<220 and mouseX>150 and mouseY<20 and mouseY>3:
                     running = False
+                    #simu.quit()
+                    simu.continueToSimu=True
                     simu.t_pause = pygame.time.get_ticks()/1000
 
                 if not draw_state:
@@ -478,16 +483,16 @@ def show_geom(simu):
                             result1, result2, result3, result4 = door.intersecWithLine(w1, w2, '4arc')
                             #print('result1, result2, result3, result4:', result1, result2, result3, result4)
                             if result1 != None:
-                                exit2door[draw_exit.id, door.id]=1
+                                simu.exit2door[draw_exit.id, door.id]=1
                                 #door.arrow=1
                             elif result2 != None:
-                                exit2door[draw_exit.id, door.id]= -2
+                                simu.exit2door[draw_exit.id, door.id]= -2
                                 #door.arrow=-2
                             elif result3 != None:
-                                exit2door[draw_exit.id, door.id]= -1
+                                simu.exit2door[draw_exit.id, door.id]= -1
                                 #door.arrow=-1
                             elif result4 != None:
-                                exit2door[draw_exit.id, door.id]= 2
+                                simu.exit2door[draw_exit.id, door.id]= 2
                                 #door.arrow=2
                         
             elif event.type == pygame.KEYDOWN:
@@ -520,9 +525,9 @@ def show_geom(simu):
 
         xyShift = np.array([xSpace, ySpace])
         
-        drawWall(screen, simu.walls, ZOOMFACTOR, simu.SHOWWALLDATA, xSpace, ySpace)
-        drawDoor(screen, simu.doors, ZOOMFACTOR, simu.SHOWDOORDATA, xSpace, ySpace)
-        drawExit(screen, simu.exits, ZOOMFACTOR, simu.SHOWEXITDATA, xSpace, ySpace)
+        drawWalls(screen, simu.walls, ZOOMFACTOR, simu.SHOWWALLDATA, xSpace, ySpace)
+        drawDoors(screen, simu.doors, ZOOMFACTOR, simu.SHOWDOORDATA, xSpace, ySpace)
+        drawExits(screen, simu.exits, ZOOMFACTOR, simu.SHOWEXITDATA, xSpace, ySpace)
 
         #####################################
         #### Draw Agents at Initial Positions ###
@@ -622,7 +627,7 @@ def show_geom(simu):
         screen.blit(text_surface, [150,3]) #+xyShift)
                 
         pygame.display.flip()
-        #clock.tick(20)
+        clock.tick(20)
         
     f.close()
     simu.ZOOMFACTOR = ZOOMFACTOR
@@ -639,12 +644,12 @@ def show_simu(simu):
     f = open(FN_Temp, "a+")
     #simu.outFileName=f
 
-    print >> f, "Start and show simulation here."
-    #print >> f, 'FN_FDS=', simu.FN_FDS
-    #print >> f, 'FN_EVAC=', simu.FN_EVAC #,'\n'
+    f.write("Start and show simulation here.")
+    # f.write('FN_FDS=', simu.FN_FDS)
+    # f.write('FN_EVAC=', simu.FN_EVAC #,'\n')
 
     if not simu.inputDataCorrect:
-        print "Input data is not correct!  Please modify input data file!"
+        print("Input data is not correct!  Please modify input data file!")
         return
 
     ZOOMFACTOR = simu.ZOOMFACTOR
@@ -673,6 +678,7 @@ def show_simu(simu):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
+                #pygame.display.quit()
                 simu.quit()
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 (mouseX, mouseY) = pygame.mouse.get_pos()
@@ -736,14 +742,14 @@ def show_simu(simu):
         if simu.SHOWTIME:
             tt = pygame.time.get_ticks()/1000-simu.t_pause
             myfont=pygame.font.SysFont("arial",14)
-            #time_surface=myfont.render("Physics Time:" + str(tt), True, (0,0,0), (255,255,255))
-            #screen.blit(time_surface, [470,370]) #[750,350]*ZOOMFACTOR)
+            time_surface=myfont.render("Physics Time:" + str(tt), True, (0,0,0), (255,255,255))
+            screen.blit(time_surface, [470,370]) #[750,350]*ZOOMFACTOR)
             time_surface=myfont.render("Simulation Time:" + str(simu.t_sim), True, (0,0,0), (255,255,255))
             screen.blit(time_surface, [630,370]) #[750,350]*ZOOMFACTOR)
 
-        drawWall(screen, simu.walls, ZOOMFACTOR, simu.SHOWWALLDATA, xSpace, ySpace)
-        drawDoor(screen, simu.doors, ZOOMFACTOR, simu.SHOWDOORDATA, xSpace, ySpace)
-        drawExit(screen, simu.exits, ZOOMFACTOR, simu.SHOWEXITDATA, xSpace, ySpace)
+        drawWalls(screen, simu.walls, ZOOMFACTOR, simu.SHOWWALLDATA, xSpace, ySpace)
+        drawDoors(screen, simu.doors, ZOOMFACTOR, simu.SHOWDOORDATA, xSpace, ySpace)
+        drawExits(screen, simu.exits, ZOOMFACTOR, simu.SHOWEXITDATA, xSpace, ySpace)
 
         # pygame.draw.circle(screen, AGENTCOLOR, (np.array(SCREENSIZE)/2).tolist(), agent.size, LINEWIDTH)
         
@@ -780,7 +786,7 @@ def show_simu(simu):
                 rightS[0] = int(rightShoulder[0]*ZOOMFACTOR+xSpace)
                 rightS[1] = int(rightShoulder[1]*ZOOMFACTOR+ySpace)
                 
-                #print 'shoulders:', leftS, rightS
+                #print ('shoulders:', leftS, rightS)
                 pygame.draw.circle(screen, color_para, leftS, agent.size/2, 3)
                 pygame.draw.circle(screen, color_para, rightS, agent.size/2, 3)
             
@@ -879,13 +885,14 @@ def show_simu(simu):
 
 if __name__=="__main__":
 
-
+    print("=======================")
+    print("A Test Case for Draw Geometry")
     from obst import *
     #from passage import *
     #from outlet import *
 
     # initialize OBST
-    obstFeatures = readCSV("obstData2018.csv", "string")
+    obstFeatures = readCSV("./test_case/obstData2018.csv", "string")
     walls = []
     for obstFeature in obstFeatures:
         wall = obst()
@@ -895,8 +902,8 @@ if __name__=="__main__":
         wall.params[3]= float(obstFeature[3])
         wall.mode = obstFeature[4]
         wall.id = int(obstFeature[5])
-        wall.arrow = int(obstFeature[6])
-        wall.inComp = int(obstFeature[7])
+        wall.inComp = int(obstFeature[6])
+        wall.arrow = int(obstFeature[7])
         #wall.pointer1 = np.array([float(obstFeature[8]), float(obstFeature[9])])
         #wall.pointer2 = np.array([float(obstFeature[10]), float(obstFeature[11])])
         walls.append(wall)
@@ -924,9 +931,9 @@ if __name__=="__main__":
         ####################################
         # Drawing the geometries: walls, doors, exits
         ####################################
-        drawWall(screen, walls)
-        #drawDoor(screen, doors)
-        #drawExit(screen, exits)
+        drawWalls(screen, walls)
+        #drawDoors(screen, doors)
+        #drawExits(screen, exits)
         
         pygame.display.flip()
         clock.tick(20)

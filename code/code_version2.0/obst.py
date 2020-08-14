@@ -542,17 +542,17 @@ class passage(object):
 
 if __name__ == '__main__':
     obst = obst()
-    print 'OBST Test OK'
+    print ('OBST Test OK')
     
     doorTest2 = passage()
     doorTest2.params = np.array([60.3, 3.0, 66.0, 6.0])
     doorTest2.arrow = -2
     #doorTest2.visiblePx(pos, walls):
-    print doorTest2.direction(-2)
-    print doorTest2.edge()
+    print (doorTest2.direction(-2))
+    print (doorTest2.edge())
 
     doorTest3 = passage()
     doorTest3.params = np.array([18.9, 16, 23, 20])
     doorTest3.arrow = 1
-    print doorTest3.direction(doorTest3.arrow)
-    print 'DOOR Test OK'
+    print (doorTest3.direction(doorTest3.arrow))
+    print ('DOOR Test OK')

@@ -174,7 +174,7 @@ if __name__ == '__main__':
     wall = [3.33, 3.33, 29.97, 3.33]
     w1 = np.array([wall[0], wall[1]])
     w2 = np.array([wall[2], wall[3]])
-    print distanceP2L(np.array([10.0,10.0]), w1, w2)
+    print (distanceP2L(np.array([10.0,10.0]), w1, w2))
     # print distanceP2W(np.array([0.5,2.0]),wall)
     # print distanceP2W(np.array([2.0,2.0]),wall)
     

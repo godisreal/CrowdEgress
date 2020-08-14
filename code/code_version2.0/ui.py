@@ -113,7 +113,7 @@ class GUI(object):
         self.buttonStart = Button(self.frameRun, text='start now: start simulation', command=self.startSim)
         self.buttonStart.pack()
         #buttonStart.place(x=5,y=220)
-        print self.fname_FDS, self.fname_EVAC
+        print(self.fname_FDS, self.fname_EVAC)
 
 
         # --------------------------------------------
@@ -214,7 +214,7 @@ class GUI(object):
         #temp=self.fname_FDS.split('/') 
         self.lb0.config(text = "Optional: If .fds is selected, the compartment geometry is created by .fds file. \n"+"The FDS data file selected: "+str(temp[-1])+"\n")
         self.textInformation.insert(END, 'fname_FDS:   '+self.fname_FDS)
-        print 'fname_FDS:', self.fname_FDS
+        print('fname_FDS:', self.fname_FDS)
         self.setStatusStr("Simulation not yet started!")
 
     def selectEvacFile(self):
@@ -222,7 +222,7 @@ class GUI(object):
         temp=self.fname_EVAC.split('/') 
         self.lb1.config(text = "The input .csv file selected: "+str(temp[-1])+"\n")
         self.textInformation.insert(END, 'fname_EVAC:   '+self.fname_EVAC)
-        print 'fname', self.fname_EVAC
+        print('fname', self.fname_EVAC)
         self.setStatusStr("Simulation not yet started!")
 
     #def readData(self):
@@ -265,7 +265,9 @@ class GUI(object):
         self.currentSimu.quit()
 
             
-    
+#==========================================
+#===This is a small GUI widget used for debug mode=======
+#==========================================
 def startPage(FN_FDS=None, FN_EVAC=None):
 
     #FN_FDS=None  #'1'
@@ -288,14 +290,14 @@ def startPage(FN_FDS=None, FN_EVAC=None):
     # added "self.rootWindow" by Hiroki Sayama 10/09/2018
     frameRun = Frame(window)
     frameSettings = Frame(window)
-    frameParameters = Frame(window)
-    frameInformation = Frame(window)
+    #frameParameters = Frame(window)
+    #frameInformation = Frame(window)
 
 
     notebook.add(frameRun,text="Run")
     notebook.add(frameSettings,text="Settings")
-    notebook.add(frameParameters,text="Parameters")
-    notebook.add(frameInformation,text="Info")
+    #notebook.add(frameParameters,text="Parameters")
+    #notebook.add(frameInformation,text="Info")
     notebook.pack(expand=NO, fill=BOTH, padx=5, pady=5 ,side=TOP)
     # self.notebook.grid(row=0, column=0, padx=5, pady=5, sticky='nswe')   # commented out by toshi on 2016-06-21(Tue) 18:31:02
     
@@ -324,7 +326,7 @@ def startPage(FN_FDS=None, FN_EVAC=None):
             lb1.config(text = "The input csv file selected: "+str(FN[index])+"\n")
         #elif index ==2:
         #    lb2.config(text = "The exit data file selected: "+str(FN[index])+"\n")
-        print 'fname', FN[index]
+        print('fname', FN[index])
 
     #lb = tk.Label(window,text = '')
     #lb.pack()
@@ -364,12 +366,15 @@ def startPage(FN_FDS=None, FN_EVAC=None):
     buttonStart = Button(frameRun, text='start now: read in data', command=window.quit).pack()
     #buttonStart.place(x=5,y=220)
     #print FN_Agents, FN_Walls, FN_Doors
-    print FN[0], FN[1] #, FN[2]
+
+    print("As below is the input files you update now!")
+    #print FN[0]
+    #print FN[1] #, FN[2]
 
     window.mainloop()
 
     #print FN['Agents'], FN['Walls'], FN['Doors']
-    print FN[0], FN[1] #, FN[2]
+    #print FN[0], FN[1] #, FN[2]
     #print TestV
 
     #FN_FDS = FN[0]
