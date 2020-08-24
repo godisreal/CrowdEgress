@@ -15,6 +15,13 @@ The program mainly consists of four components: User Interface, Simulation Core,
 **Visualization Tool**:  The visulization component is packed in draw_func.py and pygame (SDL for Python) is used to visualize the simulation result.  We may develop another offline visualization tool such that users can first run the simulation and get the output data, and then visualize the output data.  
 
 
+When GUI screen is activated, please select the input files for the simulation.  Users can optionally use .fds file to create the compartment geometry, and the pedestrian features are described in .csv file.  If .fds file is omitted, the compartment geometry is described in .csv file.  Please take a look at the examples for details.  
+
+When pygame screen is activated, press certain keys to adjust the display features:
+Use pageup/pagedown to zoom in or zoom out the entities in screen
+Use space key to pause the simulation
+Use arrows to move the entities vertically or horizonally in screen.  
+
 
 ### Collaborators are needed and your ideas are much valued!  
 
