@@ -775,7 +775,7 @@ class person(object):
         for aj in self.others:
 
             #idaj=aj.ID
-            print 'others ID', aj.ID
+            print ('others ID', aj.ID)
                         
             dij = np.linalg.norm(self.pos - aj.pos)
              

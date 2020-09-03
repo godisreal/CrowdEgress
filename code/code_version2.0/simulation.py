@@ -1,4 +1,5 @@
 
+
 import os, sys
 from random import randint, choice, normalvariate
 from math import sin, cos, radians
@@ -13,7 +14,8 @@ from obst import *
 from math_func import *
 from data_func import *
 from draw_func import *
-from startPage import*
+from ui import*
+
 
 class simulation(object):
 
@@ -60,7 +62,7 @@ class simulation(object):
         self.t_pause=0.0
 
         # A Logical Varible to Control if TestGeom Goes to Simulation
-        self.continueToSimu=True
+        self.continueToSimu=False
         
         self.DT_OtherList = 3.0
         self.tt_OtherList = 0.0
@@ -76,7 +78,7 @@ class simulation(object):
         self.TPREMODE = 3        ### Instructinn: 1 -- DesiredV = 0  2 -- Motive Force =0: 
         self.TESTFORCE = True
         self.GROUPBEHAVIOR = False     # Enable the group social force
-        self.TESTMODE = False #True
+        self.DEBUG = False #True
         #self.GUI = True
         #self.STARTPAGE = False
         #self.COHESION = False
@@ -107,11 +109,11 @@ class simulation(object):
         #self.t_pause = 0.0
         
 
-    def select_file(self, FN_EVAC=None, FN_FDS=None, mode='GUI'):
+    def select_file(self, FN_EVAC=None, FN_FDS=None, mode='smallGUI'):
 		
         FN_Temp = self.outDataName + ".txt"
         
-        if os.path.exists(FN_Temp) and self.FN_EVAC is None and mode=='GUI':
+        if os.path.exists(FN_Temp) and FN_EVAC is None and FN_FDS is None and mode=="smallGUI":
             for line in open(FN_Temp, "r"):
                 if re.match('FN_FDS', line):
                     temp =  line.split('=')
@@ -121,14 +123,14 @@ class simulation(object):
                     FN_EVAC = temp[1].strip()
 
         # This is used for debug mode
-        if self.TESTMODE: 
+        if self.DEBUG: #and sys.version_info[0] == 2: 
             print(FN_FDS)
             print(FN_EVAC)
             print("As above is the input file selected in your last run!")
             raw_input('Input File Selection from Last Run.')
 
         # This is a simple user interface to select input files
-        if mode=="GUI":
+        if mode=="smallGUI":
             [FN_FDS, FN_EVAC] = startPage(FN_FDS, FN_EVAC)
 
         # Update the data in simulation class
@@ -206,10 +208,11 @@ class simulation(object):
             person.BFactor_Init = readFloatArray(tableFeatures, len(self.agents), len(self.agents))
             #BFactor_Init = readCSV("B_Data2018.csv", 'float')
 
-            #print >> f, "Wall Matrix\n", walls, "\n"
-            print >> f, "D Matrix\n", person.DFactor_Init, "\n"
-            print >> f, "A Matrix\n", person.AFactor_Init, "\n"
-            print >> f, "B Matrix\n", person.BFactor_Init, "\n"
+            if self.DEBUG and sys.version_info[0] == 2: 
+                #print >> f, "Wall Matrix\n", walls, "\n"
+                print >> f, "D Matrix\n", person.DFactor_Init, "\n"
+                print >> f, "A Matrix\n", person.AFactor_Init, "\n"
+                print >> f, "B Matrix\n", person.BFactor_Init, "\n"
 
             if np.shape(person.DFactor_Init)!= (self.num_agents, self.num_agents):
                 print('\nError on input data: DFactor_Init\n')
@@ -218,14 +221,14 @@ class simulation(object):
                 self.inputDataCorrect = False
                 
             if np.shape(person.AFactor_Init)!= (self.num_agents, self.num_agents): 
-                print '\nError on input data: AFactor_Init\n'
-                print >>f, '\nError on input data: AFactor_Init\n'
+                print('\nError on input data: AFactor_Init\n')
+                f.write('\nError on input data: AFactor_Init\n')
                 raw_input('Error on input data: AFactor_Init!  Please check')
                 self.inputDataCorrect = False
 
             if np.shape(person.BFactor_Init)!= (self.num_agents, self.num_agents): 
-                print '\nError on input data: BFactor_Init\n'
-                print >>f, '\nError on input data: BFactor_Init\n'
+                print('\nError on input data: BFactor_Init\n')
+                f.write('\nError on input data: BFactor_Init\n')
                 raw_input('Error on input data: BFactor_Init!  Please check')
                 self.inputDataCorrect = False
             
@@ -248,7 +251,7 @@ class simulation(object):
 
         person.wall_flag = np.zeros((self.num_agents, self.num_agents))
         person.see_flag = np.zeros((self.num_agents, self.num_agents))
-        
+
         if self.inputDataCorrect:
             print("Input data format is correct!")
         else:
@@ -262,7 +265,7 @@ class simulation(object):
         print('number of exits: '+str(self.num_exits))
         print('\n')
 
-        if self.TESTMODE:
+        if self.DEBUG:
             print("Now you can check if the input data is correct or not!")
             print("If everything is OK, please press ENTER to continue!")
             UserInput = raw_input('Check Input Data Here!')
@@ -272,38 +275,72 @@ class simulation(object):
         # Return a boolean variable to check if the input data format is correct or not
 
 
-
     def preprocessGeom(self):
+        
         #===================================================
         #==========Preprocessing the Geom Data =====================
         #========= Find Relationship of Door and Wall ==================
+
+        FN_Temp = self.outDataName + ".txt"
+        f = open(FN_Temp, "a+")
+        if self.DEBUG:
+            f.write("\n========================================\n")
+            f.write("Preprocessing the Geom Data"+'\n')
+            f.write("=========================================\n")
+        
         for wall in self.walls:
             wall.findAttachedDoors(self.doors)
-            print "wall #No:", wall.id, 'isSingle:', wall.isSingleWall
+            print("wall #No:", wall.id, 'isSingle:', wall.isSingleWall)
+            if self.DEBUG:
+                f.write("wall #No:" + str(wall.id) + 'isSingle:' + str(wall.isSingleWall)+'\n')
             for door in wall.attachedDoors:
-                print "attached door #No. :", door.id
+                print("attached door #No. :", door.id)
+                if self.DEBUG:
+                    f.write("attached door #No. :" + str(door.id)+'\n')
 
         for door in self.doors:
             door.findAttachedWalls(self.walls)
-            print "door #No:", door.id, 'isSingle:', door.isSingleDoor
+            print("door #No:", door.id, 'isSingle:', door.isSingleDoor)
+            if self.DEBUG:
+                f.write("door #No:" + str(door.id) + 'isSingle:' + str(door.isSingleDoor)+'\n')
             for wall in door.attachedWalls:
-                print "attached wall #No. :", wall.id
+                print("attached wall #No. :", wall.id)
+                if self.DEBUG:
+                    f.write("attached wall #No. :" + str(wall.id)+'\n')
 
+        if self.DEBUG:
+            f.write('\n\n')
+        f.close()
 
 
     def preprocessAgent(self):
-        # Assign destinations of agents
+
+        #=============================================
+        # =========Assign destinations of agents================
         # This is not yet used in the door selection routine
-        for idai,ai in enumerate(self.agents):
+
+        FN_Temp = self.outDataName + ".txt"
+        f = open(FN_Temp, "a+")
+        if self.DEBUG:
+            f.write("\n========================================\n")
+            f.write("Assign destinations of agents"+'\n')
+            f.write("=========================================\n")
+        
+        for idai, ai in enumerate(self.agents):
             temp = np.random.multinomial(1, self.agent2exit[ai.ID, :], size=1)
-            print self.agent2exit[ai.ID, :]
-            print temp
+            print(self.agent2exit[ai.ID, :])
+            print(temp)
             exit_index = np.argmax(temp)
             ai.dest = self.exits[exit_index].pos
             ai.pathMap = self.exit2door[exit_index]
             ai.exitInMind = self.exits[exit_index]   # This is the exit in one's original mind
-            print 'ai:', ai.ID, '--- exit:', exit_index
-            
+            print('ai:', ai.ID, '--- exit:', exit_index)
+            if self.DEBUG:
+                f.write('ai:' + str(ai.ID) + '--- exit:' + str(exit_index) +'\n')
+
+        if self.DEBUG:
+            f.write('\n\n')
+        f.close()
 
 
     def simulation_step(self):
@@ -464,15 +501,15 @@ class simulation(object):
                     # Loop of idaj,aj ends here
                     ###########################
                 
-                print '=== ai id ===::', idai
-                print 'ai.others len:', len(ai.others)
+                print ('=== ai id ===::', idai)
+                print ('ai.others len:', len(ai.others))
                 self.tt_OtherList = self.t_sim + self.DT_OtherList
 
             
             for aj in ai.others:
 
                 idaj=aj.ID
-                print 'others ID', idaj
+                print ('others ID', idaj)
                             
                 dij = np.linalg.norm(ai.pos - aj.pos)
                  
@@ -595,15 +632,15 @@ class simulation(object):
                     ai.desiredV = ai.diretion*ai.desiredSpeed
                     ai.tau = random.uniform(0.6,1.6) #ai.tpre_tau
                     motiveForce = ai.adaptVel()
-                    print 'ai:', ai.ID, '&&& In Tpre Stage:'
+                    print ('ai:', ai.ID, '&&& In Tpre Stage:')
                     print ('goSomeone:', goSomeone.ID)
                 else:
                     ai.desiredV = ai.direction*0.0
                     ai.desiredSpeed = 0.0
                     ai.tau = random.uniform(2.0,10.0) #ai.tpre_tau
                     motiveForce = ai.adaptVel()
-                    print  'ai:', ai.ID, '&&& In Tpre Stage:'
-                    print 'goSomeone is None.'
+                    print  ('ai:', ai.ID, '&&& In Tpre Stage:')
+                    print ('goSomeone is None.')
 
             #temp = 0.0
             #maxWallForce = 0.0
@@ -635,7 +672,7 @@ class simulation(object):
                    
                 # Start to search visible doors
                 ai.targetDoors=ai.findVisibleTarget(self.walls, self.doors)
-                print 'ai:', ai.ID, 'Length of targetDoors:', len(ai.targetDoors)
+                print ('ai:', ai.ID, 'Length of targetDoors:', len(ai.targetDoors))
                 
                 # Start to search visible exits
                 ai.targetExits=ai.findVisibleTarget(self.walls, self.exits)
@@ -646,10 +683,10 @@ class simulation(object):
                 goDoor = ai.selectTarget(self.exit2door)
                 #goDoor.computePos()
                 if goDoor==None:
-                    print 'goDoor is None.'
+                    print ('goDoor is None.')
                     doorInter = np.array([0.0, 0.0])
                 else:
-                    print 'go Door:', goDoor.id, goDoor.pos
+                    print ('go Door:', goDoor.id, goDoor.pos)
                     doorInter = ai.doorForce(goDoor, 'edge', 0.3)
                     
                 #dir1=goDoor.direction()
@@ -711,10 +748,10 @@ class simulation(object):
                     if isnan(closeWall.pointer1[0]) or isnan(closeWall.pointer1[1]) or ai.aType=='search':
                         pass
                         if diw==None:
-                            print 'diw==None'
-                            print 'ai:', idai
-                            print 'closeWall:', closeWall.id
-                            print '################################'
+                            print ('diw==None')
+                            print ('ai:', idai)
+                            print ('closeWall:', closeWall.id)
+                            print ('################################')
                         
                         ai.direction = ai.direction + wallDirection*20/diw
                         ai.direction = normalize(ai.direction)
@@ -764,12 +801,12 @@ class simulation(object):
             ai.selfrepF = selfRepulsion
 
             if self.TESTFORCE:
-                print '@motiveForce:', np.linalg.norm(motiveForce), motiveForce
-                print '@peopleInter:', np.linalg.norm(peopleInter), peopleInter
-                print '@wallInter:', np.linalg.norm(wallInter), wallInter
-                print '@doorInter:', np.linalg.norm(doorInter), doorInter
-                print '@diss:', np.linalg.norm(ai.diss*ai.actualV), ai.diss*ai.actualV
-                print '@selfRepulsion:', np.linalg.norm(selfRepulsion), selfRepulsion
+                print ('@motiveForce:', np.linalg.norm(motiveForce), motiveForce)
+                print ('@peopleInter:', np.linalg.norm(peopleInter), peopleInter)
+                print ('@wallInter:', np.linalg.norm(wallInter), wallInter)
+                print ('@doorInter:', np.linalg.norm(doorInter), doorInter)
+                print ('@diss:', np.linalg.norm(ai.diss*ai.actualV), ai.diss*ai.actualV)
+                print ('@selfRepulsion:', np.linalg.norm(selfRepulsion), selfRepulsion)
             
             ###########################################
             # Solution to Overspeed: Agents will not move too fast
@@ -791,12 +828,12 @@ class simulation(object):
             ## Output time when agents reach the safety
             #if TIMECOUNT and (ai.pos[0] >= 35.0) and (ai.Goal == 0):
             if self.TIMECOUNT and (np.linalg.norm(ai.pos-ai.dest)<=0.2) and (ai.Goal == 0):
-                print('Reaching the goal:')
+                print ('Reaching the goal:')
                 ai.inComp = 0
                 ai.Goal = 1
                 ai.timeOut = pygame.time.get_ticks()
                 #ai.timeOut = clock.get_time()/1000.0
-                print 'Time to Reach the Goal:', ai.timeOut
+                print ('Time to Reach the Goal:', ai.timeOut)
                 #print >> f, 'Time to Reach the Goal:', ai.timeOut
             
             ###########################################
@@ -826,6 +863,10 @@ if __name__=="__main__":
     myTest.select_file()
     #myTest.read_data()
     show_geom(myTest)
-    show_simu(myTest)
+    myTest.preprocessGeom()
+    myTest.preprocessAgent()
+    
+    if myTest.continueToSimu:
+        show_simu(myTest)
     #myTest.quit()
 

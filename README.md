@@ -1,19 +1,19 @@
 # CrowdEgress
 
-The source code was intially written in Python 2.7, and I am modifying the code slightly for python3 (i.e, print function). Pygame and Numpy are required to run the code. A simple user interface is under development in version 2.0.  
+The source code was intially written in Python 2.7, and I am modifying the code slightly for python3. Pygame and Numpy are required to run the code. A simple user interface is under development in version 2.0 by using Tkinter.  
 
 How-To(Version 2.0): python ui.py --> user interface (GUI) --> select input files --> visulize geometry settings --> start simulation
 
-When GUI screen is activated, please select the input files for the simulation.  Users can optionally use .fds file to create the compartment geometry, and the pedestrian features are described in .csv file.  If .fds file is omitted, the compartment geometry is described in .csv file.  Please take a look at the examples for details.  
+When GUI screen is activated, please select the input files for the simulation.  Users can optionally use .fds file to create the compartment geometry, and the pedestrian features are described in .csv file.  If both .csv and .fds files are presented, the compartment structure will be created by using .fds file.  If .fds file is omitted, the compartment geometry is described in .csv file.  Please take a look at the examples for details.  
 
-When pygame screen is activated, press certain keys to adjust the display features:
+When pygame screen is activated, press certain keys to adjust the display features:  
 Use pageup/pagedown to zoom in/zoom out the entities.  
 Use space key to pause the simulation.  
 Use arrows to move the entities vertically or horizonally in screen.  
 
 The program mainly consists of four components: User Interface, Simulation Core, Data Tool, Visualization Tool.  
 
-**User Interface**: The user interface is written in tkinter in ui.py.  A user run ui.py to enable a graphic user interface (GUI) where one selects the input files, initialize compartment geometry, and configure or start a simulation.  Currently there is a simple version of GUI and it needs to be improved in several aspects.  
+**User Interface**: The user interface is written in tkinter in ui.py.  A user run ui.py to enable a graphic user interface (GUI) where one selects the input files, initialize compartment geometry, and configure or start a simulation.  Currently there is a simple version of GUI and it needs to be improved in several aspects.  If you find any problems when using the user interface, please send me a message or direct start an issue here.  
 
 **Simulation Core**: The multi-agent simulation is implemented in simulation.py.  The component is packed in a class called simulation class, and it computes interaction of four types of entities: agents, walls, doors and exits.  This agent-based model is an extension of the traditional social force model by Helbing, Farkas, Vicsek and Molnár.  The model aims at investigating protypes of pedestrian behavior in crowd evacuation.  
 
@@ -23,7 +23,6 @@ The program mainly consists of four components: User Interface, Simulation Core,
 
 
 ### Collaborators are needed and your ideas are much valued!  
-
 
 If you are a student or researcher who want to use this python package to test your own model or algorithm, please feel free to ask your question either by email or issue trackers, and I am glad to guide you to use this package!  
 
