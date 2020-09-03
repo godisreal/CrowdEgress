@@ -11,12 +11,19 @@ if len(argv)==2:
     file1 = argv[1]
     if file1 == '-help':
         print ('Show help info in readme.txt!')
+        if os.path.exists("readme.txt"):
+            for line in open("readme.txt"):
+                print (line)
+        else:
+            print ("The file readme.txt is not in this folder.")
+            print ("Please search readme.txt in other folders and copy it to the current folder!")
         exit(-1)
     elif file1:
         if os.path.exists(file1):
             print ('load evac .csv file ',file1)
         else:
             print ("Input file %s does not exit!" %file1)
+            print ("Or please use parameter -help to show readme.txt!  Thanks for using this program!")
             exit(-1)
 
     myTest = simulation()
@@ -35,12 +42,19 @@ if len(argv)==3:
 
     if file1 == '-help':
         print ('Show help info in readme.txt!')
+        if os.path.exists("readme.txt"):
+            for line in open("readme.txt"):
+                print (line)
+        else:
+            print ("The file readme.txt is not in this folder.")
+            print ("Please search readme.txt in other folders and copy it to the current folder!")
         exit(-1)
     elif file1:
         if os.path.exists(file1):
             print ('load evac .csv file ',file1)
         else:
             print ("Input file %s does not exit!" %file1)
+            print ("Or please use parameter -help to show readme.txt!  Thanks for using this program!")
             exit(-1)
 
     if file2:

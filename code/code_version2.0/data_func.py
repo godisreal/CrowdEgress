@@ -251,22 +251,42 @@ def readExits(FileName, marginTitle=1, ini=1):
     return exits
 
 
+def readCHID(FileName):
+
+    findHEAD=False
+    for line in open(FileName):
+        if re.match('&HEAD', line):
+            findHEAD=True
+        if  findHEAD:
+            if re.search('CHID', line):
+                temp1=line.split('CHID')
+                line1=temp1[1]
+                temp2 =  line1.split('\'')
+                keyInfo = temp2[1]
+                return keyInfo
+
+
 def readOBST(FileName, outputFile=None, ShowData=False):
     #fo = open("OBSTout.txt", "w+")
     obstFeatures = []
-    #for line in open("Ex2017.fds"):
+    findOBST=False
     for line in open(FileName):
         if re.match('&OBST', line):
-
-            temp =  line.split('=')
-            dataXYZ = temp[1]
-            coords = dataXYZ.split(',')
-            obstFeature = []
-            obstFeature.append(float(coords[0]))
-            obstFeature.append(float(coords[2]))
-            obstFeature.append(float(coords[1]))
-            obstFeature.append(float(coords[3]))
-            obstFeatures.append(obstFeature)
+            findOBST=True
+        if  findOBST:
+            if re.search('XB', line):
+                temp1=line.split('XB')
+                line1=temp1[1]
+                temp =  line1.split('=')
+                dataXYZ = temp[1]
+                coords = dataXYZ.split(',')
+                obstFeature = []
+                obstFeature.append(float(coords[0]))
+                obstFeature.append(float(coords[2]))
+                obstFeature.append(float(coords[1]))
+                obstFeature.append(float(coords[3]))
+                obstFeatures.append(obstFeature)
+                findOBST=False
 
             if ShowData:
                 print (line, '\n', obstFeature)
@@ -306,24 +326,32 @@ def readOBST(FileName, outputFile=None, ShowData=False):
 def readHOLE(FileName, outputFile=None, ShowData=False):
     #fo = open("HOLEout.txt", "w+")
     holeFeatures = []
-    #for line in open("Ex2017.fds"):
+    
+    findHOLE=False
     for line in open(FileName):
         if re.match('&HOLE', line):
+            findHOLE=True
+            
+        if  findHOLE:
+            if re.search('XB', line):
+                temp1=line.split('XB')
+                line1=temp1[1]
+                temp =  line1.split('=')
+                dataXYZ = temp[1]
                     
-            temp =  line.split('=')
-            dataXYZ = temp[1]
-            coords = dataXYZ.split(',')
-            holeFeature = []
-            holeFeature.append(float(coords[0]))
-            holeFeature.append(float(coords[2]))
-            holeFeature.append(float(coords[1]))
-            holeFeature.append(float(coords[3]))
-            holeFeatures.append(holeFeature)
+                coords = dataXYZ.split(',')
+                holeFeature = []
+                holeFeature.append(float(coords[0]))
+                holeFeature.append(float(coords[2]))
+                holeFeature.append(float(coords[1]))
+                holeFeature.append(float(coords[3]))
+                holeFeatures.append(holeFeature)
+                findHOLE=False
 
-            if ShowData:
-                print (line, '\n', holeFeature)
-                #print >>fo, line
-                #print >>fo, holeFeature
+                if ShowData:
+                    print (line, '\n', holeFeature)
+                    #print >>fo, line
+                    #print >>fo, holeFeature
 
     #print >>fo, 'test\n'
     #print >>fo, 'HOLE Features\n'
@@ -359,24 +387,29 @@ def readHOLE(FileName, outputFile=None, ShowData=False):
 def readEXIT(FileName, outputFile=None, ShowData=False):
     #fo = open("EXITout.txt", "w+")
     exitFeatures = []
-    #for line in open("Ex2017.fds"):
+    findEXIT=False
     for line in open(FileName):
         if re.match('&EXIT', line):
-        
-            temp =  line.split('=')
-            dataXYZ = temp[1]
-            coords = dataXYZ.split(',')
-            exitFeature = []
-            exitFeature.append(float(coords[0]))
-            exitFeature.append(float(coords[2]))
-            exitFeature.append(float(coords[1]))
-            exitFeature.append(float(coords[3]))
-            exitFeatures.append(exitFeature)
+            findEXIT=True
+        if findEXIT:
+            if re.search('XB', line):
+                temp1=line.split('XB')
+                line1=temp1[1]
+                temp =  line1.split('=')
+                dataXYZ = temp[1]
+                coords = dataXYZ.split(',')
+                exitFeature = []
+                exitFeature.append(float(coords[0]))
+                exitFeature.append(float(coords[2]))
+                exitFeature.append(float(coords[1]))
+                exitFeature.append(float(coords[3]))
+                exitFeatures.append(exitFeature)
+                findEXIT=False
 
-            if ShowData:
-                print (line, '\n', exitFeature)
-                #print >>fo, line
-                #print >>fo, exitFeature
+                if ShowData:
+                    print (line, '\n', exitFeature)
+                    #print >>fo, line
+                    #print >>fo, exitFeature
 
     #print >>fo, 'test\n'
     #print >>fo, 'EXIT Features\n'
