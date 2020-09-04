@@ -1,0 +1,40 @@
+\documentclass{article}
+\begin{document}
+
+\title{User Guide of CrowdEgress: A Simulation Tool for Multi-Agent Model of Crowd Evacuation}
+
+\maketitle
+
+\section{An Introduction}
+
+The program mainly consists of four component: User Interface, Simulation Core, Data Tool, Visualization Tool
+
+\textbf{User Interface}: The user interface is written in tkinter in ui.py.  Users may call function startPage() from simulation routine to set up the input files.  An alternative method is using ui.py to enable a graphic user interface (GUI) and start a simulation there.  Currently there is a simple version of GUI and it needs to be improved in several aspects.
+
+\textbf{Simulation Core}: The multi-agent simulation is implemented as simulation.py.  The component is packed in a class called simulation class, and it computes interaction of four types of entities: agents, walls, doors and exits.  The agent model is described in agent.py, while walls, doors and exits are coded in obst.py.  The core algorithm is still being studied and developed.  This is an interesting study topic, which refers to Newton physics, complex systems and computer science.  Your comments or contribution are much welcome.
+
+\textbf{Data Tool}: This component reads in data from input files, and write data to output files.  The input data is written by users in .csv files.  Agents and exits must be specified in .csv file while walls and doors can be either in .csv file or read in from standard .fds input file to create major compartment geometry.  In the future We plan to use a subroutine in FDS+Evac to output the agent movement data so that the agent movement can also be visualized by smokeview in offline mode.
+
+\textbf{Visualization Tool}: The visulization component is packed in draw\_func.py and currently pygame is used to visualize the simulation result online.  We may develop another offline visualization tool together with smokeview such that users first run the simulation and get the output data, and then visualize the output data.  Currently the visualization functions are packed up as an independent module in draw\_func.py.  If any users are interested, please feel free to extend the module or try other graphic library to wrtie a visulization component.
+
+
+\section{About Simulation Model}
+
+In the simulation core there are four types of entities: agents, walls, doors and exits.
+
+\textbf{Exits}: Exits are a special types of doors which finally evacuate agents to the safety.  Thus they may be considered as safety areas, and computation of an agent stops when the agent reaches the exits.  Exits must be specified in .csv file.  In the program exits are only defined as rectangular areas.
+
+\textbf{Doors}: Doors are passageways that direct agents toward certain areas, and they may be placed over a wall so that agents can go through the wall by the door.  Doors can also be placed as a waypoint if not attached to any walls, and they can be considered as arrows or markers on the ground that guide agent movement.  In brief doors affect agent way-finding activities and they help agents to form a roadmap to exits.  In current program doors are only specified as rectangular areas.
+
+\textbf{Walls}: Walls are obstruction in a compartment geometry that confine agent movement, and they set up the boundary of a room or certain space.  Just like walls in normal buildings, walls may be labeled with arrows that direct agent to move toward certain directions.  In our program wall are either lines or rectangular areas.  If any users are interested, please feel free to extend the wall types to circular or polyangular areas.
+
+\textbf{Agents}: Finally and most importantly, agents are the core entity in computation.  They interact with each other to form collective behavior of crowd.  They also interact with above three types of entities to form egress motion toward exits.  The resulting program is essentially a multi-agent simulation of pedestrian crowd.  Each agent is modeled by extending traditional social force model.  The model is further advanced by integrating several features including pre-evacuation behavior, group behavior, way-finding behavior and so forth.
+
+
+\textbf{In Pygame Screen}: When pygame screen is displayed, press certain keys to adjust the display features.  
+Use pageup/pagedown to zoom in or zoom out the entities in screen
+Use space key to pause the simulation
+Use arrows to move the entities vertically or horizonally in screen.
+Use 1/2/3 in number panel (Right side in the keyboard) to display the door or exit data on the screen.   
+
+\end{document} 
