@@ -163,6 +163,20 @@ def readAgents(FileName, marginTitle=1, ini=1):
     return agents
 
 
+# This function addAgent() is actually not that meaningful.  We just leave it here for future optional development.  
+# Because many agent features cannot be added by using the graphic user interface.
+# Such as group features and door selection features.
+def addAgent(agents, x_pos, y_pos):
+    num = len(agents)
+    agent = person()
+    agent.pos = np.array([float(x_pos), float(y_pos)])
+    agent.ID = int(num)
+    agent.inComp = int(1)
+
+    # add agent into the list of agents
+    agents.append(agent)
+    
+
 def readWalls(FileName, marginTitle=1, ini=1):
     #obstFeatures = readCSV(FileName, "string")
     #[Num_Obsts, Num_Features] = np.shape(obstFeatures)
@@ -191,6 +205,33 @@ def readWalls(FileName, marginTitle=1, ini=1):
     return walls
 
 
+#This function addWall() is created for users to add wall in testGeom()
+def addWall(walls, startPt, endPt, mode='line'):
+    num = len(walls)
+    wall = obst()
+    
+    if mode == 'line':
+        wall.params[0]= float(startPt[0])
+        wall.params[1]= float(startPt[1])
+        wall.params[2]= float(endPt[0])
+        wall.params[3]= float(endPt[1])
+    if mode == 'rect':
+        wall.params[0]= float(startPt[0])
+        wall.params[1]= float(startPt[1])
+        wall.params[2]= float(endPt[0])
+        wall.params[3]= float(endPt[1])
+
+    wall.mode = mode
+    wall.id = int(num)
+    wall.inComp = int(1)
+
+    # The wall arrow is to be tested in simulation.  
+    wall.arrow = normalize(endPt - startPt)
+
+    # Add wall into the list of walls
+    walls.append(wall)
+    
+
 def readDoors(FileName, marginTitle=1, ini=1):
     #doorFeatures = readCSV(FileName, "string")
     #[Num_Doors, Num_Features] = np.shape(doorFeatures)
@@ -217,6 +258,30 @@ def readDoors(FileName, marginTitle=1, ini=1):
         
     return doors
 
+
+#This function addDoor() is created for users to add door in testGeom()
+def addDoor(doors, startPt, endPt, mode='rect'):
+    num = len(doors)
+    door = passage()
+    
+    if mode == 'rect':
+        door.params[0]= float(startPt[0])
+        door.params[1]= float(startPt[1])
+        door.params[2]= float(endPt[0])
+        door.params[3]= float(endPt[1])
+
+    # The wall arrow is to be tested in simulation.  
+    #door.arrow = normalize(endPt - startPt)
+    #door.mode = mode   # door has no attribute of "mode"
+
+    door.id = int(num)
+    door.inComp = int(1)
+    door.exitSign = int(0)
+    door.pos = (np.array([door.params[0], door.params[1]]) + np.array([door.params[2], door.params[3]]))*0.5
+    
+    # Add door into the list of doors
+    doors.append(door)
+    
 
 #[Num_Doors, Num_DoorFeatures] = np.shape(doorFeatures)
 #if np.shape(agent2doors)[0]!= Num_Agents or np.shape(agent2doors)[1]!= Num_Doors:
@@ -451,6 +516,16 @@ def updateDoorData(doors, outputFile):
             csv_writer.writerow(['--', str(door.params[0]), str(door.params[1]), str(door.params[2]), str(door.params[3]), str(door.arrow), str(door.id), str(door.inComp), str(door.exitSign)])
             index_temp=index_temp+1
 
+
+def updateWallData(walls, outputFile):
+    with open(outputFile, mode='wb+') as wall_test_file:
+        csv_writer = csv.writer(wall_test_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+        csv_writer.writerow(['&Wall', '0/startX', '1/startY', '2/endX', '3/endY', '4/mode', '5/id', '6/inComp', '7/arrow'])
+        index_temp=0
+        for wall in walls:
+            csv_writer.writerow(['--', str(wall.params[0]), str(wall.params[1]), str(wall.params[2]), str(wall.params[3]), str(wall.mode), str(wall.id), str(wall.inComp), str(wall.arrow)])
+            index_temp=index_temp+1
+            
 
 def updateExit2Doors(exit2doors, fileName):
     (I, J) = np.shape(exit2doors)

@@ -350,6 +350,7 @@ def show_geom(simu):
 
     menu_01 = False
     menu_02 = False
+    menu_03 = False
     menu_left = False
     change_arrows = False
     draw_state = False
@@ -387,21 +388,26 @@ def show_geom(simu):
                 else:
                      #menu_01 =False
                      if  menu_01:
-                          if mouseX<120 and mouseX>0 and mouseY<40 and mouseY>23:
+                         if mouseX<120 and mouseX>0 and mouseY<40 and mouseY>23:
                              # dump door direction data
-                             print ("Output door direction data into doorDataRev.csv! Please check!")
+                             print ("Output door data into doorDataRev.csv! Please check!")
                              updateDoorData(simu.doors, 'doorDataRev.csv')
                              menu_01 =False
-                          elif mouseX<120 and mouseX>0 and mouseY<60 and mouseY>43:
+                         elif mouseX<120 and mouseX>0 and mouseY<60 and mouseY>43:
                              # dump exit2door data
                              print ("Output exit2door data into Exit2DoorRev.csv! Please check!")
                              updateExit2Doors(simu.exit2door, 'Exit2DoorRev.csv')
                              menu_01 =False
-                          #elif mouseX<120 and mouseX>0 and mouseY<80 and mouseY>63:
-                             # To add something else in future development
+                         elif mouseX<120 and mouseX>0 and mouseY<80 and mouseY>63:
+                             # dump wall data
+                             print ("Output wall data into wallDataRev.csv! Please check!")
+                             updateWallData(simu.walls, 'wallDataRev.csv')
+                             menu_01 =False
+                          # elif mouseX<120 and mouseX>0 and mouseY<100 and mouseY>83:
+                          # To add something else in future development
                           #   simu.SHOWEXITDATA= not simu.SHOWEXITDATA
                           #   menu_01 =False
-                          else:
+                         else:
                              menu_01 =False
 
                 ### Menu No 2: Show Data ###
@@ -503,6 +509,7 @@ def show_geom(simu):
                 elif event.key == pygame.K_KP3:
                     simu.SHOWEXITDATA = not simu.SHOWEXITDATA
                 elif event.key == pygame.K_SPACE:
+                    updateWallData(simu.walls, 'wallDataRev.csv')
                     updateDoorData(simu.doors, 'doorDataRev.csv')
                     updateExit2Doors(simu.exit2door, 'Exit2DoorRev.csv')
                 elif event.key == pygame.K_PAGEUP:
@@ -592,7 +599,7 @@ def show_geom(simu):
             screen.blit(text_surface, [0,23])#+[0.0,20.0]) #+xyShift)
             text_surface=myfont.render('output_exit2door', True, white, tan)
             screen.blit(text_surface, [0,43])#+[0.0,40.0]) #+xyShift)
-            text_surface=myfont.render('output_agents', True, white, tan)
+            text_surface=myfont.render('output_walls', True, white, tan)
             screen.blit(text_surface, [0,63])#+[0.0,60.0]) #+xyShift)
             #text_surface=myfont.render('show_agentforce', True, red, white)
             #screen.blit(text_surface, mouse_pos+[0.0,60.0]) #+xyShift)
@@ -622,10 +629,14 @@ def show_geom(simu):
         text_surface=myfont.render('ShowData', True, white, tan)
         screen.blit(text_surface, [80,3]) #+xyShift)
 
+        #myfont=pygame.font.SysFont("arial",14)
+        #text_surface=myfont.render('AddData', True, white, tan)
+        #screen.blit(text_surface, [150,3]) #+xyShift)
+
         myfont=pygame.font.SysFont("arial",14)
         text_surface=myfont.render('Simulation!', True, white, tan)
         screen.blit(text_surface, [150,3]) #+xyShift)
-                
+                                
         pygame.display.flip()
         clock.tick(20)
         
