@@ -4,12 +4,14 @@ The source code was intially written in Python 2.7, and I am modifying the code 
 
 How-To(Version 2.0): python ui.py --> user interface (GUI) --> select input files --> visulize geometry settings --> start simulation
 
-When GUI screen is activated, please select the input files for the simulation.  Users can optionally use .fds file to create the compartment geometry, and the pedestrian features are described in .csv file.  If both .csv and .fds files are presented, the compartment structure will be created by using .fds file.  If .fds file is omitted, the compartment geometry is described in .csv file.  Please take a look at the examples for details.  
+(1) When tkinter window (GUI) is activated, please select the input files for simulation.  Choose .csv file for evac input data.  Users can optionally use .fds file to create the compartment geometry, and the pedestrian features must be described in .csv file.  If .fds file is omitted, the compartment geometry should be described in .csv file.  Please take a look at the user guide and examples for details.  
 
-When pygame screen is activated, press certain keys to adjust the display features:  
+(2) When pygame screen is activated, press certain keys to adjust the display features:  
 Use pageup/pagedown to zoom in/zoom out the entities.  
 Use space key to pause the simulation.  
 Use arrows to move the entities vertically or horizonally in screen.  
+
+(3) There are currently two examples in the repo.  Please execute run.bat in the subfolders to run the example.  The examples are run by using non-gui method.  Users can also learn how to write the .csv files from the examples.
 
 The program mainly consists of four components: User Interface, Simulation Core, Data Tool, Visualization Tool.  
 
