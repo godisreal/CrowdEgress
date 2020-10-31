@@ -15,7 +15,7 @@ Use arrows to move the entities vertically or horizonally in screen.
 
 The program mainly consists of four components: User Interface, Simulation Core, Data Tool, Visualization Tool.  
 
-**User Interface**: The user interface is written in tkinter in ui.py.  A user run ui.py to enable a graphic user interface (GUI) where one selects the input files, initialize compartment geometry, and configure or start a simulation.  Currently there is a simple version of GUI and it needs to be improved in several aspects.  If you find any problems when using the user interface, please send me a message or direct start an issue here.  
+**User Interface**: The user interface is written in tkinter in ui.py.  Users run ui.py to enable a graphic user interface (GUI) where one selects the input files, initialize compartment geometry, and configure or start a simulation.  Currently there is a simple version of GUI and it needs to be improved in several aspects.  If you find any problems when using the user interface, please send me a message or direct start an issue here.  
 
 **Simulation Core**: The multi-agent simulation is implemented in simulation.py.  The component is packed in a class called simulation class, and it computes interaction of four types of entities: agents, walls, doors and exits.  This agent-based model is an extension of the traditional social force model by Helbing, Farkas, Vicsek and Molnár.  The model aims at investigating protypes of pedestrian behavior in crowd evacuation.  
 
