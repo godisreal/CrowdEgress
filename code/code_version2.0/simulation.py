@@ -160,8 +160,8 @@ class simulation(object):
         self.num_exits = len(self.exits)
 
         if FN_FDS!="" and FN_FDS!="None" and FN_FDS is not None:
-            self.walls = readOBST(FN_FDS, 'obst_test.csv')
-            self.doors = readHOLE(FN_FDS, 'hole_test.csv')
+            self.walls = readOBST(FN_FDS, '&OBST', 0.0, 3.0, 'obst_test.csv')
+            self.doors = readPATH(FN_FDS, '&HOLE', 0.0, 3.0, 'hole_test.csv')
             #exits = readEXIT(FN_FDS, 'exit_test.csv')
             self.num_walls = len(self.walls)
             self.num_doors = len(self.doors)

@@ -331,20 +331,27 @@ def readCHID(FileName):
                 return keyInfo
 
 
-def readOBST(FileName, outputFile=None, ShowData=False):
+
+def readOBST(FileName, Keyword='&OBST', Zmin=0.0, Zmax=3.0, outputFile=None, ShowData=False):
     #fo = open("OBSTout.txt", "w+")
     obstFeatures = []
     findOBST=False
     for line in open(FileName):
-        if re.match('&OBST', line):
+        if re.match(Keyword, line):
             findOBST=True
         if  findOBST:
             if re.search('XB', line):
                 temp1=line.split('XB')
-                line1=temp1[1]
-                temp =  line1.split('=')
-                dataXYZ = temp[1]
-                coords = dataXYZ.split(',')
+                dataXYZ=temp1[1].strip('= ')
+                #line1=temp1[1].strip('= ')
+                #temp =  line1.split('=')
+                #dataXYZ = temp[1].strip()
+                coords = re.split(r'[\s\,]+', dataXYZ)
+                print(coords)
+                if float(coords[4])<Zmin and float(coords[5])<Zmin:
+                    continue
+                if float(coords[4])>Zmax and float(coords[5])>Zmax:
+                    continue
                 obstFeature = []
                 obstFeature.append(float(coords[0]))
                 obstFeature.append(float(coords[2]))
@@ -388,30 +395,34 @@ def readOBST(FileName, outputFile=None, ShowData=False):
     return walls
 
 
-def readHOLE(FileName, outputFile=None, ShowData=False):
+def readPATH(FileName, Keyword='&HOLE', Zmin=0.0, Zmax=3.0, outputFile=None, ShowData=False):
     #fo = open("HOLEout.txt", "w+")
     holeFeatures = []
     
-    findHOLE=False
+    findPATH=False
     for line in open(FileName):
-        if re.match('&HOLE', line):
-            findHOLE=True
+        if re.match(Keyword, line):
+            findPATH=True
             
-        if  findHOLE:
+        if  findPATH:
             if re.search('XB', line):
                 temp1=line.split('XB')
-                line1=temp1[1]
-                temp =  line1.split('=')
-                dataXYZ = temp[1]
-                    
-                coords = dataXYZ.split(',')
+                dataXYZ=temp1[1].strip('= ')
+                #line1=temp1[1]
+                #temp =  line1.split('=')
+                #dataXYZ = temp[1].strip()    
+                coords = re.split(r'[\s\,]+', dataXYZ)
+                if float(coords[4])<Zmin and float(coords[5])<Zmin:
+                    continue
+                if float(coords[4])>Zmax and float(coords[5])>Zmax:
+                    continue
                 holeFeature = []
                 holeFeature.append(float(coords[0]))
                 holeFeature.append(float(coords[2]))
                 holeFeature.append(float(coords[1]))
                 holeFeature.append(float(coords[3]))
                 holeFeatures.append(holeFeature)
-                findHOLE=False
+                findPATH=False
 
                 if ShowData:
                     print (line, '\n', holeFeature)

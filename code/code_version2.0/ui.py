@@ -7,11 +7,12 @@ from simulation import *
 if sys.version_info[0] == 3: # Python 3
     from tkinter import *
     from tkinter.ttk import Notebook
+    import tkinter.filedialog as tkf
 else:
     # Python 2
     from Tkinter import *
     from ttk import Notebook
-    import tkFileDialog
+    import tkFileDialog as tkf
 
 
 class GUI(object):
@@ -209,7 +210,7 @@ class GUI(object):
         
 
     def selectFDSFile(self):
-        self.fname_FDS = tkFileDialog.askopenfilename(filetypes=(("All files", "*.*"), ("csv files", "*.csv") ))
+        self.fname_FDS = tkf.askopenfilename(filetypes=(("All files", "*.*"), ("csv files", "*.csv") ))
         temp=re.split(r'/', self.fname_FDS)
         #temp=self.fname_FDS.split('/') 
         self.lb0.config(text = "Optional: If .fds is selected, the compartment geometry is created by .fds file. \n"+"The FDS data file selected: "+str(temp[-1])+"\n")
@@ -218,7 +219,7 @@ class GUI(object):
         self.setStatusStr("Simulation not yet started!")
 
     def selectEvacFile(self):
-        self.fname_EVAC = tkFileDialog.askopenfilename(filetypes=(("All files", "*.*"), ("csv files", "*.csv") ))
+        self.fname_EVAC = tkf.askopenfilename(filetypes=(("All files", "*.*"), ("csv files", "*.csv") ))
         temp=self.fname_EVAC.split('/') 
         self.lb1.config(text = "The input .csv file selected: "+str(temp[-1])+"\n")
         self.textInformation.insert(END, 'fname_EVAC:   '+self.fname_EVAC)
@@ -319,7 +320,7 @@ def startPage(FN_FDS=None, FN_EVAC=None):
         #print(tk.messagebox.askokcancel(title='Hi', message='hahahaha')) # return True, False
         #print(tk.messagebox.askyesnocancel(title="Hi", message="haha")) # return, True, False, None
         #from Tkinter.tkFileDialog import askopenfilename
-        FN[index] = tkFileDialog.askopenfilename(filetypes=(("All files", "*.*"), ("csv files", "*.csv") ))
+        FN[index] = tkf.askopenfilename(filetypes=(("All files", "*.*"), ("csv files", "*.csv") ))
         if index ==0:
             lb0.config(text = "Optional: The fds file selected: "+str(FN[index])+"\n")
         elif index ==1:
