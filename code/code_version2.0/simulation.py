@@ -14,7 +14,7 @@ from obst import *
 from math_func import *
 from data_func import *
 from draw_func import *
-from ui import*
+#from ui import*
 
 
 class simulation(object):
@@ -79,6 +79,8 @@ class simulation(object):
         self.TESTFORCE = True
         self.GROUPBEHAVIOR = False     # Enable the group social force
         self.DEBUG = False #True
+        #self.DEBUGFORCE = False
+        #self.DEBUGTAR = False
         #self.GUI = True
         #self.STARTPAGE = False
         #self.COHESION = False
