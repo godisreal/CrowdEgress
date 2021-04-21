@@ -37,8 +37,8 @@ def readCSV_base(fileName):
     print(fileName)
     dataNP = np.array(strData)
     #print (dataNP)
-    print ('np.shape(dataNP)', np.shape(dataNP))
-    print ('\n')
+    #print ('np.shape(dataNP)', np.shape(dataNP))
+    #print ('\n')
 
     #print(strData[1:,1:])
     csvFile.close()
@@ -69,6 +69,7 @@ def getData(fileName, strNote):
     #return data_result[1:, 1:]
     
 
+# This function is not used in this program
 def readCSV(fileName, mode='float'):
     
     # read .csv file
@@ -115,22 +116,23 @@ def readCSV(fileName, mode='float'):
     return matrix[1:, 1:]
     
 
-def readFloatArray(tableFeatures, NRow, NColomn):
+def readFloatArray(tableFeatures, NRow, NColomn, debug=True):
 
     #tableFeatures, LowerIndex, UpperIndex = getData("newDataForm.csv", '&Ped2Exit')
-    print(tableFeatures, '\n')
     matrix = np.zeros((NRow, NColomn))
     for i in range(NRow):
             for j in range(NColomn):
                 matrix[i,j] = float(tableFeatures[i+1][j+1])
-    print('Data in Table:', '\n', matrix)
+    if debug:
+        print(tableFeatures, '\n')
+        print('Data in Table:', '\n', matrix)
     return matrix
 
 
 # The file to record the some output data of the simulation
 # f = open("outData.txt", "w+")
 
-def readAgents(FileName, marginTitle=1, ini=1):
+def readAgents(FileName, debug=True, marginTitle=1, ini=1):
 
     #dataFeatures = readCSV_base(FileName)
     #[Num_Data, Num_Features] = np.shape(dataFeatures)   
@@ -138,8 +140,9 @@ def readAgents(FileName, marginTitle=1, ini=1):
     agentFeatures, lowerIndex, UpperIndex = getData(FileName, '&Ped')
     Num_Agents=len(agentFeatures)-marginTitle
 
-    print ('Number of Agents:', Num_Agents, '\n')
-    print ("Features of Agents\n", agentFeatures, "\n")
+    if debug: 
+        print ('Number of Agents:', Num_Agents, '\n')
+        print ("Features of Agents\n", agentFeatures, "\n")
 
     agents = []
     for agentFeature in agentFeatures[marginTitle:]:
@@ -177,15 +180,16 @@ def addAgent(agents, x_pos, y_pos):
     agents.append(agent)
     
 
-def readWalls(FileName, marginTitle=1, ini=1):
+def readWalls(FileName, debug=True, marginTitle=1, ini=1):
     #obstFeatures = readCSV(FileName, "string")
     #[Num_Obsts, Num_Features] = np.shape(obstFeatures)
 
     obstFeatures, lowerIndex, UpperIndex = getData(FileName, '&Wall')
     Num_Obsts=len(obstFeatures)-marginTitle
-     
-    print ('Number of Walls:', Num_Obsts, '\n')
-    print ("Features of Walls\n", obstFeatures, "\n")
+
+    if debug:
+        print ('Number of Walls:', Num_Obsts, '\n')
+        print ("Features of Walls\n", obstFeatures, "\n")
     
     walls = []
     for obstFeature in obstFeatures[marginTitle:]:
@@ -232,15 +236,16 @@ def addWall(walls, startPt, endPt, mode='line'):
     walls.append(wall)
     
 
-def readDoors(FileName, marginTitle=1, ini=1):
+def readDoors(FileName, debug=True, marginTitle=1, ini=1):
     #doorFeatures = readCSV(FileName, "string")
     #[Num_Doors, Num_Features] = np.shape(doorFeatures)
 
     doorFeatures, lowerIndex, UpperIndex = getData(FileName, '&Door')
     Num_Doors=len(doorFeatures)-marginTitle
 
-    print ('Number of Doors:', Num_Doors, '\n')
-    print ('Features of Doors\n', doorFeatures, "\n")
+    if debug:
+        print ('Number of Doors:', Num_Doors, '\n')
+        print ('Features of Doors\n', doorFeatures, "\n")
     
     doors = []
     for doorFeature in doorFeatures[marginTitle:]:
@@ -289,15 +294,16 @@ def addDoor(doors, startPt, endPt, mode='rect'):
 #    print >>f, '\nError on input data: doors or agent2doors \n'
 
 
-def readExits(FileName, marginTitle=1, ini=1):
+def readExits(FileName, debug=True, marginTitle=1, ini=1):
     #exitFeatures = readCSV(FileName, "string")
     #[Num_Exits, Num_Features] = np.shape(exitFeatures)
 
     exitFeatures, lowerIndex, UpperIndex = getData(FileName, '&Exit')
     Num_Exits=len(exitFeatures)-marginTitle
 
-    print ('Number of Exits:', Num_Exits, '\n')
-    print ("Features of Exits\n", exitFeatures, "\n")
+    if debug: 
+        print ('Number of Exits:', Num_Exits, '\n')
+        print ("Features of Exits\n", exitFeatures, "\n")
     
     exits = []
     for exitFeature in exitFeatures[marginTitle:]:
@@ -332,7 +338,7 @@ def readCHID(FileName):
 
 
 
-def readOBST(FileName, Keyword='&OBST', Zmin=0.0, Zmax=3.0, outputFile=None, ShowData=False):
+def readOBST(FileName, Keyword='&OBST', Zmin=0.0, Zmax=3.0, outputFile=None, debug=True):
     #fo = open("OBSTout.txt", "w+")
     obstFeatures = []
     findOBST=False
@@ -360,7 +366,7 @@ def readOBST(FileName, Keyword='&OBST', Zmin=0.0, Zmax=3.0, outputFile=None, Sho
                 obstFeatures.append(obstFeature)
                 findOBST=False
 
-            if ShowData:
+            if debug:
                 print (line, '\n', obstFeature)
                 #print >>fo, line
                 #print >>fo, obstFeature
@@ -395,7 +401,7 @@ def readOBST(FileName, Keyword='&OBST', Zmin=0.0, Zmax=3.0, outputFile=None, Sho
     return walls
 
 
-def readPATH(FileName, Keyword='&HOLE', Zmin=0.0, Zmax=3.0, outputFile=None, ShowData=False):
+def readPATH(FileName, Keyword='&HOLE', Zmin=0.0, Zmax=3.0, outputFile=None, debug=True):
     #fo = open("HOLEout.txt", "w+")
     holeFeatures = []
     
@@ -424,7 +430,7 @@ def readPATH(FileName, Keyword='&HOLE', Zmin=0.0, Zmax=3.0, outputFile=None, Sho
                 holeFeatures.append(holeFeature)
                 findPATH=False
 
-                if ShowData:
+                if debug:
                     print (line, '\n', holeFeature)
                     #print >>fo, line
                     #print >>fo, holeFeature
@@ -459,8 +465,8 @@ def readPATH(FileName, Keyword='&HOLE', Zmin=0.0, Zmax=3.0, outputFile=None, Sho
         index = index+1
     return doors
 
-
-def readEXIT(FileName, outputFile=None, ShowData=False):
+# This function is not used in this program
+def readEXIT(FileName, outputFile=None, debug=True):
     #fo = open("EXITout.txt", "w+")
     exitFeatures = []
     findEXIT=False
@@ -482,7 +488,7 @@ def readEXIT(FileName, outputFile=None, ShowData=False):
                 exitFeatures.append(exitFeature)
                 findEXIT=False
 
-                if ShowData:
+                if debug:
                     print (line, '\n', exitFeature)
                     #print >>fo, line
                     #print >>fo, exitFeature

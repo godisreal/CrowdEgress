@@ -1,11 +1,11 @@
 \documentclass{article}
 \begin{document}
 
-\title{User Guide of CrowdEgress: A Simulation Tool for Multi-Agent Model of Crowd Evacuation}
+\title{CrowdEgress: A Multi-Agent Simulation Tool for Crowd Evacuation}
 
 \maketitle
 
-\section{Introduction}
+\section{Introduction} 
 
 The program mainly consists of four component: User Interface, Simulation Core, Data Tool, Visualization Tool
 
@@ -20,9 +20,25 @@ The program mainly consists of four component: User Interface, Simulation Core, 
 
 \section{About Simulation Model}
 
-In the simulation core there are four types of entities: agents, walls, doors and exits.
+Agent-based model (ABM) describes interactions among individual agents and their surroundings.  In the simulation core there are four types of entities: agents, walls, doors and exits, and their interactions are illustrated in Figure 1.  
+
+\begin{figure}
+\includegraphics[bb=0bp 0bp 595bp 342bp,clip,scale=0.43]{img/NewtonLaw01}
+\caption{Figure1. Simulation Model: Interaction of Newtonian Agents and Their Surroundings}\label{Fig_SimulationModel}
+\end{figure}
 
 \textbf{Walls}: Walls are obstruction in a compartment geometry that confine agent movement, and they set up the boundary of a room or certain space.  Just like walls in normal buildings, walls may be labeled with arrows that direct agent to move toward certain directions.  In our program wall are either lines or rectangular areas.  If any users are interested, please feel free to extend the wall types to circular or polyangular areas.
+
+If users specify a line obstruction, it is expected to input the position of starting point and ending point of a line.  If users specify a rectangular obstruction, it is required to input the position of upper left point and lower right point of a line.  
+
+start X: x position of starting point for line obstruction; x position of upper left point for rectangular obstruction.  
+start Y: y position of starting point for line obstruction; y position of upper left point for rectangular obstruction.  
+end X: x position of ending point for line obstruction; x position of lower right point for rectangular obstruction.  
+end Y: y position of ending point for line obstruction; y position of lower right point for rectangular obstruction.  
+mode: either line or rectangular obstruction in current program
+id: id number assigned to this obstruction; id number is optionally shown in the pygame screen so that users can easily modify the obstruction
+inComp: a boolean variable to indicate if the obstruction is in computation or not
+arrow: direction assigned to the obstruction so that agents will be guided when they do not have any target door or exit 
 
 \textbf{Doors}: Doors are passageways that direct agents toward certain areas, and they may be placed over a wall so that agents can go through the wall by the door.  Doors can also be placed as a waypoint if not attached to any walls, and they can be considered as arrows or markers on the ground that guide agent movement.  In brief doors affect agent way-finding activities and they help agents to form a roadmap to exits.  In current program doors are only specified as rectangular areas.
 
@@ -34,6 +50,12 @@ In the simulation core there are four types of entities: agents, walls, doors an
 \section{How-To}
 
 \textbf{In Tkinter Screen}: When tkinter window (GUI) is activated, please select the input files for simulation.  Choose .csv file for evac input data.  Users can optionally use .fds file to create the compartment geometry, and the pedestrian features are described in .csv file.  If both .csv and .fds files are presented, the compartment structure will be created by using .fds file.  If .fds file is omitted, the compartment geometry is described in .csv file.  The agents and exits must be specified in .csv file currently while the walls and doors can either described by .csv file or .fds file.  Please take a look at the examples for details.
+
+\begin{figure}
+\centerline{\includegraphics[bb=0bp 0bp 595bp 342bp,clip,scale=0.43]{img/gui}}
+\caption{In Tkinter Screen}\label{Fig_TkScreen}
+\end{figure}
+
 
 \textbf{In Pygame Screen}: When pygame screen is displayed, press keys to adjust the display features and visualize entity data.
 Use pageup/pagedown to zoom in or zoom out the entities in screen
