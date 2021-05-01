@@ -1,4 +1,19 @@
 
+#-----------------------------------------------------------------------
+# Copyright (C) 2020, All rights reserved
+#
+# Peng Wang
+#
+#-----------------------------------------------------------------------
+#=======================================================================
+# 
+# DESCRIPTION:
+# This software is part of a python library to assist in developing and
+# analyzing evacuation simulation results from Fire Dynamics Simulator with Evacuation (FDS+Evac).
+# FDS+Evac is an open source software package developed by NIST. The source
+# code is available at: https://github.com/firemodels/fds
+#
+
 import pygame
 import pygame.draw
 import numpy as np
