@@ -1,6 +1,22 @@
+
+#-----------------------------------------------------------------------
+# Copyright (C) 2020, All rights reserved
+#
+# Peng Wang
+#
+#-----------------------------------------------------------------------
+#=======================================================================
+# 
+# DESCRIPTION:
+# This software is part of a python library to assist in developing and
+# analyzing evacuation simulation results from Fire Dynamics Simulator with Evacuation (FDS+Evac).
+# FDS+Evac is an open source software package developed by NIST. The source
+# code is available at: https://github.com/firemodels/fds
+#
+
 # -*-coding:utf-8-*-
 # Author: WP
-# Email: wp2204@126.com
+# Email: wp2204@gmail.com
 
 import pygame
 import pygame.draw
@@ -198,10 +214,10 @@ def readWalls(FileName, debug=True, marginTitle=1, ini=1):
         wall.params[1]= float(obstFeature[ini+1])
         wall.params[2]= float(obstFeature[ini+2])
         wall.params[3]= float(obstFeature[ini+3])
-        wall.mode = obstFeature[ini+4]
+        wall.arrow = int(obstFeature[ini+4])
         wall.id = int(obstFeature[ini+5])
         wall.inComp = int(obstFeature[ini+6])
-        wall.arrow = int(obstFeature[ini+7])
+        wall.mode = obstFeature[ini+7]
         #wall.pointer1 = np.array([float(obstFeature[8]), float(obstFeature[9])])
         #wall.pointer2 = np.array([float(obstFeature[10]), float(obstFeature[11])])
         walls.append(wall)
@@ -225,16 +241,17 @@ def addWall(walls, startPt, endPt, mode='line'):
         wall.params[2]= float(endPt[0])
         wall.params[3]= float(endPt[1])
 
+    # The wall arrow is to be tested in simulation.  
+    # The default value is no direction assigned, i.e., zero.  
+    wall.arrow = 0 #normalize(endPt - startPt)
+    
     wall.mode = mode
     wall.id = int(num)
     wall.inComp = int(1)
 
-    # The wall arrow is to be tested in simulation.  
-    wall.arrow = normalize(endPt - startPt)
-
     # Add wall into the list of walls
     walls.append(wall)
-    
+
 
 def readDoors(FileName, debug=True, marginTitle=1, ini=1):
     #doorFeatures = readCSV(FileName, "string")
@@ -276,7 +293,9 @@ def addDoor(doors, startPt, endPt, mode='rect'):
         door.params[3]= float(endPt[1])
 
     # The wall arrow is to be tested in simulation.  
-    #door.arrow = normalize(endPt - startPt)
+    # The default value is no direction assigned, i.e., zero.  
+    door.arrow = 0 #normalize(endPt - startPt)
+    
     #door.mode = mode   # door has no attribute of "mode"
 
     door.id = int(num)
@@ -378,10 +397,10 @@ def readOBST(FileName, Keyword='&OBST', Zmin=0.0, Zmax=3.0, outputFile=None, deb
     if outputFile!=None:
         with open(outputFile, mode='wb+') as obst_test_file:
             csv_writer = csv.writer(obst_test_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-            csv_writer.writerow(['--', '0/startX', '1/startY', '2/endX', '3/endY', '4/mode', '5/id', '6/inComp', '7/arrow'])
+            csv_writer.writerow(['--', '0/startX', '1/startY', '2/endX', '3/endY', '4/arrow', '5/id', '6/inComp', '7/mode'])
             index_temp=0
             for obstFeature in obstFeatures:
-                csv_writer.writerow(['--', str(obstFeature[0]), str(obstFeature[1]), str(obstFeature[2]), str(obstFeature[3]), 'rect', str(index_temp), '1', '0'])
+                csv_writer.writerow(['--', str(obstFeature[0]), str(obstFeature[1]), str(obstFeature[2]), str(obstFeature[3]), '0', str(index_temp), '1', 'rect'])
                 index_temp=index_temp+1
     
     walls = []
@@ -392,10 +411,10 @@ def readOBST(FileName, Keyword='&OBST', Zmin=0.0, Zmax=3.0, outputFile=None, deb
         wall.params[1]= float(obstFeature[1])
         wall.params[2]= float(obstFeature[2])
         wall.params[3]= float(obstFeature[3])
-        wall.mode = 'rect'
+        wall.arrow = 0
         wall.id = index
         wall.inComp = 1
-        wall.arrow = 0
+        wall.mode = 'rect'
         walls.append(wall)
         index = index+1
     return walls
@@ -465,21 +484,30 @@ def readPATH(FileName, Keyword='&HOLE', Zmin=0.0, Zmax=3.0, outputFile=None, deb
         index = index+1
     return doors
 
-# This function is not used in this program
-def readEXIT(FileName, outputFile=None, debug=True):
+
+# This function will be used in this program in future
+def readEXIT(FileName, Keyword='&EXIT', Zmin=0.0, Zmax=3.0, outputFile=None, debug=True):
     #fo = open("EXITout.txt", "w+")
     exitFeatures = []
     findEXIT=False
+    
     for line in open(FileName):
-        if re.match('&EXIT', line):
+        if re.match(Keyword, line):
             findEXIT=True
+            
         if findEXIT:
             if re.search('XB', line):
                 temp1=line.split('XB')
-                line1=temp1[1]
-                temp =  line1.split('=')
-                dataXYZ = temp[1]
-                coords = dataXYZ.split(',')
+                dataXYZ=temp1[1].strip('= ')
+                #line1=temp1[1]
+                #temp =  line1.split('=')
+                #dataXYZ = temp[1]
+                #coords = dataXYZ.split(',')
+                coords = re.split(r'[\s\,]+', dataXYZ)
+                if float(coords[4])<Zmin and float(coords[5])<Zmin:
+                    continue
+                if float(coords[4])>Zmax and float(coords[5])>Zmax:
+                    continue
                 exitFeature = []
                 exitFeature.append(float(coords[0]))
                 exitFeature.append(float(coords[2]))
@@ -519,6 +547,15 @@ def readEXIT(FileName, outputFile=None, debug=True):
         exit.inComp = 1
         exit.exitSign = 0
         exit.pos = (np.array([exit.params[0], exit.params[1]]) + np.array([exit.params[2], exit.params[3]]))*0.5
+        
+        if exit.params[0]==exit.params[2]:
+            exit.params[0]=exit.params[0]-0.2
+            exit.params[2]=exit.params[2]+0.2
+            
+        if exit.params[1]==exit.params[3]:
+            exit.params[1]=exit.params[1]-0.2
+            exit.params[3]=exit.params[3]+0.2           
+            
         exits.append(exit)
         index = index+1
     return exits
@@ -537,10 +574,10 @@ def updateDoorData(doors, outputFile):
 def updateWallData(walls, outputFile):
     with open(outputFile, mode='wb+') as wall_test_file:
         csv_writer = csv.writer(wall_test_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-        csv_writer.writerow(['&Wall', '0/startX', '1/startY', '2/endX', '3/endY', '4/mode', '5/id', '6/inComp', '7/arrow'])
+        csv_writer.writerow(['&Wall', '0/startX', '1/startY', '2/endX', '3/endY', '4/arrow', '5/id', '6/inComp', '7/mode'])
         index_temp=0
         for wall in walls:
-            csv_writer.writerow(['--', str(wall.params[0]), str(wall.params[1]), str(wall.params[2]), str(wall.params[3]), str(wall.mode), str(wall.id), str(wall.inComp), str(wall.arrow)])
+            csv_writer.writerow(['--', str(wall.params[0]), str(wall.params[1]), str(wall.params[2]), str(wall.params[3]), str(wall.arrow), str(wall.id), str(wall.inComp), str(wall.mode)])
             index_temp=index_temp+1
             
 
