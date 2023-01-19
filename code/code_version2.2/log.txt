@@ -1,0 +1,2 @@
+FN_FDS= 
+FN_EVAC= /mnt/sda6/gitwork2022/CrowdEgress/examples/Example_MassEgress/tpre2020-massEgress.csv
