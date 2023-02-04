@@ -308,15 +308,15 @@ def addDoor(doors, startPt, endPt, mode='rect'):
         door.params[2]= float(endPt[0])
         door.params[3]= float(endPt[1])
 
-    # The wall arrow is to be tested in simulation.  
+    # The arrow is to be tested in simulation.  
     # The default value is no direction assigned, i.e., zero.  
     door.arrow = 0 #normalize(endPt - startPt)
     
-    #door.mode = mode   # door has no attribute of "mode"
+    #door.mode = mode   # Currently door has no attribute of "mode"
 
     door.id = int(num)
     door.inComp = int(1)
-    door.exitSign = int(0)
+    door.exitSign = int(0) # Default: there is no exit sign 
     door.pos = (np.array([door.params[0], door.params[1]]) + np.array([door.params[2], door.params[3]]))*0.5
     
     # Add door into the list of doors
@@ -357,6 +357,32 @@ def readExits(FileName, debug=True, marginTitle=1, ini=1):
     return exits
 
 
+#This function addDoor() is created for users to add door in testGeom()
+def addExit(exits, startPt, endPt, mode='rect'):
+    num = len(exits)
+    exit = passage()
+    
+    if mode == 'rect':
+        exit.params[0]= float(startPt[0])
+        exit.params[1]= float(startPt[1])
+        exit.params[2]= float(endPt[0])
+        exit.params[3]= float(endPt[1])
+
+    # The arrow is to be tested in simulation.  
+    # The default value is no direction assigned, i.e., zero.  
+    exit.arrow = 0 #normalize(endPt - startPt)
+    
+    #exit.mode = mode   # Currently passage class has no attribute of "mode"
+
+    exit.id = int(num)
+    exit.inComp = int(1)
+    exit.exitSign = int(1) # Default there is an exit sign
+    exit.pos = (np.array([exit.params[0], exit.params[1]]) + np.array([exit.params[2], exit.params[3]]))*0.5
+    
+    # Add exit into the list of exits
+    exits.append(exit)
+
+    
 
 ##############################################
 # This function will be used to read CHID from FDS input file
@@ -375,7 +401,34 @@ def readCHID(FileName):
                 return keyInfo
             if re.search('/', line):
                 findHEAD = False
-    #return None
+    return None
+
+# Find the first &MESH line in FDS input file and return the value
+def readMesh(FileName):
+    findMESH=False
+    for line in open(FileName):
+        if re.match('&MESH', line):
+            findMESH=True
+        if  findMESH:
+            if re.search('IJK', line):
+                temp1=line.split('IJK')
+                line1=temp1[1].strip().strip('=').strip()
+                temp2 =  re.split(r'[\s\,]+', line1)
+                xpoints = temp2[0]
+                ypoints = temp2[1]
+            if re.search('XB', line):
+                temp1=line.split('XB')
+                line1=temp1[1].strip().strip('=').strip()
+                temp2 =  re.split(r'[\s\,]+', line1)
+                xmax = temp2[1]-temp2[0]
+                ymax = temp2[3]-temp2[2]
+            if re.search('/', line):
+                findMESH = False
+                return xpoints, ypoints, xmax, ymax
+                # Only find the first &MESH line
+                # The second or other MESH lines are ignored
+    return None
+
 
 
 def readTEnd(FileName):
@@ -419,6 +472,16 @@ def readKeyOnce(FileName, Title, Key):
     return None
 
 
+
+### A illustration of OBST PATH and EXIT in RECTANGULAR SHAPE
+##############################
+### p1-----------------p4  ###
+###  |                  |  ###
+###  |                  |  ###
+###  |                  |  ###
+### p2-----------------p3  ###
+##############################
+            
 ##############################################
 # This function will be used to read OBST from FDS input file
 def readOBST(FileName, Keyword='&OBST', Zmin=0.0, Zmax=3.0, outputFile=None, debug=True):
@@ -488,6 +551,7 @@ def readOBST(FileName, Keyword='&OBST', Zmin=0.0, Zmax=3.0, outputFile=None, deb
         walls.append(wall)
         index = index+1
     return walls
+
 
 #######################################################
 # This function will be used to read HOLE or DOOR from FDS input file
@@ -572,6 +636,7 @@ def readPATH(FileName, Keyword='&HOLE', Zmin=0.0, Zmax=3.0, outputFile=None, deb
         index = index+1
     return doors
 
+
 ##############################################
 # This function will be used to read EXIT from FDS input file
 def readEXIT(FileName, Keyword='&EXIT', Zmin=0.0, Zmax=3.0, outputFile=None, debug=True):
@@ -628,19 +693,6 @@ def readEXIT(FileName, Keyword='&EXIT', Zmin=0.0, Zmax=3.0, outputFile=None, deb
         #    findEXIT_XB=False
         #    findEXIT_IOR=False
 
-    if outputFile:
-        with open(outputFile, mode='w+') as exit_test_file:
-            csv_writer = csv.writer(exit_test_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-            csv_writer.writerow(['--', '0/startX', '1/startY', '2/endX', '3/endY', '4/arrow', '5/id', '6/inComp', '7/exitSign'])
-            index_temp=0
-            for exitFeature in exitFeatures:
-                if exitFeature[4]<Zmin and exitFeature[5]<Zmin:
-                    continue
-                if exitFeature[4]>Zmax and exitFeature[5]>Zmax:
-                    continue                
-                csv_writer.writerow(['--', str(exitFeature[0]), str(exitFeature[1]), str(exitFeature[2]), str(exitFeature[3]), '0', str(index_temp), '1', '0'])
-                index_temp=index_temp+1
-
     exits = []
     index = 0
     for exitFeature in exitFeatures:
@@ -658,17 +710,39 @@ def readEXIT(FileName, Keyword='&EXIT', Zmin=0.0, Zmax=3.0, outputFile=None, deb
         exit.inComp = 1
         exit.exitSign = 0
         exit.pos = (np.array([exit.params[0], exit.params[1]]) + np.array([exit.params[2], exit.params[3]]))*0.5
-        
+
+        # In FDS input file exit is a planary surface and agents go into the surface
+        # In our simulaiton exit is a rectangular area and agent reach the area
         if exit.params[0]==exit.params[2]:
             exit.params[0]=exit.params[0]-0.3
             exit.params[2]=exit.params[2]+0.3
+            exitFeature[0]=exitFeature[0]-0.3
+            exitFeature[2]=exitFeature[2]+0.3
+            
             
         if exit.params[1]==exit.params[3]:
             exit.params[1]=exit.params[1]-0.3
-            exit.params[3]=exit.params[3]+0.3           
+            exit.params[3]=exit.params[3]+0.3
+            exitFeature[1]=exitFeature[1]-0.3
+            exitFeature[3]=exitFeature[3]+0.3
             
         exits.append(exit)
         index = index+1
+
+
+    if outputFile:
+        with open(outputFile, mode='w+') as exit_test_file:
+            csv_writer = csv.writer(exit_test_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+            csv_writer.writerow(['--', '0/startX', '1/startY', '2/endX', '3/endY', '4/arrow', '5/id', '6/inComp', '7/exitSign'])
+            index_temp=0
+            for exitFeature in exitFeatures:
+                if exitFeature[4]<Zmin and exitFeature[5]<Zmin:
+                    continue
+                if exitFeature[4]>Zmax and exitFeature[5]>Zmax:
+                    continue                
+                csv_writer.writerow(['--', str(exitFeature[0]), str(exitFeature[1]), str(exitFeature[2]), str(exitFeature[3]), '0', str(index_temp), '1', '0'])
+                index_temp=index_temp+1
+                
     return exits
 
 
@@ -903,7 +977,7 @@ def compute_simu(simu):
     while running and simu.t_sim < simu.t_end:
         
         # Computation Step
-        simu.simulation_step()
+        simu.simulation_step2022()
         #simu.t_sim = simu.t_sim + simu.DT  # Maybe it should be in step()
         pass
         

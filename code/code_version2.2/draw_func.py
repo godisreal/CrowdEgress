@@ -47,7 +47,7 @@ LightCyan = 224, 255, 255
 lightgreen = 193, 255, 193
 
 # Some Constant Parameters for Pygame 
-SCREENSIZE = [800, 400]
+SCREENSIZE = [900, 600]
 RESOLUTION = 180
 #BACKGROUNDCOLOR = [255,255,255]
 LINEWIDTH = 2
@@ -334,6 +334,60 @@ def drawDirection(screen, door, arrow, ZOOMFACTOR=10.0, xSpace=0.0, ySpace=0.0):
     pygame.draw.line(screen, red, endPx*ZOOMFACTOR+xyShift, arrowPx2*ZOOMFACTOR+xyShift, 2)
 
 
+def show_vel(screen, x_min, y_min, x_max, y_max, Ud, Vd, ZOOMFACTOR=10.0, xSpace=0.0, ySpace=0.0, SHOWDATA=False):
+
+    #Ud=np.load("Ud.npy")
+    #Vd=np.load("Vd.npy")
+    print(np.shape(Ud))
+    (dimX,dimY)=np.shape(Ud)
+
+    #dim=np.shape(U)
+    print(dimX, dimY)
+
+    #dimX is x_points+2
+    #dimY is y_points+2
+
+    del_x = (x_max-x_min)/float(dimX - 3)
+    del_y = (y_max-y_min)/float(dimY - 3)
+    
+    xDim=np.linspace(x_min, x_max+2*del_x, dimX) #Should be the same as x
+    yDim=np.linspace(y_min, y_max+2*del_y, dimY) #Should be the same as y
+    print("Dim info:\n")
+    print(xDim)
+    print(yDim)
+
+    #BLDindex = build_compartment(x_min, y_min, x_max, y_max, x_points, y_points, walls, doors, exits)
+    #BLDindex = build_compartment(x_min, y_min, x_max, y_max, dimX-2, dimY-2, walls, doors, exits)
+    
+    # Visualize gradient field by pygame
+    #BACKGROUNDCOLOR = [255,255,255]
+    #LINECOLOR = [255,0,0]
+    #SHOWDATA=False
+    VECFACTOR = 0.3
+
+    #pygame.init()
+    #screen = pygame.display.set_mode(SCREENSIZE)
+    #screen.fill(BACKGROUNDCOLOR)
+    xyShift = np.array([xSpace, ySpace])
+
+    for i in range(dimX):
+        for j in range(dimY):
+            #if BLDindex[i,j]==0:
+                #startPos = np.array([xDim[i],yDim[j]]) #np.array([int(xDim[i]),int(yDim[j])])
+                #endPos = np.array([int(xDim[i]),int(yDim[j])])
+                #pygame.draw.circle(screen, [0,60,0], startPos*ZOOMFACTOR, 6, 2)
+                #pygame.draw.line(screen, [0,60,0], startPos*ZOOMFACTOR-[0,0.8]+xyShift, startPos*ZOOMFACTOR+[0,0.8]+xyShift, 2)
+            vec=np.array([Ud[i,j],Vd[i,j]])
+            startPos = np.array([xDim[i],yDim[j]])
+            endPos = startPos + VECFACTOR*normalize(vec) #
+            pygame.draw.line(screen, [255,60,0], startPos*ZOOMFACTOR+xyShift, endPos*ZOOMFACTOR+xyShift, 2)
+
+        #drawWalls(screen, simu.walls, ZOOMFACTOR, SHOWDATA, ZOOMFACTOR*del_x/2.0+xSpace, ZOOMFACTOR*del_y/2.0+ySpace)
+        #drawDoors(screen, simu.doors, ZOOMFACTOR, SHOWDATA, ZOOMFACTOR*del_x/2.0+xSpace, ZOOMFACTOR*del_y/2.0+ySpace)
+        #drawExits(screen, simu.exits, ZOOMFACTOR, SHOWDATA, ZOOMFACTOR*del_x/2.0+xSpace, ZOOMFACTOR*del_y/2.0+ySpace)
+        
+
+
 def show_geom(simu):
 
     # The file to record the output data of simulation
@@ -352,6 +406,11 @@ def show_geom(simu):
     ZOOMFACTOR = simu.ZOOMFACTOR
     xSpace = simu.xSpace
     ySpace = simu.ySpace
+    walls = simu.walls
+    doors = simu.doors
+    exits = simu.exits
+    agents = simu.agents
+    exit2door = simu.exit2door
     xyShift = np.array([xSpace, ySpace])
     
     #========== Test of Geometry of Building Structure===============
@@ -366,9 +425,16 @@ def show_geom(simu):
     menu_01 = False
     menu_02 = False
     menu_03 = False
-    menu_left = False
+    menu_04 = False
+    menu_05 = False
+    menu_06 = False
+    #menu_07 = False
+    menu_left = False # Not used for right button of mouse
+    
     change_arrows = False
     draw_state = False
+    move_agent_state = False
+    
     running = True
     while running: 
         screen.fill(black)
@@ -416,7 +482,8 @@ def show_geom(simu):
                          elif mouseX<120 and mouseX>0 and mouseY<80 and mouseY>63:
                              # dump wall data
                              print ("Output wall data into wallDataRev.csv! Please check!")
-                             updateWallData(simu.walls, 'wallDataRev.csv')
+                             #updateWallData(simu.walls, 'wallDataRev.csv')
+                             updateWallData(walls, 'wallDataRev.csv')
                              menu_01 =False
                           # elif mouseX<120 and mouseX>0 and mouseY<100 and mouseY>83:
                           # To add something else in future development
@@ -443,19 +510,42 @@ def show_geom(simu):
                              # Show Wall Info
                              simu.SHOWWALLDATA= not simu.SHOWWALLDATA
                              menu_02 =False
-
                           else:
                              menu_02 =False
 
                 ### Menu No 3: Start Simulation ###
                 if mouseX<220 and mouseX>150 and mouseY<20 and mouseY>3:
+                    menu_03 = not menu_03
+                    menu_04 = False
+                    menu_05 = False
+                    menu_06 = False
+                    
+                if mouseX<290 and mouseX>220 and mouseY<20 and mouseY>3:
+                    menu_03 = False
+                    menu_04 = not menu_04
+                    menu_05 = False
+                    menu_06 = False
+                    
+                if mouseX<360 and mouseX>290 and mouseY<20 and mouseY>3:
+                    menu_03 = False
+                    menu_04 = False
+                    menu_05 = not menu_05
+                    menu_06 = False
+                    
+                if mouseX<430 and mouseX>360 and mouseY<20 and mouseY>3:
+                    menu_03 = False
+                    menu_04 = False
+                    menu_05 = False
+                    menu_06 = not menu_06
+
+                if mouseX<500 and mouseX>430 and mouseY<20 and mouseY>3:
                     running = False
                     #simu.quit()
                     simu.continueToSimu=True
                     simu.t_pause = pygame.time.get_ticks()/1000
 
                 if not draw_state:
-                    for exit in simu.exits:
+                    for exit in exits:
                         if exit.inside((mouse_pos-xyShift)*(1/ZOOMFACTOR)):
                             draw_state = True
                             draw_exit = exit
@@ -465,9 +555,72 @@ def show_geom(simu):
                     if draw_exit.inside((mouse_pos-xyShift)*(1/ZOOMFACTOR)):
                         draw_state = False
 
+                if not move_agent_state:
+                    for agent in agents:
+                        if np.linalg.norm((mouse_pos-xyShift)*(1/ZOOMFACTOR)-agent.pos)<1.0:
+                            move_agent_state = True
+                            move_agent = agent
+                else:
+                    if np.linalg.norm((mouse_pos-xyShift)*(1/ZOOMFACTOR)-agent.pos)<1.0:
+                        move_agent_state = False
+
             elif event.type == pygame.MOUSEBUTTONUP:
                 (mouseX2, mouseY2) = pygame.mouse.get_pos()
                 mouse_pos2 = np.array([mouseX2, mouseY2])
+
+                if mouseX>=0 and mouseX<=500 and mouseY>=0 and mouseY<=20:
+                    continue
+                elif mouseX2>=0 and mouseX2<=500 and mouseY2>=0 and mouseY2<=20:
+                    continue
+                else:
+                    if menu_03 is True:
+                        move_agent_state = False
+                        px1 = (mouse_pos-xyShift)*(1/ZOOMFACTOR)
+                        px2 = (mouse_pos2-xyShift)*(1/ZOOMFACTOR)
+                        addWall(walls, px1, px2, mode='line')
+                        #menu_03 = False
+
+                    if menu_04 is True:
+                        move_agent_state = False
+                        px1 = (mouse_pos-xyShift)*(1/ZOOMFACTOR)
+                        px2 = (mouse_pos2-xyShift)*(1/ZOOMFACTOR)
+                        x1 = px1[0]
+                        y1 = px1[1]
+                        x2 = px2[0]
+                        y2 = px2[1]
+                        #if x1<x2 and y1<y2:
+                        #    pass
+                        addWall(walls, px1, px2, mode='rect')
+
+                    if menu_05 is True:
+                        move_agent_state = False
+                        px1 = (mouse_pos-xyShift)*(1/ZOOMFACTOR)
+                        px2 = (mouse_pos2-xyShift)*(1/ZOOMFACTOR)
+                        x1 = px1[0]
+                        y1 = px1[1]
+                        x2 = px2[0]
+                        y2 = px2[1]
+                        #if x1<x2 and y1<y2:
+                        #    pass
+                        addDoor(doors, px1, px2, mode='rect')
+
+                    if menu_06 is True:
+                        move_agent_state = False
+                        px1 = (mouse_pos-xyShift)*(1/ZOOMFACTOR)
+                        px2 = (mouse_pos2-xyShift)*(1/ZOOMFACTOR)
+                        x1 = px1[0]
+                        y1 = px1[1]
+                        x2 = px2[0]
+                        y2 = px2[1]
+                        #if x1<x2 and y1<y2:
+                        #    pass
+                        addExit(exits, px1, px2, mode='rect')
+
+                if move_agent_state:
+                    xyPos = (mouse_pos2-xyShift)*(1/ZOOMFACTOR)
+                    move_agent.pos = xyPos
+                    move_agent_state = False
+                    
 
                 #if button ==(1,0,0):
                 change_arrows = True
@@ -524,8 +677,11 @@ def show_geom(simu):
                 elif event.key == pygame.K_KP3:
                     simu.SHOWEXITDATA = not simu.SHOWEXITDATA
                 elif event.key == pygame.K_SPACE:
-                    updateWallData(simu.walls, 'wallDataRev.csv')
-                    updateDoorData(simu.doors, 'doorDataRev.csv')
+                    #updateWallData(simu.walls, 'wallDataRev.csv')
+                    #updateDoorData(simu.doors, 'doorDataRev.csv')
+                    #updateExit2Doors(simu.exit2door, 'Exit2DoorRev.csv')
+                    updateWallData(walls, 'wallDataRev.csv')
+                    updateDoorData(doors, 'doorDataRev.csv')
                     updateExit2Doors(simu.exit2door, 'Exit2DoorRev.csv')
                 elif event.key == pygame.K_PAGEUP:
                     ZOOMFACTOR = ZOOMFACTOR +1
@@ -547,14 +703,14 @@ def show_geom(simu):
 
         xyShift = np.array([xSpace, ySpace])
         
-        drawWalls(screen, simu.walls, ZOOMFACTOR, simu.SHOWWALLDATA, xSpace, ySpace)
-        drawDoors(screen, simu.doors, ZOOMFACTOR, simu.SHOWDOORDATA, xSpace, ySpace)
-        drawExits(screen, simu.exits, ZOOMFACTOR, simu.SHOWEXITDATA, xSpace, ySpace)
+        drawWalls(screen, walls, ZOOMFACTOR, simu.SHOWWALLDATA, xSpace, ySpace)
+        drawDoors(screen, doors, ZOOMFACTOR, simu.SHOWDOORDATA, xSpace, ySpace)
+        drawExits(screen, exits, ZOOMFACTOR, simu.SHOWEXITDATA, xSpace, ySpace)
 
         #####################################
         #### Draw Agents at Initial Positions ###
         #####################################
-        for idai, agent in enumerate(simu.agents):
+        for idai, agent in enumerate(agents):
             
             if agent.inComp == 0:
                 continue
@@ -567,6 +723,12 @@ def show_geom(simu):
             myfont=pygame.font.SysFont("arial",14)
             text_surface=myfont.render(str(idai), True, (255,0,0), (255,255,255))
             screen.blit(text_surface, agent.pos*ZOOMFACTOR+xyShift)
+
+        if move_agent_state:
+            scPos = [0, 0]
+            scPos[0] = int(move_agent.pos[0]*ZOOMFACTOR+xSpace)
+            scPos[1] = int(move_agent.pos[1]*ZOOMFACTOR+ySpace)
+            pygame.draw.circle(screen, white, scPos, agent.size, LINEWIDTH+2)
 
         if draw_state:
 
@@ -632,8 +794,24 @@ def show_geom(simu):
             screen.blit(text_surface, [80,63])#+[0.0,60.0]) #+xyShift)
             #text_surface=myfont.render('show_agentforce', True, red, white)
             #screen.blit(text_surface, mouse_pos+[0.0,60.0]) #+xyShift)
-            
 
+        if menu_03 is True:
+            text_surface=myfont.render('Add one wall in line shape by dragging mouse from start point to end point.', True, white, tan)
+            screen.blit(text_surface, [150,23]) #+xyShift)
+            
+        if menu_04 is True:
+            text_surface=myfont.render('Add one wall in rectangular shape by dragging mouse from start point to end point.', True, white, tan)
+            screen.blit(text_surface, [220,23]) #+xyShift)
+
+        if menu_05 is True:
+            text_surface=myfont.render('Add one door in rectangular shape by dragging mouse from start point to end point.', True, white, tan)
+            screen.blit(text_surface, [290,23]) #+xyShift)
+
+        if menu_06 is True:
+            text_surface=myfont.render('Add one exit in rectangular shape by dragging mouse from start point to end point.', True, white, tan)
+            screen.blit(text_surface, [340,23]) #+xyShift)
+
+            
         #--------Menu Bar at Top Left-----------
         #pygame.draw.rect(screen, tan, [720, 3, 60, 20], LINEWIDTH)
         myfont=pygame.font.SysFont("arial",14)
@@ -649,9 +827,34 @@ def show_geom(simu):
         #screen.blit(text_surface, [150,3]) #+xyShift)
 
         myfont=pygame.font.SysFont("arial",14)
-        text_surface=myfont.render('Simulation!', True, white, tan)
+        text_surface=myfont.render('+wall(line)', True, white, tan)
         screen.blit(text_surface, [150,3]) #+xyShift)
-                                
+
+        myfont=pygame.font.SysFont("arial",14)
+        text_surface=myfont.render('+wall(rect)', True, white, tan)
+        screen.blit(text_surface, [220,3]) #+xyShift)
+
+        myfont=pygame.font.SysFont("arial",14)
+        text_surface=myfont.render(' +door ', True, white, tan)
+        screen.blit(text_surface, [290,3]) #+xyShift)
+
+        myfont=pygame.font.SysFont("arial",14)
+        text_surface=myfont.render(' +exit  ', True, white, tan)
+        screen.blit(text_surface, [340,3]) #+xyShift)
+
+        myfont=pygame.font.SysFont("arial",14)
+        text_surface=myfont.render('Simulation!', True, white, tan)
+        screen.blit(text_surface, [390,3]) #+xyShift)
+
+        # The Zoom and xSpace ySpace Info
+        myfont=pygame.font.SysFont("arial",14)
+        text_surface=myfont.render('ZOOM:'+str(ZOOMFACTOR), True, white, black)
+        screen.blit(text_surface, [500,3]) #+xyShift)
+        text_surface=myfont.render('xSpace:'+str(xSpace), True, white, black)
+        screen.blit(text_surface, [600,3]) #+xyShift)        
+        text_surface=myfont.render('ySpace:'+str(ySpace), True, white, black)
+        screen.blit(text_surface, [700,3]) #+xyShift) 
+                                                                
         pygame.display.flip()
         clock.tick(20)
         
@@ -659,6 +862,11 @@ def show_geom(simu):
     simu.ZOOMFACTOR = ZOOMFACTOR
     simu.xSpace = xSpace
     simu.ySpace = ySpace
+    simu.walls = walls
+    simu.doors = doors
+    simu.exits = exits
+    simu.agents = agents
+    #simu.exit2door = exit2door
     pygame.display.quit()
 
 
@@ -687,6 +895,16 @@ def show_simu(simu):
     ZOOMFACTOR = simu.ZOOMFACTOR
     xSpace = simu.xSpace
     ySpace = simu.ySpace
+    #walls = simu.walls
+    #doors = simu.doors
+    #exits = simu.exits
+
+    exitIndex=-1
+    #if simu.solver=1:
+    #    (dimX,dimY)=np.shape(simu.UallExit)
+
+    #if simu.solver=2:
+    #    (dimX,dimY)=np.shape(simu.UeachExit)
     
     ##########################################
     ### Simulation starts here with Pygame
@@ -749,6 +967,10 @@ def show_simu(simu):
                     xSpace=xSpace-10
                 elif event.key == pygame.K_RIGHT:
                     xSpace=xSpace+10
+                elif event.key == pygame.K_o:
+                    exitIndex=exitIndex+1
+                elif event.key == pygame.K_p:
+                    exitIndex=exitIndex-1
 
         if simu.MODETRAJ == False:
             screen.fill(white)
@@ -760,7 +982,7 @@ def show_simu(simu):
             continue
 
         # Computation Step
-        simu.simulation_step()
+        simu.simulation_step2022()
         #simu.t_sim = simu.t_sim + simu.DT  # Maybe it should be in step()
         pass
 
@@ -780,10 +1002,40 @@ def show_simu(simu):
             tt = pygame.time.get_ticks()/1000-simu.t_pause
             myfont=pygame.font.SysFont("arial",14)
             time_surface=myfont.render("Physics Time:" + str(tt), True, (0,0,0), (255,255,255))
-            screen.blit(time_surface, [470,370]) #[750,350]*ZOOMFACTOR)
+            screen.blit(time_surface, [600,3]) #[750,350]*ZOOMFACTOR)
             time_surface=myfont.render("Simulation Time:" + str(simu.t_sim), True, (0,0,0), (255,255,255))
-            screen.blit(time_surface, [630,370]) #[750,350]*ZOOMFACTOR)
+            screen.blit(time_surface, [600,23]) #[750,350]*ZOOMFACTOR)
 
+        # Show flow field in the background
+        if simu.solver==1 and exitIndex%2==0: # and exitIndex==-1:
+            Ud=simu.UallExit[1:-1, 1:-1]
+            Vd=simu.VallExit[1:-1, 1:-1]
+            show_vel(screen, simu.xmin, simu.ymin, simu.xmax, simu.ymax, Ud, Vd, ZOOMFACTOR, xSpace, ySpace)
+        if simu.solver==2:
+            for idexit, exit in enumerate(simu.exits):
+                if exitIndex%len(simu.exits) == idexit:
+                    Utemp = simu.UeachExit[idexit] 
+                    Vtemp = simu.VeachExit[idexit]
+                    Ud = Utemp[1:-1, 1:-1]
+                    Vd = Vtemp[1:-1, 1:-1]
+            show_vel(screen, simu.xmin, simu.ymin, simu.xmax, simu.ymax, Ud, Vd, ZOOMFACTOR, xSpace, ySpace)
+
+        '''
+        for i in range(dimX):
+            for j in range(dimY):
+                if simu.solver==1:
+                    vec=np.array([simu.UallExit[i,j],simu.VallExit[i,j]])
+                    startPos = np.array([xDim[i],yDim[j]])
+                    endPos = startPos + VECFACTOR*normalize(vec) #
+                    pygame.draw.line(screen, [255,60,0], startPos*ZOOMFACTOR+xyShift, endPos*ZOOMFACTOR+xyShift, 2)
+                if simu.solver==2:
+                    vec=np.array([simu.UeachExit[i,j],simu.VeachExit[i,j]])
+                    startPos = np.array([xDim[i],yDim[j]])
+                    endPos = startPos + VECFACTOR*normalize(vec) #
+                    pygame.draw.line(screen, [255,60,0], startPos*ZOOMFACTOR+xyShift, endPos*ZOOMFACTOR+xyShift, 2)
+
+        '''
+        
         drawWalls(screen, simu.walls, ZOOMFACTOR, simu.SHOWWALLDATA, xSpace, ySpace)
         drawDoors(screen, simu.doors, ZOOMFACTOR, simu.SHOWDOORDATA, xSpace, ySpace)
         drawExits(screen, simu.exits, ZOOMFACTOR, simu.SHOWEXITDATA, xSpace, ySpace)
@@ -917,6 +1169,9 @@ def show_simu(simu):
     simu.ZOOMFACTOR = ZOOMFACTOR
     simu.xSpace = xSpace
     simu.ySpace = ySpace
+    #simu.walls = walls
+    #simu.doors = doors
+    #simu.exits = exits
     pygame.display.quit()
 
 
