@@ -110,6 +110,9 @@ class GUI(object):
         #self.buttonRead.pack()
         self.buttonGeom = Button(self.frameRun, text='read now: test geom', command=self.testGeom)
         self.buttonGeom.pack()
+
+        self.buttonFlow = Button(self.frameRun, text='read now: test flow', command=self.testFlow)
+        self.buttonFlow.pack()
         
         self.buttonStart = Button(self.frameRun, text='start now: start simulation', command=self.startSim)
         self.buttonStart.pack()
@@ -240,14 +243,25 @@ class GUI(object):
         if self.currentSimu.continueToSimu:
             self.currentSimu.preprocessGeom()
             self.currentSimu.preprocessAgent()
+            #self.currentSimu.flowMesh()
             self.updateCtrlParam()
-            sunpro1 = mp.Process(target=show_simu(self.currentSimu))     
+            sunpro1 = mp.Process(target=show_simu(self.currentSimu))
+            #sunpro1 = mp.Process(target=self.currentSimu.flowMesh())
             sunpro1.start()
             #sunpro1.join()
 
         #show_geom(myTest)
         #myTest.show_simulation()
         self.currentSimu.quit()
+
+    def testFlow(self):
+        self.currentSimu = simulation()
+        self.currentSimu.select_file(self.fname_EVAC, self.fname_FDS, "non-debug")
+        show_geom(self.currentSimu)
+        #sunpro2 = mp.Process(target=show_geom(self.currentSimu)) 
+        #sunpro2.start()
+        #sunpro2.join()
+        self.currentSimu.flowMesh()
 
     def startSim(self):
         self.currentSimu = simulation()

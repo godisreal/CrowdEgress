@@ -56,6 +56,9 @@ class person(object):
         self.direction = normalize(self.dest - self.pos)
         #self.direction = np.array([0.0, 0.0])
 
+        self.pathMapU= []
+        self.pathMapV= []
+        
         self.pathMap = []
         self.others = []
         self.targetDoors = []

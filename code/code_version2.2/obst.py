@@ -240,7 +240,22 @@ class obst(object):
                 flag3 = self.intersecWithLine(p3, p4)
                 flag4 = self.intersecWithLine(p4, p1)
 
-                if flag1 or flag2 or flag3 or flag4:
+                ###
+                # if a door is within a rectangular wall, it is considered to be attached to the wall
+                ###
+                if door.params[0]>=self.params[0] and door.params[1]>=self.params[1]:
+                    flag5 = True
+                else:
+                    flag5 = False
+
+                if door.params[2]<=self.params[2] and door.params[3]<=self.params[3]:
+                    flag6=True
+                else:
+                    flag5 = False
+
+                flag0 = flag5 and flag6
+
+                if flag1 or flag2 or flag3 or flag4 or flag0:
                     self.attachedDoors.append(door)
 
         if len(self.attachedDoors) == 0:
@@ -518,7 +533,22 @@ class passage(object):
                 flag3 = self.intersecWithLine(w3, w4)
                 flag4 = self.intersecWithLine(w4, w1)
 
-                if flag1 or flag2 or flag3 or flag4:
+                ###
+                # if a door is within a rectangular wall, it is considered to be attached to the wall
+                ###
+                if self.params[0]>=wall.params[0] and self.params[1]>=wall.params[1]:
+                    flag5 = True
+                else:
+                    flag5 = False
+
+                if self.params[2]<=wall.params[2] and self.params[3]<=wall.params[3]:
+                    flag6 = True
+                else:
+                    flag6 = False
+
+                flag0 = flag5 and flag6
+
+                if flag1 or flag2 or flag3 or flag4 or flag0:
                     self.attachedWalls.append(wall)
 
         if len(self.attachedWalls) == 0:
