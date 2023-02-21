@@ -263,6 +263,16 @@ class obst(object):
 
         return self.attachedDoors
 
+
+    def inside(self, pos):
+        if self.mode == 'line':
+            return False
+        if self.mode == 'rect':
+            if pos[0]>=self.params[0] and pos[0]<=self.params[2]:
+                if  pos[1]>=self.params[1] and pos[1]<=self.params[3]:
+                    return True
+            else:
+                return False
     
 
 class passage(object):
@@ -293,7 +303,7 @@ class passage(object):
         self.attachedWalls=[]
         self.inComp = 1
         self.isSingleDoor = False
-        self.arrow = 1
+        self.arrow = 0 # The default doorway direction: Using nearest-exit strategy 
         #self.direction = None #self.arrow*normalize(self.endPx - self.startPx)
         #self.pointer1 = np.array([0, 0])
         #self.pointer2 = np.array([0, 0])
@@ -306,20 +316,20 @@ class passage(object):
         ### +2: +y
         ###  -2: -y 
         if arrow == 1:
-            direction = -np.array([self.params[0], self.params[3]]) -np.array([self.params[2], self.params[3]])
-            direction = normalize(direction)
+            #direction = -np.array([self.params[0], self.params[3]]) -np.array([self.params[2], self.params[3]])
+            #direction = normalize(direction)
             direction = np.array([1.0, 0.0])
         elif arrow == -1:
-            direction = np.array([self.params[0], self.params[3]]) -np.array([self.params[2], self.params[3]])
-            direction = normalize(direction)
+            #direction = np.array([self.params[0], self.params[3]]) -np.array([self.params[2], self.params[3]])
+            #direction = normalize(direction)
             direction = np.array([-1.0, 0.0])
         elif arrow == 2:
-            direction = -np.array([self.params[0], self.params[1]]) -np.array([self.params[0], self.params[3]])
-            direction = normalize(direction)
+            #direction = -np.array([self.params[0], self.params[1]]) -np.array([self.params[0], self.params[3]])
+            #direction = normalize(direction)
             direction = np.array([0.0, 1.0])
         elif arrow == -2:
-            direction = np.array([self.params[0], self.params[1]]) -np.array([self.params[0], self.params[3]])
-            direction = normalize(direction)
+            #direction = np.array([self.params[0], self.params[1]]) -np.array([self.params[0], self.params[3]])
+            #direction = normalize(direction)
             direction = np.array([0.0, -1.0])
         elif arrow == 0:
             direction = np.array([0.0, 0.0])
@@ -335,12 +345,13 @@ class passage(object):
 
 
     def intersecWithLine(self, w1, w2, mode='onlylogic'):
-
+        # x axis: to right
+        # y axit: to downside
         ########################
         ### p1-----------------p4 ###
-        ###  |                              |  ###
-        ###  |                              |  ###
-        ###  |                              |  ###
+        ###  |                 |  ###
+        ###  |                 |  ###
+        ###  |                 |  ###
         ### p2-----------------p3 ###
         ########################
         
@@ -416,9 +427,8 @@ class passage(object):
 
 
     def inside(self, pos):
-        if pos[0]>=self.params[0] and pos[0]<=self.params[2]:
-            if  pos[1]>=self.params[1] and pos[1]<=self.params[3]:
-                return True
+        if pos[0]>=self.params[0] and pos[0]<=self.params[2] and pos[1]>=self.params[1] and pos[1]<=self.params[3]:
+            return True
         else:
             return False
 
@@ -474,13 +484,13 @@ class passage(object):
         return self.pos
     
     # For preprocessing data of doors and walls
-    def findAttachedWalls(self, walls):
+    def findAttachedWalls(self, walls, mode='onlyFindWalls'):
 
         ########################
         ### p1-----------------p4 ###
-        ###  |                              |  ###
-        ###  |                              |  ###
-        ###  |                              |  ###
+        ###  |                 |  ###
+        ###  |                 |  ###
+        ###  |                 |  ###
         ### p2-----------------p3 ###
         ########################
 
@@ -516,11 +526,11 @@ class passage(object):
             if wall.mode == 'rect':
                 
                 ########################
-                ### w1-----------------w4  ##
-                ###  |                              |  ###
-                ###  |                              |  ###
-                ###  |                              |  ###
-                ### w2-----------------w3  ##
+                ### w1-----------------w4  ###
+                ###  |                 |   ###
+                ###  |                 |   ###
+                ###  |                 |   ###
+                ### w2-----------------w3  ###
                 ########################
                 
                 w1 = np.array([wall.params[0], wall.params[1]])
@@ -552,11 +562,203 @@ class passage(object):
                     self.attachedWalls.append(wall)
 
         if len(self.attachedWalls) == 0:
-            self.isSingleDoor = True
-            
+            self.isSingleDoor = True                    
+                            
         return self.attachedWalls
 
 
+    # Test if the attached walls intersect with any edge of the door
+    # Return the average positions of the intersection points if any
+        ##############################
+        ### p1--------z4--------p4 ###
+        ###  |                  |  ###
+        ### z1                  z3 ###
+        ###  |                  |  ###
+        ### p2--------z2--------p3 ###
+        ##############################
+    def dirWithAttachedWalls(self, mode='average'):
+        if len(self.attachedWalls) == 0:
+            self.arrow = 0
+        else:
+            #z1=np.array([0.0, 0.0])
+            #z2=np.array([0.0, 0.0])
+            #z3=np.array([0.0, 0.0])
+            #z4=np.array([0.0, 0.0])
+            z1 = []
+            z2 = []
+            z3 = []
+            z4 = []
+            for walls in self.attachedWalls:
+                if wall.mode == 'line':
+                    w1 = np.array([wall.params[0], wall.params[1]])
+                    w2 = np.array([wall.params[2], wall.params[3]])
+                    pt1, pt2, pt3, pt4 = self.intersecWithLine(w1, w2, 'findCrossPoint')
+                    
+                    #intersecPt = []
+                    #if pt1 is None:
+                    #    pt1=np.array([0.0, 0.0])
+                    #if pt2 is None:
+                    #    pt2=np.array([0.0, 0.0])
+                    #if pt3 is None:
+                    #    pt3=np.array([0.0, 0.0])
+                    #if pt4 is None:
+                    #    pt4=np.array([0.0, 0.0])
+
+                    if pt1 is None:
+                        pass
+                    else:
+                        z1.append(pt1[1])
+
+                    if pt2 is None:
+                        pass
+                    else:
+                        z2.append(pt2[0])
+
+                    if pt3 is None:
+                        pass
+                    else:
+                        z3.append(pt3[1])
+
+                    if pt4 is None:
+                        pass
+                    else:                    
+                        z4.append(pt4[0])
+
+                if wall.mode == 'rect':
+                    
+                    w1 = np.array([wall.params[0], wall.params[1]])
+                    w2 = np.array([wall.params[0], wall.params[3]])
+                    w3 = np.array([wall.params[2], wall.params[3]])
+                    w4 = np.array([wall.params[2], wall.params[1]])
+
+                    pt1, pt2, pt3, pt4 = self.intersecWithLine(w1, w2, 'findCrossPoint')
+
+                    if pt1 is None:
+                        pass
+                    else:
+                        z1.append(pt1[1])
+
+                    if pt2 is None:
+                        pass
+                    else:
+                        z2.append(pt2[0])
+
+                    if pt3 is None:
+                        pass
+                    else:
+                        z3.append(pt3[1])
+
+                    if pt4 is None:
+                        pass
+                    else:                    
+                        z4.append(pt4[0])
+                        
+                    pt1, pt2, pt3, pt4 = self.intersecWithLine(w2, w3, 'findCrossPoint')
+
+                    if pt1 is None:
+                        pass
+                    else:
+                        z1.append(pt1[1])
+
+                    if pt2 is None:
+                        pass
+                    else:
+                        z2.append(pt2[0])
+
+                    if pt3 is None:
+                        pass
+                    else:
+                        z3.append(pt3[1])
+
+                    if pt4 is None:
+                        pass
+                    else:                    
+                        z4.append(pt4[0])
+                        
+                    pt1, pt2, pt3, pt4 = self.intersecWithLine(w3, w4, 'findCrossPoint')
+
+                    if pt1 is None:
+                        pass
+                    else:
+                        z1.append(pt1[1])
+
+                    if pt2 is None:
+                        pass
+                    else:
+                        z2.append(pt2[0])
+
+                    if pt3 is None:
+                        pass
+                    else:
+                        z3.append(pt3[1])
+
+                    if pt4 is None:
+                        pass
+                    else:                    
+                        z4.append(pt4[0])
+                    
+                    pt1, pt2, pt3, pt4 = self.intersecWithLine(w4, w1, 'findCrossPoint')
+
+                    if pt1 is None:
+                        pass
+                    else:
+                        z1.append(pt1[1])
+
+                    if pt2 is None:
+                        pass
+                    else:
+                        z2.append(pt2[0])
+
+                    if pt3 is None:
+                        pass
+                    else:
+                        z3.append(pt3[1])
+
+                    if pt4 is None:
+                        pass
+                    else:                    
+                        z4.append(pt4[0])
+                        
+        #if len(z1)==0 and len(z3)==0 and len(z2)>0 and len(z4)>0:
+        #    self.arrow = 1
+
+        #if z1 is not None and z3 is not None and z2 is None and z4 is None:
+        #if len(z1)>0 and len(z3)>0 and len(z2)==0 and len(z4)==0:
+        #    self.arrow = 2
+        if mode == 'average':
+            r1 = None
+            r2 = None
+            r3 = None
+            r4 = None
+
+            if len(z1)>0:
+                r1 = sum(z1)/len(z1)
+            if len(z2)>0:
+                r2 = sum(z2)/len(z2)
+            if len(z3)>0:
+                r3 = sum(z3)/len(z3)
+            if len(z4)>0:
+                r4 = sum(z4)/len(z4)
+            return r1, r2, r3, r4
+        
+        elif mode == 'maxmin':
+            r1 = None
+            r2 = None
+            r3 = None
+            r4 = None
+            
+            if len(z1)>0:
+                r1 = np.sort(z1)
+            if len(z2)>0:
+                r2 = np.sort(z2)
+            if len(z3)>0:
+                r3 = np.sort(z3)
+            if len(z4)>0:
+                r4 = np.sort(z4)                                        
+            return r1, r2, r3, r4
+        else:
+            return z1, z2, z3, z4
+            
 
         '''
             if not flag1 and not flag2:
