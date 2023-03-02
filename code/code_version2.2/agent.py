@@ -28,6 +28,10 @@ class person(object):
 
     wall_flag =None
     see_flag = None
+
+    exit_prob = None
+    exit_known = None
+    exit_selected = None
     
     def __init__(self, x=1, y=1):
         # random initialize a agent
@@ -53,6 +57,7 @@ class person(object):
 
         self.dest = np.array([60.0,10.0])
         self.exitInMind = None
+        self.exitInMindIndex = None
         self.direction = normalize(self.dest - self.pos)
         #self.direction = np.array([0.0, 0.0])
 
@@ -61,11 +66,12 @@ class person(object):
         
         self.pathMap = []
         self.others = []
+        self.seeothers =[]
         self.targetDoors = []
         self.targetExits = []
-        self.memory = []
         self.route = []     # Record the passing doors
         # in size of number of doors -1, 0,+1
+        #self.memory = []
         #self.memory.append(self.dest)
         
         self.desiredSpeed = 2.0 #random.uniform(0.3,2.3) #1.8
@@ -80,17 +86,17 @@ class person(object):
         self.size = 6 # This feature is used to draw agents in pygame ???
 
         self.motiveF= np.array([0.0,0.0])
-        self.wallrepF= np.array([0.0,0.0])
-        self.groupF= np.array([0.0,0.0])
         self.selfrepF= np.array([0.0,0.0])
-        self.doorF= np.array([0.0,0.0])
+        self.groupF= np.array([0.0,0.0])
         self.physicF= np.array([0.0,0.0])
-        
+        self.wallrepF= np.array([0.0,0.0])
+        self.doorF= np.array([0.0,0.0])
+
         self.interactionRange = 3.0 #Distance for communication (talking)
         self.p = 0.2
         self.pMode = 'random' #{'random' 'fixed' 'increase' 'decrease'}
         
-        self.bodyFactorA = 12.0
+        self.bodyFactorA = 2000.0
         self.slideFricFactorA = 240000
 	
         # /Group Social Force
@@ -102,8 +108,8 @@ class person(object):
         self.B_SF = 0.8 #random.uniform(0.8,1.6) #0.8 #0.08
 	
         # Wall Force / Door Force
-        self.A_WF = 60 #200 #60 #2
-        self.B_WF = 0.3 #0.2 #0.8 #3.2 #2.2 #random.uniform(0.8,1.6) #0.08
+        self.A_WF = 200 #60 #2
+        self.B_WF = 0.2 #0.2 #0.8 #3.2 #2.2 #random.uniform(0.8,1.6) #0.08
         
         self.bodyFactorW = 12.0
         self.slideFricFactorW = 240000
@@ -151,11 +157,14 @@ class person(object):
         return self.direction
     
 	
-    def adaptVel(self):
+    def adaptMotiveForce(self):
+        self.motiveF= np.array([0.0,0.0])
+        self.desiredV = self.desiredSpeed*self.direction
         deltaV = self.desiredV - self.actualV
         if np.allclose(deltaV, np.zeros(2)):
             deltaV = np.zeros(2)
-        return deltaV*self.mass/self.tau
+        self.motiveF = deltaV*self.mass/self.tau
+        return self.motiveF
 
 
     def adaptP(self, flag = 'random'):
@@ -184,8 +193,10 @@ class person(object):
             self.desiredSpeed = max(0.0, self.desiredSpeed)
         return None
 	
-
+    # Compute self-motive force before self-repulsion
     def selfRepulsion(self, Dfactor=1, Afactor=1, Bfactor=1):
+        # selfRep = -selfMotive*(1.0-exp(-n))
+        first = -self.motiveF*(1.0-np.exp(-len(self.others)*(self.radius*Dfactor)/(self.B_CF*Bfactor)))
         first = -self.direction*Afactor*self.A_CF*np.exp((self.radius*Dfactor)/(self.B_CF*Bfactor))*(self.radius*Dfactor)
         return first
 	
@@ -204,124 +215,8 @@ class person(object):
         print('X and Y Position:', self.pos)
         print('self.direction:', self.direction)
         print('self.velocity:', self.actualV)
-        
-
-    def groupForce(self, other, Dfactor=1, Afactor=1, Bfactor=1):
-
-        # self.A = AMatrix(selfID, otherID)
-        # self.B = BMatrix(selfID, otherID)
-        #phiij = vectorAngleCos(self.actualV , (other.pos - self.pos))
-        #anisoF = self.lamb + (1-self.lamb)*(1+cos(phiij))/2
-	
-        rij = self.radius + other.radius
-        dij = np.linalg.norm(self.pos - other.pos)
-        nij = (self.pos - other.pos)/dij
-        first = Afactor*self.A_CF*np.exp((rij*Dfactor-dij)/(self.B_CF*Bfactor))*nij*(rij*Dfactor-dij) #*anisoF
-        return first
-	
-
-    def agentForce(self, other):
-        rij = self.radius + other.radius
-        dij = np.linalg.norm(self.pos - other.pos)
-        nij = (self.pos - other.pos)/dij
-        first = self.A_SF*np.exp((rij-dij)/self.B_SF)*nij
-        second = self.bodyFactorA*ggg(rij-dij)*nij
-	
-        #Issue: nij is a vector directing from j to i.  
-        #*(rij*Dfactor-dij)/20000+ self.bodyFactor*g(rij-dij)*nij/10000
-        tij = np.array([-nij[1],nij[0]])
-        deltaVij = (self.actualV - other.actualV)*tij
-        third = self.slideFricFactorA*ggg(rij-dij)*deltaVij*tij
-        #third = 300*exp(rij-dij)*deltaVij*tij/dij
-	
-        return first + second #+ third
-    
-
-    ############################
-    # This is not used any more.  
-    def physicalForce(self, other):
-        rij = self.radius + other.radius
-        dij = np.linalg.norm(self.pos - other.pos)
-        nij = (self.pos - other.pos)/dij
-        first = self.bodyFactorA*g(rij-dij)*nij
-        #print >> f, "first:", first, "/n"
-	
-        return first
-    # This is not used any more. 
-    ############################
 
     
-    def doorForce(self, door, mode='edge', fuzzydir=0.0):
-        if door.inside(self.pos)==False:
-            doordir = door.direction(door.arrow)
-            agentdir = door.pos-self.pos
-            if np.dot(doordir, agentdir)>=fuzzydir:
-                ri = self.radius
-                #mid= (np.array([self.params[0], self.params[1]]) + np.array([self.params[2], self.params[3]]))/2.0
-                if mode=='pos':
-                    dist=np.linalg.norm(door.pos - self.pos)
-                    dire = normalize(door.pos-self.pos)
-                elif mode == 'edge':
-                    edge1, edge2, edge3, edge4 = door.edge()
-                    dist1 = np.linalg.norm(edge1 - self.pos)
-                    dist2 = np.linalg.norm(edge2 - self.pos)
-                    dist3 = np.linalg.norm(edge3 - self.pos)
-                    dist4 = np.linalg.norm(edge4 - self.pos)
-                    dist_list = [dist1, dist2, dist3, dist4]
-                    dist = min(dist_list)
-                    dist_index =np.argmin(dist_list)
-                    dire = normalize(door.pos-self.pos)  #  Need improvement
-                    #if dist1<dist2:
-                    #    dist=dist1
-                    #    dire = normalize(edge1-self.pos)
-                    #else:
-                    #    dist=dist2
-                    #    dire = normalize(edge2-self.pos)
-                        
-                #first = self.A_WF*np.exp((ri-dist)/self.B_WF)*dire
-                second = 760*exp((ri-dist)/0.3)*dire  #1.8)*dire
-                return second #first + second
-            else:
-                return np.array([0.0, 0.0])
-        else:
-            if door.arrow == 1 or door.arrow == -1:
-                w1= np.array([door.params[0], door.params[1]])
-                w2 = np.array([door.params[2], door.params[1]])
-                diw, niw = distanceP2L(self.pos, w1, w2)
-                first = -self.A_WF*np.exp((self.diw_desired-diw)/self.B_WF)*niw
-                #second = -600*exp((2*ri-diw)/0.2)*niw
-                #result1 = self.wall_LineForce(w1, w2)
-
-                w1= np.array([door.params[0], door.params[3]])
-                w2 = np.array([door.params[2], door.params[3]])
-                diw, niw = distanceP2L(self.pos, w1, w2)
-                second = -self.A_WF*np.exp((self.diw_desired-diw)/self.B_WF)*niw
-                #result2 = self.wall_LineForce(w1, w2)
-
-                return first + second
-                #return result1 + result2
-            
-            if door.arrow == 2 or door.arrow == -2:
-                w1= np.array([door.params[0], door.params[1]])
-                w2= np.array([door.params[0], door.params[3]])
-                diw, niw = distanceP2L(self.pos, w1, w2)
-                first = -self.A_WF*np.exp((self.diw_desired-diw)/self.B_WF)*niw
-                #result1 = self.wall_LineForce(w1, w2)
-
-                w1= np.array([door.params[2], door.params[1]])
-                w2= np.array([door.params[2], door.params[3]])
-                diw, niw = distanceP2L(self.pos, w1, w2)
-                second = -self.A_WF*np.exp((self.diw_desired-diw)/self.B_WF)*niw
-                #result2 = self.wall_LineForce(w1, w2)
-
-                return first + second
-                #return result1 + result2
-            
-            if door.arrow ==0:
-                return np.array([0.0, 0.0])
-             #   if abs(self.actualV[0]) > abs(self.actualV[1]):
-
-
     def wall_LineForce(self, w1, w2):
         #ftest = open("wallForceTest.txt", "w+")
         ri = self.radius
@@ -512,8 +407,8 @@ class person(object):
                 dist3 = np.linalg.norm(self.pos - result3)
 
             #dist3 = self.wallOnRoute_Line(w1, w2, mode, lookhead)
-            if dist3!=None:
-                if dist==None:
+            if dist3 is not None:
+                if dist is None:
                     result=result3
                     dist=dist3
                     arrow=w2-w1
@@ -522,7 +417,7 @@ class person(object):
                     dist=dist3
                     arrow=w2-w1
 
-            if arrow!=None:
+            if arrow is not None:
                 arrow=normalize(arrow)
             return result, dist, arrow
 
@@ -682,80 +577,170 @@ class person(object):
         return resultDoors
 
 
-    def updateAttentionList(self, agents, walls, WALLBLOCKHERDING):
+    def updateSee(self, agents, walls): #WALLBLOCKHERDING):
+
+        for idaj,aj in enumerate(agents):
+            if self is aj:
+                idai = idaj
+                break
+                
+        for idaj,aj in enumerate(agents):
+            if aj.inComp == 0:
+                continue
+
+            if self is aj: # Suppose one can see himself or herself
+                person.wall_flag[idai, idaj]=1
+                person.see_flag[idai, idaj]=1
+                continue
+            else:
+                person.wall_flag[idai, idaj]=0
+                person.see_flag[idai, idaj]=0
+                
+            #####################################################
+            # Check whether there is a wall between agent i and j
+            no_wall_ij = True
+            #if WALLBLOCKHERDING: 
+            for idwall, wall in enumerate(walls):
+                if wall.inComp ==0:
+                    continue
+                result, flag = wall.wallInBetween(self.pos, aj.pos)
+                if flag==False:
+                    no_wall_ij = True
+                    person.wall_flag[idai, idaj]=1
+                else:
+                    no_wall_ij = False
+                    person.wall_flag[idai, idaj]=0
+                    break
+                        
+            if no_wall_ij:
+                see_i2j = True
+                if np.dot(self.actualV, aj.pos-self.pos)<0.2:
+                    see_i2j = False
+                    person.see_flag[idai, idaj]=0
+                #elif np.linalg.norm(self.actualV)<0.2:
+                #    temp=random.uniform(-180, 180)
+                #    if temp < 70 and temp > -70:
+                #        see_i2j =True
+                #        person.see_flag[idai, idaj]=1
+                #
+                # eyesight is narrowed when one moves fast ?
+                else:
+                    see_i2j =True
+                    person.see_flag[idai, idaj]=1
+
+
+    def groupForce(self, other, Dfactor=1, Afactor=1, Bfactor=1):
+
+        # self.A = AMatrix(selfID, otherID)
+        # self.B = BMatrix(selfID, otherID)
+	
+        rij = self.radius + other.radius
+        dij = np.linalg.norm(self.pos - other.pos)
+        nij = (self.pos - other.pos)/dij
+
+        phiij = vectorAngleCos(self.actualV, (other.pos - self.pos))
+        anisoF = self.lamb + (1-self.lamb)*(1+cos(phiij))*0.5
+        
+        first = Afactor*self.A_CF*np.exp((rij*Dfactor-dij)/(self.B_CF*Bfactor))*nij*(rij*Dfactor-dij)*anisoF
+        #print("group social force:", first, "/n")
+        return first
+
+
+    def agentForce(self, other):
+        rij = self.radius + other.radius
+        dij = np.linalg.norm(self.pos - other.pos)
+        nij = (self.pos - other.pos)/dij
+
+        phiij = vectorAngleCos(self.actualV, (other.pos - self.pos))
+        anisoF = self.lamb + (1-self.lamb)*(1+cos(phiij))*0.5
+        
+        first = self.A_SF*np.exp((rij-dij)/self.B_SF)*nij*anisoF
+        second = self.bodyFactorA*ggg(rij-dij)*nij*anisoF
+	
+        #Issue: nij is a vector directing from j to i.  
+        #*(rij*Dfactor-dij)/20000+ self.bodyFactor*g(rij-dij)*nij/10000
+        tij = np.array([-nij[1],nij[0]])
+        deltaVij = (self.actualV - other.actualV)*tij
+        third = self.slideFricFactorA*ggg(rij-dij)*deltaVij*tij*anisoF
+        #third = 300*exp(rij-dij)*deltaVij*tij/dij
+	
+        return first + second #+ third
+
+    ############################
+    # This is not used any more.  
+    def physicalForce(self, other):
+        
+        rij = self.radius + other.radius
+        dij = np.linalg.norm(self.pos - other.pos)
+        nij = (self.pos - other.pos)/dij
+        
+        phiij = vectorAngleCos(self.actualV, (other.pos - self.pos))
+        anisoF = self.lamb + (1-self.lamb)*(1+cos(phiij))*0.5
+        
+        first = self.bodyFactorA*g(rij-dij)*nij*anisoF
+        #print("physical interaction force:", first, "/n")
+	
+        return first
+    # This is not used any more. 
+    ############################
+    
+
+    def updateAttentionList(self, agents, walls): #, WALLBLOCKHERDING):
     
         #######################################################
         # Compute interaction of agents:  Find the agents who draw ai's attention
         ########################################################
-        self.others=[]
-        self.physicF = np.array([0.0,0.0])
         for idaj,aj in enumerate(agents):
+            if self is aj:
+                idai = idaj
+                break
+                
+        self.others=[]
+        self.seeothers=[]
+        #self.physicF = np.array([0.0,0.0])
+        for idaj, aj in enumerate(agents):
             
             if aj.inComp == 0:
                 person.comm[self.ID, aj.ID] = 0
                 person.talk[self.ID, aj.ID] = 0
                 continue
-            
+
+            if aj is self:
+                person.comm[self.ID, aj.ID] = 1
+                person.talk[self.ID, aj.ID] = 1
+                continue
+            else:
+                person.comm[self.ID, aj.ID] = 0
+                person.talk[self.ID, aj.ID] = 0
+                
             rij = self.radius + aj.radius
             dij = np.linalg.norm(self.pos - aj.pos)
              
-            #Difference of current destinations
-            dij_dest = np.linalg.norm(self.dest - aj.dest)
-             
-            #Difference of desired velocities
-            vij_desiredV = np.linalg.norm(self.desiredV - aj.desiredV)
-             
-            #Difference of actual velocities
-            vij_actualV = np.linalg.norm(self.actualV - aj.actualV)
+            #Difference of current destinations: dij_dest = np.linalg.norm(self.dest - aj.dest)
+            #Difference of desired velocities: vij_desiredV = np.linalg.norm(self.desiredV - aj.desiredV)
+            #Difference of actual velocities: vij_actualV = np.linalg.norm(self.actualV - aj.actualV)
              
             phiij = vectorAngleCos(self.actualV , (aj.pos - self.pos))
             anisoF = self.lamb + (1-self.lamb)*(1+cos(phiij))*0.5
-             
             #print >> f, "anisotropic factor", anisoF, "/n"
-             
-            if self.ID == aj.ID:
-                continue
-                    
-            #####################################################
-            # Check whether there is a wall between agent i and j
-            no_wall_ij = True
-            if WALLBLOCKHERDING: 
-                for idwall, wall in enumerate(walls):
-                    if wall.inComp ==0:
-                        continue
-                    #result, flag = self.iswallInBetween(aj, wall)
-                    result, flag = wall.wallInBetween(self.pos, aj.pos)
-                    if flag==True:
-                        no_wall_ij = False
-                        break
-                        
-            see_i2j = True
-            if np.dot(self.actualV, aj.pos-self.pos)<0.2:
-                see_i2j = False
-            if np.linalg.norm(self.actualV)<0.2:
-                temp=random.uniform(-180, 180)
-                if temp < 70 and temp > -70:
-                    see_i2j =True
-             
+            
             #############################################
             # Turn on or off group social force
-            # Also known as cohesive social force
             #if GROUPBEHAVIOR and no_wall_ij and see_i2j:
             #    peopleInter += self.groupForce(aj, DFactor[idai, idaj], AFactor[idai, idaj], BFactor[idai, idaj])*anisoF
          
             #############################################
             # Traditional Social Force and Physical Force
-            if no_wall_ij: #and see_i2j:
+            if person.see_flag[self.ID, aj.ID]:
                 #peopleInter += self.agentForce(aj)*anisoF
-                self.physicF += self.agentForce(aj)*anisoF
-                         
-            person.talk[self.ID, aj.ID] = 0
+                self.seeothers.append(aj)
+
             ###################################################
             # Interactive Opinion Dynamics Starts here
             # Including Herding Effect, Group Effect and Talking Behavior
             # There are several persons around you.  Which draws your attention?  
             ###################################################
-            if dij < self.B_CF*person.BFactor[self.ID, aj.ID] + rij*person.DFactor[self.ID, aj.ID] and no_wall_ij and see_i2j:
+            if dij < self.B_CF*person.BFactor[self.ID, aj.ID] + rij*person.DFactor[self.ID, aj.ID] and person.see_flag[self.ID, aj.ID]:
             #if dij < self.interactionRange and no_wall_ij and see_i2j:
                 person.comm[self.ID, aj.ID] = 1
                 self.others.append(aj)
@@ -771,28 +756,35 @@ class person(object):
             ###########################
 
 
-    def updateTalk(self, GROUPBEHAVIOR):
+    def updateTalk(self, agents, GROUPBEHAVIOR, debug=False):
+
+        self.physicF = np.array([0.0,0.0])
+        for idaj, aj in enumerate(agents):
+
+            if aj.inComp == 0:
+                continue
+            if aj is self:
+                continue
+             
+            #print("anisotropic factor", anisoF, "/n")
+            self.physicF += self.agentForce(aj)
+            #self.physicF += self.physicalForce(aj)*anisoF
+            #peopleInter += self.agentForce(aj)*anisoF
 
         self.groupF = np.array([0.0,0.0])
         for aj in self.others:
 
             #idaj=aj.ID
-            print ('others ID', aj.ID)
+            if debug:
+                print ('others ID', aj.ID)
                         
             dij = np.linalg.norm(self.pos - aj.pos)
-             
-            #Difference of current destinations
-            dij_dest = np.linalg.norm(self.dest - aj.dest)
-             
             #Difference of desired velocities
             vij_desiredV = np.linalg.norm(self.desiredV - aj.desiredV)
-             
             #Difference of actual velocities
             vij_actualV = np.linalg.norm(self.actualV - aj.actualV)
 
-            phiij = vectorAngleCos(self.actualV , (aj.pos - self.pos))
-            anisoF = self.lamb + (1-self.lamb)*(1+cos(phiij))*0.5
-                        
+            person.talk[self.ID, aj.ID] = 0                        
             if dij<self.interactionRange: #and 0.6<random.uniform(0.0,1.0):
             #self.talk_prob<random.uniform(0.0,1.0):
                 person.DFactor[self.ID, aj.ID]=2.0
@@ -807,18 +799,145 @@ class person(object):
                 self.tau = self.moving_tau
                 person.talk[self.ID, aj.ID]=0
 
-            ############################
+            ####################################
             # Turn on or off group social force
-            ############################
+            ####################################
             if GROUPBEHAVIOR:
-                self.groupF += self.groupForce(aj, person.DFactor[self.ID, aj.ID], person.AFactor[self.ID, aj.ID], person.BFactor[self.ID, aj.ID])*anisoF
+                self.groupF += self.groupForce(aj, person.DFactor[self.ID, aj.ID], person.AFactor[self.ID, aj.ID], person.BFactor[self.ID, aj.ID])
 
-            ###############################
+            #########################################
             # Half opinion dynamics for tpre feature
             # To be extended by using PFactor
-            ##############################
+            #########################################
             if dij < self.interactionRange:
                 self.tpre = 0.5*self.tpre + 0.5*aj.tpre
+
+        return self.groupF + self.physicF
+
+
+    def doorForce(self, door, mode='edge', fuzzydir=0.0):
+        if door.inside(self.pos)==False:
+            doordir = door.direction(door.arrow)
+            agentdir = door.pos-self.pos
+            if np.dot(doordir, agentdir)>=fuzzydir:
+                ri = self.radius
+                #mid= (np.array([self.params[0], self.params[1]]) + np.array([self.params[2], self.params[3]]))/2.0
+                if mode=='pos':
+                    dist=np.linalg.norm(door.pos - self.pos)
+                    dire = normalize(door.pos-self.pos)
+                elif mode == 'edge':
+                    edge1, edge2, edge3, edge4 = door.edge()
+                    dist1 = np.linalg.norm(edge1 - self.pos)
+                    dist2 = np.linalg.norm(edge2 - self.pos)
+                    dist3 = np.linalg.norm(edge3 - self.pos)
+                    dist4 = np.linalg.norm(edge4 - self.pos)
+                    dist_list = [dist1, dist2, dist3, dist4]
+                    dist = min(dist_list)
+                    dist_index =np.argmin(dist_list)
+                    dire = normalize(door.pos-self.pos)  #  Need improvement
+                    #if dist1<dist2:
+                    #    dist=dist1
+                    #    dire = normalize(edge1-self.pos)
+                    #else:
+                    #    dist=dist2
+                    #    dire = normalize(edge2-self.pos)
+                        
+                #first = self.A_WF*np.exp((ri-dist)/self.B_WF)*dire
+                second = 760*exp((ri-dist)/0.3)*dire  #1.8)*dire
+                return second #first + second
+            else:
+                return np.array([0.0, 0.0])
+        else:
+            if door.arrow == 1 or door.arrow == -1:
+                w1= np.array([door.params[0], door.params[1]])
+                w2 = np.array([door.params[2], door.params[1]])
+                diw, niw = distanceP2L(self.pos, w1, w2)
+                first = -self.A_WF*np.exp((self.diw_desired-diw)/self.B_WF)*niw
+                #second = -600*exp((2*ri-diw)/0.2)*niw
+                #result1 = self.wall_LineForce(w1, w2)
+
+                w1= np.array([door.params[0], door.params[3]])
+                w2 = np.array([door.params[2], door.params[3]])
+                diw, niw = distanceP2L(self.pos, w1, w2)
+                second = -self.A_WF*np.exp((self.diw_desired-diw)/self.B_WF)*niw
+                #result2 = self.wall_LineForce(w1, w2)
+
+                return first + second
+                #return result1 + result2
+            
+            if door.arrow == 2 or door.arrow == -2:
+                w1= np.array([door.params[0], door.params[1]])
+                w2= np.array([door.params[0], door.params[3]])
+                diw, niw = distanceP2L(self.pos, w1, w2)
+                first = -self.A_WF*np.exp((self.diw_desired-diw)/self.B_WF)*niw
+                #result1 = self.wall_LineForce(w1, w2)
+
+                w1= np.array([door.params[2], door.params[1]])
+                w2= np.array([door.params[2], door.params[3]])
+                diw, niw = distanceP2L(self.pos, w1, w2)
+                second = -self.A_WF*np.exp((self.diw_desired-diw)/self.B_WF)*niw
+                #result2 = self.wall_LineForce(w1, w2)
+
+                return first + second
+                #return result1 + result2
+            
+            if door.arrow ==0:
+                return np.array([0.0, 0.0])
+             #   if abs(self.actualV[0]) > abs(self.actualV[1]):
+
+
+
+    def adaptWallDoorForce(self, walls, doors):
+        
+        self.wallrepF = np.array([0.0,0.0])
+        self.doorF= np.array([0.0,0.0])
+        outsideDoor = True
+        for door in doors:
+            if door.inComp ==0:
+                continue
+            #doorInter += self.doorForce(door)
+            if door.inside(self.pos):
+                self.wallrepF = np.array([0.0, 0.0])
+                self.doorF = self.doorForce(door) 
+                outsideDoor = False
+                return self.wallrepF, self.doorF, outsideDoor
+                #doorInter = self.doorForce(door)
+                #break
+
+        #########################
+        # Calculate Wall Repulsion
+        if outsideDoor:
+            for wall in walls:
+                if wall.inComp ==0:
+                    continue
+                self.wallrepF += self.wallForce(wall)
+
+        # Interaction with enviroment
+        # Search for wall on the route
+        # temp = 0.0
+        closeWall = None
+        closeWallDist = 10.0 # Define how close the wall is
+        for wall in walls:
+            if wall.inComp ==0:
+                continue
+            crossp, diw, arrow = self.wallOnRoute(wall, 1.0)
+            if diw!=None and diw < closeWallDist:
+                closeWallDist = diw
+                closeWall = wall
+
+
+        closeWallEffect = True
+        crossp, diw, wallDirection = self.wallOnRoute(closeWall, 1.0)
+        if diw!=None and outsideDoor:
+            for door in closeWall.attachedDoors:
+                if door.inside(crossp):
+                    self.wallrepF = self.wallrepF - self.wallForce(closeWall) + self.doorForce(door)
+                    #self.doorF += self.doorForce(door)
+                    closeWallEffect = False
+                    break
+                
+        return self.wallrepF, self.doorF, outsideDoor
+
                     
 
 if __name__ == '__main__':
@@ -834,7 +953,7 @@ if __name__ == '__main__':
     print('Other Opinion', f2)
     Ped1.showAttr()
     Ped1.showAttr()
-    v = Ped1.adaptVel
+    v = Ped1.adaptMotiveF
     Ped1.changeAttr(1,1)
     Ped2.changeAttr(2,2)
 

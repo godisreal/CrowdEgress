@@ -268,9 +268,8 @@ class obst(object):
         if self.mode == 'line':
             return False
         if self.mode == 'rect':
-            if pos[0]>=self.params[0] and pos[0]<=self.params[2]:
-                if  pos[1]>=self.params[1] and pos[1]<=self.params[3]:
-                    return True
+            if pos[0]>=self.params[0] and pos[0]<=self.params[2] and pos[1]>=self.params[1] and pos[1]<=self.params[3]:
+                return True
             else:
                 return False
     
@@ -588,7 +587,7 @@ class passage(object):
             z2 = []
             z3 = []
             z4 = []
-            for walls in self.attachedWalls:
+            for wall in self.attachedWalls:
                 if wall.mode == 'line':
                     w1 = np.array([wall.params[0], wall.params[1]])
                     w2 = np.array([wall.params[2], wall.params[3]])
