@@ -241,9 +241,9 @@ class GUI(object):
         sunpro2.start()
         #sunpro2.join()
         if self.currentSimu.continueToSimu:
+            self.currentSimu.flowMesh()
             self.currentSimu.preprocessGeom()
             self.currentSimu.preprocessAgent()
-            #self.currentSimu.flowMesh()
             self.updateCtrlParam()
             sunpro1 = mp.Process(target=show_simu(self.currentSimu))
             #sunpro1 = mp.Process(target=self.currentSimu.flowMesh())
@@ -269,6 +269,7 @@ class GUI(object):
         #self.textInformation.insert(END, "Start Simulation Now!")
         self.setStatusStr("Simulation starts!  GUI window is not effective when Pygame screen is displayed!")
         self.updateCtrlParam()
+        self.currentSimu.flowMesh()
         self.currentSimu.preprocessGeom()
         self.currentSimu.preprocessAgent()
         sunpro1 = mp.Process(target=show_simu(self.currentSimu))        

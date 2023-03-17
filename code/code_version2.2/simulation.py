@@ -241,19 +241,20 @@ class simulation(object):
         f = open("log.txt", "a+")
         #self.outFileName=f
 
-        if sys.version_info[0] == 2:
-            print >> f, 'FN_FDS=', self.FN_FDS
-            print >> f, 'FN_EVAC=', self.FN_EVAC #,'\n'
-        else:
-            f.write('FN_FDS='+str(self.FN_FDS)+'\n')
-            f.write('FN_EVAC='+str(self.FN_EVAC)+'\n')
-            f.write('Working path='+os.getcwd()+'\n')
-            f.write('ZOOM='+str(self.ZOOMFACTOR)+'\n')    	
-            f.write('xSpace='+str(self.xSpace)+'\n')
-            f.write('ySpace='+str(self.ySpace)+'\n')
-            f.write('solver='+str(self.solver)+'\n')
-            #f.write('group=')
-            f.write(time.strftime('%Y-%m-%d_%H_%M_%S')+'\n\n')
+        #if sys.version_info[0] == 2:
+        #    print >> f, 'FN_FDS=', self.FN_FDS
+        #    print >> f, 'FN_EVAC=', self.FN_EVAC #,'\n'
+        #else:
+        
+        f.write('FN_FDS='+str(self.FN_FDS)+'\n')
+        f.write('FN_EVAC='+str(self.FN_EVAC)+'\n')
+        f.write('Working path='+os.getcwd()+'\n')
+        f.write('ZOOM='+str(self.ZOOMFACTOR)+'\n')    	
+        f.write('xSpace='+str(self.xSpace)+'\n')
+        f.write('ySpace='+str(self.ySpace)+'\n')
+        f.write('solver='+str(self.solver)+'\n')
+        #f.write('group=')
+        f.write(time.strftime('%Y-%m-%d_%H_%M_%S')+'\n\n')
 
         #FN_FDS=self.FN_FDS
         #FN_EVAC=self.FN_EVAC
@@ -1729,6 +1730,7 @@ if __name__=="__main__":
     myTest.flowMesh()
     myTest.preprocessGeom()
     myTest.preprocessAgent()
+    show_flow(myTest)
     
     if myTest.continueToSimu:
         show_simu(myTest)
