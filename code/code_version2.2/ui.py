@@ -147,8 +147,14 @@ class GUI(object):
         self.SHOWFORCE_Var = IntVar()
         self.SHOWFORCE_Var.set(1)
         self.SHOWFORCE_CB=Checkbutton(self.frameParameters, text= 'Show forces on agents in simulation', variable=self.SHOWFORCE_Var, onvalue=1, offvalue=0)
-        self.SHOWFORCE_CB.place(x=2, y=66)
+        self.SHOWFORCE_CB.place(x=300, y=36)
         self.showHelp(self.SHOWFORCE_CB, "Show various forces on agents in the simulation.")
+
+        self.NearExit_Var = IntVar()
+        self.NearExit_Var.set(1)
+        self.NearExit_CB=Checkbutton(self.frameParameters, text= 'Use nearest exit strategy', variable=self.NearExit_Var, onvalue=1, offvalue=0)
+        self.NearExit_CB.place(x=2, y=66)
+        self.showHelp(self.NearExit_CB, "Use nearest exit strategy to guide evacuee agents.")
 
         #print self.SHOWTIME_Var.get()
 
@@ -187,6 +193,10 @@ class GUI(object):
             self.currentSimu.DRAWGROUPFORCE=False
             #self.currentSimu.DRAWSELFREPULSION=False
 
+        if self.NearExit_Var.get():
+            self.currentSimu.solver=1
+        else:
+            self.currentSimu.solver=2
             
     def start(self):
         self.window.mainloop()
@@ -241,10 +251,10 @@ class GUI(object):
         sunpro2.start()
         #sunpro2.join()
         if self.currentSimu.continueToSimu:
+            self.updateCtrlParam()
             self.currentSimu.flowMesh()
             self.currentSimu.preprocessGeom()
             self.currentSimu.preprocessAgent()
-            self.updateCtrlParam()
             sunpro1 = mp.Process(target=show_simu(self.currentSimu))
             #sunpro1 = mp.Process(target=self.currentSimu.flowMesh())
             sunpro1.start()
@@ -257,6 +267,7 @@ class GUI(object):
     def testFlow(self):
         self.currentSimu = simulation()
         self.currentSimu.select_file(self.fname_EVAC, self.fname_FDS, "non-debug")
+        self.updateCtrlParam()
         show_geom(self.currentSimu)
         #sunpro2 = mp.Process(target=show_geom(self.currentSimu)) 
         #sunpro2.start()

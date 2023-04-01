@@ -434,7 +434,7 @@ class simulation(object):
             print('R0:\n',R0)
             print('np.sum(R0):',np.sum(R0))
             #eular2D(x_min, y_min, x_max, y_max, x_points, y_points, D_t, t_end, bldInfo, R0, U0, V0, Rdes, Udes, Vdes, mode=0, saveData=True, showPlot=True, debug=True):
-            #eular2D(x_min, y_min, x_max, y_max, x_points, y_points, D_t, t_end, BLDinfo, R0, zeroArray, zeroArray, zeroArray, Ud, Vd, 1, True)
+            #eular2D(x_min, y_min, x_max, y_max, x_points, y_points, D_t, t_end, BLDinfo, R0, zeroArray, zeroArray, zeroArray, Ud0, Vd0, 2, True)
             #if self.DEBUG:
                 
         if self.solver==2: # Show flow field of each individual exit
@@ -506,8 +506,8 @@ class simulation(object):
 
         ###=== Door Direction for Each Exit ========
         if self.solver==1:
-            tableFeatures, LowerIndex, UpperIndex = getData(self.FN_EVAC, '&Exit2Door')
-            self.exit2door = readFloatArray(tableFeatures, len(self.exits), len(self.doors))
+            #tableFeatures, LowerIndex, UpperIndex = getData(self.FN_EVAC, '&Exit2Door')
+            #self.exit2door = readFloatArray(tableFeatures, len(self.exits), len(self.doors))
             #exit2door = readCSV("Exit2Door2018.csv", "float")
 
             if np.shape(self.exit2door)!= (self.num_exits, self.num_doors): 
