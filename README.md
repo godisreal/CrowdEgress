@@ -2,7 +2,8 @@
 
 The source code was intially written in Python 2.7, and has been slightly modified for python3. Pygame and Numpy are required to run the code.  Some output data are post-processed or plotted with matplotlib.  A simple user interface is under development in version 2.2 by using Tkinter.  Currently version 2.2 is the latest version where exit flow field is calculated by using a flow solver.  This algorithm is learned from FDS+Evac, a well-known evacuation simulator.  Please try version 2.2 in this repo.  
 
-How-To(Version 2.2): python ui.py --> user interface (GUI) --> select input files --> visulize geometry settings --> start simulation
+### How-To(Version 2.2): 
+python ui.py --> user interface (GUI) --> select input files --> visulize geometry settings --> start simulation
 
 (1) When tkinter window (GUI) is activated, please select the input files for simulation.  Choose csv file for evac input data.  Users can optionally use fds file to create the compartment geometry, and the pedestrian features must be described in csv file.  If fds file is omitted, the compartment geometry should be described in csv file.  Please take a look at the user guide and examples for details.  
 
@@ -21,8 +22,10 @@ The program mainly consists of four components: User Interface, Simulation Core,
 
 **Data Tool**: This component is included in data.py, which reads in data from input files and write data to output files.  In code version 2.2 the agent data must be included in a csv file.  The compartment geometry (i.e., walls, doors and exits) is either read from the csv file or fds file (FDS+Evac input file).  Please refer to examples for details on specification of agents, walls, doors and exits.  
 
-**Visualization Tool**:  The visulization component is packed in draw_func.py and pygame (SDL for Python) is used to visualize the simulation result.  We have developed another offline visualization tool such that users can first run the simulation and get the output data, and then visualize the output data.  This tool is in our repo https://github.com/godisreal/evac-prt5-tool.  
+**Visualization Tool**:  The visulization component is packed in draw_func.py and pygame (SDL for Python) is used to visualize the simulation result.  We have developed a simple data tool such that users can first run the simulation and get the output data, and then visualize the output data.  This tool is in our repo https://github.com/godisreal/evac-prt5-tool.  As a ongoing project the output data is also to be visualized by smokeview, a 3D graphic data interface for fds.  
 
+### Acknowledgments
+I would like to express my sincere gratitude to Dr. Peter Luh for his helpful comments on my earlier work in University of Connecticut. I am also thankful to Timo Korhonen for helpful discussion in his wonderful simulation work of FDS+Evac.  I highly appreciates the research program funded by NSF Grant # CMMI-1000495.  
 
 ### Collaborators are needed and your ideas are much valued!  
 
