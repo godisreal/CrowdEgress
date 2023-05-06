@@ -12,16 +12,16 @@ import random
 class person(object):
 
     # Social characteristics of a group of pedestrians (Social Parameters of Crowd)
+    PFactor = None
     AFactor = None
     BFactor = None
     DFactor = None
-    PFactor = None
 
     # Initial Social Characteristics
-    DFactor_Init = None
     AFactor_Init = None
     BFactor_Init = None
     PFactor_Init = None
+    DFactor_Init = None
 
     comm = None # Non-language communication
     talk = None     # Language communication
@@ -88,9 +88,20 @@ class person(object):
         self.motiveF= np.array([0.0,0.0])
         self.selfrepF= np.array([0.0,0.0])
         self.groupF= np.array([0.0,0.0])
+        # self.socialF= np.array([0.0,0.0])
         self.physicF= np.array([0.0,0.0])
+        self.physicSF= np.array([0.0,0.0])
+        self.physicWF= np.array([0.0,0.0])
         self.wallrepF= np.array([0.0,0.0])
         self.doorF= np.array([0.0,0.0])
+
+        self.objF = np.array([0.0,0.0])
+        self.subF = np.array([0.0,0.0])
+
+        # self.W3 = self.p
+        self.W1=0.0
+        self.W2=0.0
+        self.W3=0.0
 
         self.interactionRange = 3.0 #Distance for communication (talking)
         self.p = 0.2
@@ -121,7 +132,7 @@ class person(object):
         self.actualV_old = np.array([0.0, 0.0])
 	
         self.lamb = random.uniform(0.2,0.4)
-        self.diw_desired = 0.6
+        self.diw_desired = 0.2
 	
         self.ratioV = 1
         self.stressLevel = 1
@@ -192,6 +203,7 @@ class person(object):
             self.desiredSpeed = self.desiredSpeed + random.uniform(-0.3, 0.0)
             self.desiredSpeed = max(0.0, self.desiredSpeed)
         return None
+    
 	
     # Compute self-motive force before self-repulsion
     def selfRepulsion(self, Dfactor=1, Afactor=1, Bfactor=1):
@@ -217,13 +229,17 @@ class person(object):
         print('self.velocity:', self.actualV)
 
     
-    def wall_LineForce(self, w1, w2):
+    def wall_SocialForce(self, w1, w2, threshold = 0.6):
         #ftest = open("wallForceTest.txt", "w+")
         ri = self.radius
         #w1 = np.array([wall.params[0],wall.params[1]])
         #w2 = np.array([wall.params[2],wall.params[3]])
         diw, niw = distanceP2L(self.pos, w1, w2)
-        if diw>0.6:
+
+        # Wall force is effective if diw <= threshold
+        # The meaning of threshold is that people will neglect the wall effect if the wall is far away from them.  
+        # Thus the threshold is psychological meaningful.  
+        if diw>threshold: 
             result=np.array([0.0, 0.0])
             return result
         else:
@@ -233,25 +249,42 @@ class person(object):
             #second = -self.bodyFactorW*ggg(2*ri-diw)*niw*200000
             #Issue: the diretion of niw is from the agent to the wall.  Check Needed!
             #print >> ftest, 'first:', first, '\n'
-    
+
             #tiw = np.array([-niw[1],niw[0]])
             #third = self.slideFricFactorW*ggg(ri-diw)*(self.actualV*tiw)*tiw/1000
             #print >> ftest, 'second:', second, '\n'
     
             #ftest.close()
-            if diw>=ri:
-                second = np.array([0.0, 0.0])
-            else:
-                second = -self.bodyFactorW*(ri-diw)*niw*200000
-            return first + second #+ third
+            return first #,second #+ third
 
+
+    def wall_PhysicalForce(self, w1, w2):
+        
+        ri = self.radius
+        #w1 = np.array([wall.params[0],wall.params[1]])
+        #w2 = np.array([wall.params[2],wall.params[3]])
+        diw, niw = distanceP2L(self.pos, w1, w2)
+
+        #Issue: the diretion of niw is from the agent to the wall.  Check Needed!
+        second = -self.bodyFactorW*ggg(ri-diw)*niw*200000
+        tiw = np.array([-niw[1], niw[0]])
+        third = self.slideFricFactorW*ggg(ri-diw)*(self.actualV*tiw)*tiw/1000
+
+        #if diw>=ri:
+        #    second = np.array([0.0, 0.0])
+        #else:
+        #    second = -self.bodyFactorW*(ri-diw)*niw*200000
+        
+        return second + third
     
-    def wallForce(self, wall):
+    
+    def wallSocForce(self, wall):
         if wall.mode == 'line':
             w1 = np.array([wall.params[0],wall.params[1]])
             w2 = np.array([wall.params[2],wall.params[3]])
-            result = self.wall_LineForce(w1, w2)
-            return result
+            wallSocF = self.wall_SocialForce(w1, w2)
+            #wallPhyF = self.wall_PhysicalForce(w1, w2)
+            return wallSocF #+ wallPhyF
 
         elif wall.mode == 'rect':
 
@@ -274,40 +307,118 @@ class person(object):
             if dist1<0.3 and dist2/dist1>10.0:
                 w1=(p1+p2)/2.0
                 w2=(p3+p4)/2.0
-                result = self.wall_LineForce(w1, w2)
-                return result
+                wallSocF = self.wall_SocialForce(w1, w2)
+                #wallPhyF = self.wall_PhysicalForce(w1, w2)
+                return wallSocF #+ wallPhyF
 
             if dist2<0.3 and dist1/dist2>10.0:
                 w1=(p1+p4)/2.0
                 w2=(p2+p3)/2.0
-                result = self.wall_LineForce(w1, w2)
-                return result
+                wallSocF = self.wall_SocialForce(w1, w2)
+                #wallPhyF = self.wall_PhysicalForce(w1, w2)
+                return wallSocF #+ wallPhyF
+
+            wallSocF = np.array([0.0,0.0])
+            #wallPhyF = np.array([0.0,0.0])
             
             w1 = np.array([wall.params[0],wall.params[1]])
             w2 = np.array([wall.params[0],wall.params[3]])
-            result0 = self.wall_LineForce(w1, w2)
+            wallSocF += self.wall_SocialForce(w1, w2)
+            #wallPhyF += self.wall_PhysicalForce(w1, w2)
 
             w1 = np.array([wall.params[2],wall.params[1]])
             w2 = np.array([wall.params[2],wall.params[3]])
-            result2 = self.wall_LineForce(w1, w2)
+            wallSocF += self.wall_SocialForce(w1, w2)
+            #wallPhyF += self.wall_PhysicalForce(w1, w2)
 
             w1 = np.array([wall.params[0],wall.params[1]])
             w2 = np.array([wall.params[2],wall.params[1]])
-            result1 = self.wall_LineForce(w1, w2)
+            wallSocF += self.wall_SocialForce(w1, w2)
+            #wallPhyF += self.wall_PhysicalForce(w1, w2)
 
             w1 = np.array([wall.params[0],wall.params[3]])
             w2 = np.array([wall.params[2],wall.params[3]])
-            result3 = self.wall_LineForce(w1, w2)
+            wallSocF += self.wall_SocialForce(w1, w2)
+            #wallPhyF += self.wall_PhysicalForce(w1, w2)
 
-            result = result0+result1+result2+result3
-            return result
+            #result = result0+result1+result2+result3
+            #return result
+            return wallSocF #+ wallPhyF
 
 
-    def wallOnRoute(self, wall, mode=1.0, lookhead=3.0):
+    def wallPhyForce(self, wall):
+        if wall.mode == 'line':
+            w1 = np.array([wall.params[0],wall.params[1]])
+            w2 = np.array([wall.params[2],wall.params[3]])
+            #wallSocF = self.wall_SocialForce(w1, w2)
+            wallPhyF = self.wall_PhysicalForce(w1, w2)
+            return wallPhyF #+ wallSocF
+
+        elif wall.mode == 'rect':
+
+            ########################
+            ### p1-----------------p4 ###
+            ###  |                              |  ###
+            ###  |                              |  ###
+            ###  |                              |  ###
+            ### p2-----------------p3 ###
+            ########################
+        
+            p1 = np.array([wall.params[0], wall.params[1]])
+            p2 = np.array([wall.params[0], wall.params[3]])
+            p3 = np.array([wall.params[2], wall.params[3]])
+            p4 = np.array([wall.params[2], wall.params[1]])
+
+            dist1 =  np.linalg.norm(p1 - p2)
+            dist2 =  np.linalg.norm(p2 - p3)
+
+            if dist1<0.6 and dist2/dist1>10.0:
+                w1=(p1+p2)/2.0
+                w2=(p3+p4)/2.0
+                #wallSocF = self.wall_SocialForce(w1, w2)
+                wallPhyF = self.wall_PhysicalForce(w1, w2)
+                return wallPhyF #+ wallSocF
+
+            if dist2<0.6 and dist1/dist2>10.0:
+                w1=(p1+p4)/2.0
+                w2=(p2+p3)/2.0
+                #wallSocF = self.wall_SocialForce(w1, w2)
+                wallPhyF = self.wall_PhysicalForce(w1, w2)
+                return wallPhyF #+ wallSocF
+
+            #wallSocF = np.array([0.0,0.0])
+            wallPhyF = np.array([0.0,0.0])
+            
+            w1 = np.array([wall.params[0],wall.params[1]])
+            w2 = np.array([wall.params[0],wall.params[3]])
+            #wallSocF += self.wall_SocialForce(w1, w2)
+            wallPhyF += self.wall_PhysicalForce(w1, w2)
+
+            w1 = np.array([wall.params[2],wall.params[1]])
+            w2 = np.array([wall.params[2],wall.params[3]])
+            #wallSocF += self.wall_SocialForce(w1, w2)
+            wallPhyF += self.wall_PhysicalForce(w1, w2)
+
+            w1 = np.array([wall.params[0],wall.params[1]])
+            w2 = np.array([wall.params[2],wall.params[1]])
+            #wallSocF += self.wall_SocialForce(w1, w2)
+            wallPhyF += self.wall_PhysicalForce(w1, w2)
+
+            w1 = np.array([wall.params[0],wall.params[3]])
+            w2 = np.array([wall.params[2],wall.params[3]])
+            #wallSocF += self.wall_SocialForce(w1, w2)
+            wallPhyF += self.wall_PhysicalForce(w1, w2)
+
+            #result = result0+result1+result2+result3
+            #return result
+            return wallPhyF #+ wallSocF
+        
+
+    def wallOnRoute(self, wall, mode=0.0, lookhead=3.0):
 
         p1 = self.pos
         p2 = self.pos + (mode*self.desiredV+(1-mode)*self.actualV)*lookhead
-	
+    
         #if mode=="dv":
         #    p2 = self.pos + self.desiredV
         #elif mode=="av":
@@ -315,7 +426,7 @@ class person(object):
         #else:
         #    print 'Error: mode must be either "dv" or "av"!'
         #    return
-	
+    
         # The time interval to look ahead is an important issue
         # It is a major issue to use whether actualV or desiredV
 
@@ -407,8 +518,8 @@ class person(object):
                 dist3 = np.linalg.norm(self.pos - result3)
 
             #dist3 = self.wallOnRoute_Line(w1, w2, mode, lookhead)
-            if dist3 is not None:
-                if dist is None:
+            if dist3!=None:
+                if dist==None:
                     result=result3
                     dist=dist3
                     arrow=w2-w1
@@ -420,65 +531,128 @@ class person(object):
             if arrow is not None:
                 arrow=normalize(arrow)
             return result, dist, arrow
+            # arrow is not useful after flow field is applied
 
-       
-            
-    #####################################
-    # how an agent interacts with others
-    #####################################
-     
-    def opinionDynamics(self):
-	
-        # self.D = DMatrix(selfID, otherID)
-        # self.A = AMatrix(selfID, otherID)
-        # self.B = BMatrix(selfID, otherID)
-        # dij = np.linalg.norm(self.pos - other.pos)
+
+    def updatePhysicWF(self, walls, debug=False):
+
+        self.physicWF = np.array([0.0,0.0])
+        #self.wallrepF = np.array([0.0,0.0])
+        # If inside a door, the wall force is zero  ???
+        # If inside a door, the wall attached to the door should be considered.  
+        for wall in walls:
+            outsideDoor = True
+            if wall.inComp ==0:
+                continue
+            # No need to test whether an agent is inside or not
+            if wall.inside(self.pos):
+                for door in wall.attachedDoors:
+                    if door.inside(self.pos):
+                        outsideDoor = False
+                        continue
+                        # To add the door force here???  No
+                        # Door force is added in adaptWallDoorForce()
+            else:
+                for door in wall.attachedDoors:
+                    if door.inside(self.pos):
+                        outsideDoor = False
+                        continue
+            if outsideDoor:
+                #self.wallrepF += self.wallPhyForce(wall)
+                self.physicWF += self.wallPhyForce(wall)
+        return self.physicWF
+
+
+    def adaptWallDoorForce(self, walls, doors):
         
-        otherMovingDir = np.array([0.0, 0.0])
-        otherMovingSpeed = 0.0
-        otherMovingNum = 0
-	
-        for idaj, aj in enumerate(self.others):
-            otherMovingDir += normalize(aj.actualV) #/DFactor[idai, idaj]*AFactor[idai, idaj]
-            otherMovingSpeed += np.linalg.norm(aj.actualV) #/DFactor[idai, idaj]*AFactor[idai, idaj]
-            otherMovingNum += 1
-		
-        #nij = (self.pos - other.pos)/dij
-        
-        #if dij < self.interactionRange:
-	#    self.dest = self.p*self.dest + (1-self.p)*other.dest
+        self.wallrepF = np.array([0.0,0.0])
+        self.doorF= np.array([0.0,0.0])
+        outsideDoor = True
+        for door in doors:
+            if door.inComp ==0:
+                continue
+            #doorInter += self.doorForce(door)
+            if door.inside(self.pos):
+                self.wallrepF = np.array([0.0, 0.0])
+                self.doorF = self.doorForce(door) 
+                outsideDoor = False
+                return self.wallrepF, self.doorF, outsideDoor
+                #doorInter = self.doorForce(door)
+                #break
 
-	#otherDirection = np.array([0.0, 0.0])
-	#otherSpeed = 0.0
-	#num = 0
-	#otherV = np.array([0.0, 0.0])
+        if outsideDoor:
+            for wall in walls:
+                if wall.inComp ==0:
+                    continue
+                self.wallrepF += self.wallSocForce(wall)
+                #self.wallrepF += self.wallPhyForce(wall)
+                
+        '''
+        #########################
+        # Calculate Wall Repulsion
+        if outsideDoor:
+            for wall in walls:
+                if wall.inComp ==0:
+                    continue
+                self.wallrepF += self.wallSocForce(wall)
+                self.wallrepF += self.wallPhyForce(wall)
+                
 
-        #if dij < self.interactionRange:
-	    #self.desiredV = self.p*self.desiredV + (1-self.p)*other.actualV
-	    #otherDirection = normalize(other.actualV)
-	    #otherSpeed = np.linalg.norm(other.actualV)
-	    #num = 1
-	    #otherV = other.actualV
-	
-        return otherMovingDir, otherMovingSpeed/otherMovingNum
+            for door in doors:
+                if door.inComp ==0:
+                    continue
+                self.doorF += self.doorForce(door)
+        return self.wallrepF, self.doorF, outsideDoor
     
+            
+        '''
+        # Interaction with enviroment
+        # Search for wall on the route
+        # temp = 0.0
+        closeWall = None
+        closeWallPoint = None
+        closeWallDist = 10.0 # Define how close the wall is
+        for wall in walls:
+            if wall.inComp ==0:
+                continue
+            crossp, diw, arrow = self.wallOnRoute(wall, 0.0, 2.0)
+            if diw is not None and diw < closeWallDist:
+                closeWallDist = diw
+                closeWall = wall
+                closeWallPoint = crossp
+                print("crossp and diw:", crossp, diw)
 
-    def opinionExchange(self, other, mode=1.0):
-        otherV= mode*other.desiredV+(1-mode)*other.actualV
-        self.desiredV = self.p*self.desiredV + (1-self.p)*otherV
-        return
 
-
-    def findDoorDir(self, direction):
-        if direction == 1:
-            return np.array([1.0, 0.0])
-        elif direction == -1:
-            return np.array([-1.0, 0.0])
-        elif direction == 2:
-            return np.array([0.0, 1.0])
-        elif direction == -2:
-            return np.array([0.0, -1.0])
+        #closeWallEffect = True
+        print("closeWall:", closeWall)
+        if closeWall is not None:
+            crossx, diw, wallDirection = self.wallOnRoute(closeWall, 0.0, 2.0) # This line can be merged with above
+            for door in closeWall.attachedDoors:
+                if door is not None and crossx is not None:
+                    print("crossx and diw:", crossx, diw, "doorid:", door.id)
+                    if door.inside(crossx):
+                        self.wallrepF = self.wallrepF - self.wallSocForce(closeWall) #- self.wallPhyForce(closeWall) #+ self.doorForce(door)
+                        self.doorF = self.doorForce(door)
+                        #closeWallEffect = False
+                        break
+                        
+        '''
+        #closeWallEffect = True
+        print("closeWall:", closeWall)
+        if closeWall is not None:
+            #crossx, diw, wallDirection = self.wallOnRoute(closeWall, 0.0, 2.0) # This line can be merged with above
+            for door in closeWall.attachedDoors:
+                if door is not None: #and crossx is not None:
+                    #print("crossx and diw:", crossx, diw, "doorid:", door.id)
+                    if door.inside(closeWallPoint): #(crossx):
+                        self.wallrepF = self.wallrepF - self.wallSocForce(closeWall) #- self.wallPhyForce(closeWall) #+ self.doorForce(door)
+                        self.doorF = self.doorForce(door)
+                        #closeWallEffect = False
+                        break
+        '''
         
+        return self.wallrepF, self.doorF, outsideDoor
+               
         
     def selectTarget(self, exit2door):
         dest = None
@@ -545,6 +719,7 @@ class person(object):
                 someoneOK = aj
         return someoneOK
 
+
     
     def findVisibleTarget(self, walls, doors):
         resultDoors=[]
@@ -579,7 +754,7 @@ class person(object):
 
     def updateSee(self, agents, walls): #WALLBLOCKHERDING):
 
-        for idaj,aj in enumerate(agents):
+        for idaj, aj in enumerate(agents):
             if self is aj:
                 idai = idaj
                 break
@@ -646,7 +821,7 @@ class person(object):
         return first
 
 
-    def agentForce(self, other):
+    def socialForce(self, other):
         rij = self.radius + other.radius
         dij = np.linalg.norm(self.pos - other.pos)
         nij = (self.pos - other.pos)/dij
@@ -655,19 +830,12 @@ class person(object):
         anisoF = self.lamb + (1-self.lamb)*(1+cos(phiij))*0.5
         
         first = self.A_SF*np.exp((rij-dij)/self.B_SF)*nij*anisoF
-        second = self.bodyFactorA*ggg(rij-dij)*nij*anisoF
-	
-        #Issue: nij is a vector directing from j to i.  
-        #*(rij*Dfactor-dij)/20000+ self.bodyFactor*g(rij-dij)*nij/10000
-        tij = np.array([-nij[1],nij[0]])
-        deltaVij = (self.actualV - other.actualV)*tij
-        third = self.slideFricFactorA*ggg(rij-dij)*deltaVij*tij*anisoF
-        #third = 300*exp(rij-dij)*deltaVij*tij/dij
-	
-        return first + second #+ third
+
+        return first #+ second #+ third
+
 
     ############################
-    # This is not used any more.  
+    # This is re-used now: Pure Physical Force between individuals  
     def physicalForce(self, other):
         
         rij = self.radius + other.radius
@@ -675,15 +843,38 @@ class person(object):
         nij = (self.pos - other.pos)/dij
         
         phiij = vectorAngleCos(self.actualV, (other.pos - self.pos))
-        anisoF = self.lamb + (1-self.lamb)*(1+cos(phiij))*0.5
+        anisoF = self.lamb + (1-self.lamb)*(1+cos(phiij))*0.5        
+        second = self.bodyFactorA*ggg(rij-dij)*nij*anisoF
+	
+        #Issue: nij is a vector directing from j to i.  
+        #*(rij*Dfactor-dij)/20000+ self.bodyFactor*g(rij-dij)*nij/10000
+        tij = np.array([-nij[1],nij[0]])
         
-        first = self.bodyFactorA*g(rij-dij)*nij*anisoF
+        deltaVij = (self.actualV - other.actualV)*tij
+        third = self.slideFricFactorA*ggg(rij-dij)*deltaVij*tij*anisoF
+        #third = 300*exp(rij-dij)*deltaVij*tij/dij
         #print("physical interaction force:", first, "/n")
 	
-        return first
-    # This is not used any more. 
+        return second + third
     ############################
-    
+
+
+    def updatePhysicSF(self, agents, debug=False):
+
+        self.physicSF = np.array([0.0,0.0])
+        for idaj, aj in enumerate(agents):
+
+            if aj.inComp == 0:
+                continue
+            if aj is self:
+                continue
+             
+            #print("anisotropic factor", anisoF, "/n")
+            self.physicSF += self.physicalForce(aj)
+            #self.physicF += self.physicalForce(aj)*anisoF
+        
+        return self.physicSF
+
 
     def updateAttentionList(self, agents, walls): #, WALLBLOCKHERDING):
     
@@ -732,7 +923,7 @@ class person(object):
             #############################################
             # Traditional Social Force and Physical Force
             if person.see_flag[self.ID, aj.ID]:
-                #peopleInter += self.agentForce(aj)*anisoF
+                #peopleInter += self.socialForce(aj)*anisoF
                 self.seeothers.append(aj)
 
             ###################################################
@@ -758,7 +949,7 @@ class person(object):
 
     def updateTalk(self, agents, GROUPBEHAVIOR, debug=False):
 
-        self.physicF = np.array([0.0,0.0])
+        self.groupF = np.array([0.0,0.0])
         for idaj, aj in enumerate(agents):
 
             if aj.inComp == 0:
@@ -766,12 +957,10 @@ class person(object):
             if aj is self:
                 continue
              
-            #print("anisotropic factor", anisoF, "/n")
-            self.physicF += self.agentForce(aj)
-            #self.physicF += self.physicalForce(aj)*anisoF
-            #peopleInter += self.agentForce(aj)*anisoF
+            # Traditional Social Force in Helbing et. al., 2000
+            self.groupF += self.socialForce(aj)
+            #peopleInter += self.socialForce(aj)*anisoF
 
-        self.groupF = np.array([0.0,0.0])
         for aj in self.others:
 
             #idaj=aj.ID
@@ -787,10 +976,14 @@ class person(object):
             person.talk[self.ID, aj.ID] = 0                        
             if dij<self.interactionRange: #and 0.6<random.uniform(0.0,1.0):
             #self.talk_prob<random.uniform(0.0,1.0):
-                person.DFactor[self.ID, aj.ID]=2.0
+                person.DFactor[self.ID, aj.ID]=(1-self.p)*person.DFactor[self.ID, aj.ID]+self.p*person.DFactor[aj.ID, self.ID]
+                #person.AFactor[self.ID, aj.ID]=(1-self.p)*person.AFactor[self.ID, aj.ID]+self.p*person.AFactor[aj.ID, self.ID]
+                #person.BFactor[self.ID, aj.ID]=(1-self.p)*person.BFactor[self.ID, aj.ID]+self.p*person.BFactor[aj.ID, self.ID]
+                #person.DFactor[self.ID, aj.ID]=2.0
                 person.AFactor[self.ID, aj.ID]=600
                 person.BFactor[self.ID, aj.ID]=300
                 self.tau = self.talk_tau
+                #self.desiredV = np.array([0.0,0.0])
                 person.talk[self.ID, aj.ID]=1
             else:
                 person.DFactor[self.ID, aj.ID]=person.DFactor_Init[self.ID, aj.ID]
@@ -806,47 +999,107 @@ class person(object):
                 self.groupF += self.groupForce(aj, person.DFactor[self.ID, aj.ID], person.AFactor[self.ID, aj.ID], person.BFactor[self.ID, aj.ID])
 
             #########################################
-            # Half opinion dynamics for tpre feature
-            # To be extended by using PFactor
+            # Opinion dynamics for tpre feature
             #########################################
             if dij < self.interactionRange:
-                self.tpre = 0.5*self.tpre + 0.5*aj.tpre
+                self.tpre = (1-self.p)*self.tpre + self.p*aj.tpre
 
-        return self.groupF + self.physicF
+        return self.groupF
 
 
+    #####################################
+    # how an agent interacts with others
+    #####################################
+     
+    def opinionDynamics(self):
+	
+        # self.D = DMatrix(selfID, otherID)
+        # self.A = AMatrix(selfID, otherID)
+        # self.B = BMatrix(selfID, otherID)
+        # dij = np.linalg.norm(self.pos - other.pos)
+        
+        otherMovingDir = np.array([0.0, 0.0])
+        otherMovingSpeed = 0.0
+        otherMovingNum = 0
+	
+        for idaj, aj in enumerate(self.others):
+            otherMovingDir += normalize(aj.actualV) #/DFactor[idai, idaj]*AFactor[idai, idaj]
+            otherMovingSpeed += np.linalg.norm(aj.actualV) #/DFactor[idai, idaj]*AFactor[idai, idaj]
+            otherMovingNum += 1
+		
+        #nij = (self.pos - other.pos)/dij
+        
+        #if dij < self.interactionRange:
+	#    self.dest = (1-self.p)*self.dest + self.p*other.dest
+
+	#otherDirection = np.array([0.0, 0.0])
+	#otherSpeed = 0.0
+	#num = 0
+	#otherV = np.array([0.0, 0.0])
+
+        #if dij < self.interactionRange:
+	    #self.desiredV = (1-self.p)*self.desiredV + self.p*other.actualV
+	    #otherDirection = normalize(other.actualV)
+	    #otherSpeed = np.linalg.norm(other.actualV)
+	    #num = 1
+	    #otherV = other.actualV
+	
+        return otherMovingDir, otherMovingSpeed/otherMovingNum
+    
+
+    def opinionExchange(self, other, mode=1.0):
+        otherV= (1-mode)*other.desiredV + mode*other.actualV
+        self.desiredV = (1-self.p)*self.desiredV + self.p*otherV
+        return
+
+
+    def findDoorDir(self, direction):
+        if direction == 1:
+            return np.array([1.0, 0.0])
+        elif direction == -1:
+            return np.array([-1.0, 0.0])
+        elif direction == 2:
+            return np.array([0.0, 1.0])
+        elif direction == -2:
+            return np.array([0.0, -1.0])
+
+
+    # In current algorithm the door force is calculated when agents are inside doors
     def doorForce(self, door, mode='edge', fuzzydir=0.0):
-        if door.inside(self.pos)==False:
+        if door.inside(self.pos) is False:
             doordir = door.direction(door.arrow)
             agentdir = door.pos-self.pos
-            if np.dot(doordir, agentdir)>=fuzzydir:
-                ri = self.radius
-                #mid= (np.array([self.params[0], self.params[1]]) + np.array([self.params[2], self.params[3]]))/2.0
-                if mode=='pos':
-                    dist=np.linalg.norm(door.pos - self.pos)
-                    dire = normalize(door.pos-self.pos)
-                elif mode == 'edge':
-                    edge1, edge2, edge3, edge4 = door.edge()
-                    dist1 = np.linalg.norm(edge1 - self.pos)
-                    dist2 = np.linalg.norm(edge2 - self.pos)
-                    dist3 = np.linalg.norm(edge3 - self.pos)
-                    dist4 = np.linalg.norm(edge4 - self.pos)
-                    dist_list = [dist1, dist2, dist3, dist4]
-                    dist = min(dist_list)
-                    dist_index =np.argmin(dist_list)
-                    dire = normalize(door.pos-self.pos)  #  Need improvement
-                    #if dist1<dist2:
-                    #    dist=dist1
-                    #    dire = normalize(edge1-self.pos)
-                    #else:
-                    #    dist=dist2
-                    #    dire = normalize(edge2-self.pos)
-                        
-                #first = self.A_WF*np.exp((ri-dist)/self.B_WF)*dire
-                second = 760*exp((ri-dist)/0.3)*dire  #1.8)*dire
-                return second #first + second
-            else:
-                return np.array([0.0, 0.0])
+            #if np.dot(doordir, agentdir)>=fuzzydir:
+            ri = self.radius
+            #mid= (np.array([self.params[0], self.params[1]]) + np.array([self.params[2], self.params[3]]))/2.0
+            if mode=='pos':
+                dist=np.linalg.norm(door.pos - self.pos)
+                dire = normalize(door.pos-self.pos)
+            elif mode == 'edge':
+                edge1, edge2, edge3, edge4 = door.edge()
+                dist1 = np.linalg.norm(edge1 - self.pos)
+                dist2 = np.linalg.norm(edge2 - self.pos)
+                dist3 = np.linalg.norm(edge3 - self.pos)
+                dist4 = np.linalg.norm(edge4 - self.pos)
+                dist_list = [dist1, dist2, dist3, dist4]
+                dist = min(dist_list)
+                dist_index =np.argmin(dist_list)
+                dire = normalize(door.pos-self.pos)  #  Need improvement
+                #if dist1<dist2:
+                #    dist=dist1
+                #    dire = normalize(edge1-self.pos)
+                #else:
+                #    dist=dist2
+                #    dire = normalize(edge2-self.pos)
+            #if dist < ri + 0.5:
+            #    first = self.bodyFactorW*(dist-ri)*200000*dire
+            #else:
+            #    first = np.array([0.0, 0.0])
+            #second = 760*exp((ri-dist)/0.3)*dire  #1.8)*dire
+            first =  self.A_WF*np.exp((ri-dist)/self.B_WF)*dire
+            return first #+ second
+            #else:
+            #    return np.array([0.0, 0.0])
         else:
             if door.arrow == 1 or door.arrow == -1:
                 w1= np.array([door.params[0], door.params[1]])
@@ -885,60 +1138,7 @@ class person(object):
                 return np.array([0.0, 0.0])
              #   if abs(self.actualV[0]) > abs(self.actualV[1]):
 
-
-
-    def adaptWallDoorForce(self, walls, doors):
-        
-        self.wallrepF = np.array([0.0,0.0])
-        self.doorF= np.array([0.0,0.0])
-        outsideDoor = True
-        for door in doors:
-            if door.inComp ==0:
-                continue
-            #doorInter += self.doorForce(door)
-            if door.inside(self.pos):
-                self.wallrepF = np.array([0.0, 0.0])
-                self.doorF = self.doorForce(door) 
-                outsideDoor = False
-                return self.wallrepF, self.doorF, outsideDoor
-                #doorInter = self.doorForce(door)
-                #break
-
-        #########################
-        # Calculate Wall Repulsion
-        if outsideDoor:
-            for wall in walls:
-                if wall.inComp ==0:
-                    continue
-                self.wallrepF += self.wallForce(wall)
-
-        # Interaction with enviroment
-        # Search for wall on the route
-        # temp = 0.0
-        closeWall = None
-        closeWallDist = 10.0 # Define how close the wall is
-        for wall in walls:
-            if wall.inComp ==0:
-                continue
-            crossp, diw, arrow = self.wallOnRoute(wall, 1.0)
-            if diw!=None and diw < closeWallDist:
-                closeWallDist = diw
-                closeWall = wall
-
-
-        closeWallEffect = True
-        crossp, diw, wallDirection = self.wallOnRoute(closeWall, 1.0)
-        if diw!=None and outsideDoor:
-            for door in closeWall.attachedDoors:
-                if door.inside(crossp):
-                    self.wallrepF = self.wallrepF - self.wallForce(closeWall) + self.doorForce(door)
-                    #self.doorF += self.doorForce(door)
-                    closeWallEffect = False
-                    break
-                
-        return self.wallrepF, self.doorF, outsideDoor
-
-                    
+              
 
 if __name__ == '__main__':
     
