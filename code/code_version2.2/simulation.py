@@ -66,8 +66,8 @@ class simulation(object):
     SHOWSTRESS = False
     DRAWWALLFORCE = True
     DRAWDOORFORCE = True
-    DRAWGROUPFORCE = False
-    DRAWSELFREPULSION = False
+    DRAWGROUPFORCE = True
+    DRAWSELFREPULSION = True
     
         
     def __init__(self, outputFileName=None, params=None):
@@ -87,7 +87,7 @@ class simulation(object):
         self.DT_DumpData = self.DT
         self.tt_DumpData = 0.0
         
-        self.DT_OtherList = 1.0
+        self.DT_OtherList = 3.0
         self.tt_OtherList = 0.0
 
         self.DT_ChangeDoor = 3.0
@@ -144,6 +144,8 @@ class simulation(object):
         #self.t_pause = 0.0
 
         self.solver=1
+        
+        self.bldmesh = None
 
         #Human Mesh Data
         self.xmin=0.0
@@ -240,11 +242,22 @@ class simulation(object):
         # FN_Temp = "log.txt" #self.outDataName + ".txt"
         f = open("log.txt", "a+")
         #self.outFileName=f
-
-        #if sys.version_info[0] == 2:
-        #    print >> f, 'FN_FDS=', self.FN_FDS
-        #    print >> f, 'FN_EVAC=', self.FN_EVAC #,'\n'
-        #else:
+        
+        '''
+        if sys.version_info[0] == 2:
+            print >> f, 'FN_FDS=', self.FN_FDS
+            print >> f, 'FN_EVAC=', self.FN_EVAC #,'\n'
+        else:
+            f.write('FN_FDS='+str(self.FN_FDS)+'\n')
+            f.write('FN_EVAC='+str(self.FN_EVAC)+'\n')
+            f.write('Working path='+os.getcwd()+'\n')
+            f.write('ZOOM='+str(self.ZOOMFACTOR)+'\n')    	
+            f.write('xSpace='+str(self.xSpace)+'\n')
+            f.write('ySpace='+str(self.ySpace)+'\n')
+            f.write('solver='+str(self.solver)+'\n')
+            #f.write('group=')
+            f.write(time.strftime('%Y-%m-%d_%H_%M_%S')+'\n\n')
+        '''
         
         f.write('FN_FDS='+str(self.FN_FDS)+'\n')
         f.write('FN_EVAC='+str(self.FN_EVAC)+'\n')
@@ -255,7 +268,9 @@ class simulation(object):
         f.write('solver='+str(self.solver)+'\n')
         #f.write('group=')
         f.write(time.strftime('%Y-%m-%d_%H_%M_%S')+'\n\n')
-
+        
+        f.close()
+        
         #FN_FDS=self.FN_FDS
         #FN_EVAC=self.FN_EVAC
 
@@ -279,8 +294,12 @@ class simulation(object):
             #self.t_end = float(readTEnd(FN_FDS))
             #self.DT = float(readKeyOnce(FN_FDS, '&TIME', 'DT'))
             temp = readKeyOnce(FN_FDS, '&DUMP', 'DT_PART')
-            if temp is not None:
+            tempTEND = readKeyOnce(FN_FDS, '&TIME', 'T_END')
+            tempDT = readKeyOnce(FN_FDS, '&TIME', 'DT')
+            if temp is not None and tempTEND is not None:
+                self.DT = float(tempDT)
                 self.DT_DumpData = float(temp)
+                #self.t_end = float(tempTEND)
                 
         else:
             self.walls = readWalls(FN_EVAC)  #readWalls(FN_Walls) #readWalls("obstData2018.csv")
@@ -297,13 +316,42 @@ class simulation(object):
             print("Input data format is wrong! Please check and modify!")
         '''
         
+        
         ### Display a summary of input data
-        print('Display a summary of input data as below.')
-        print('number of agents: '+str(self.num_agents))
-        print('number of walls: '+str(self.num_walls))
-        print('number of doors: '+str(self.num_doors))
-        print('number of exits: '+str(self.num_exits))
+        print('Display a summary of input data as below.\n')
+        print('number of agents: '+str(self.num_agents)+ '\n')
+        print('number of walls: '+str(self.num_walls)+ '\n')
+        print('number of doors: '+str(self.num_doors)+ '\n')
+        print('number of exits: '+str(self.num_exits)+ '\n')
         print('\n')
+
+        print('time-related paramters: \n')        
+        print('DT: '+str(self.DT)+ '\n')
+        print('DT_DumpData: '+str(self.DT_DumpData)+ '\n')
+        print('t_end: '+str(self.t_end)+ '\n')
+        print('DT_OtherList'+str(self.DT_OtherList)+ '\n')
+        print('DT_ChangeDoor'+str(self.DT_ChangeDoor)+ '\n')
+
+        print('\n')
+        
+        FN_Temp = self.outDataName + ".txt"
+        f = open(FN_Temp, "a+")
+
+        f.write('Display a summary of input data as below.\n')
+        f.write('number of agents: '+str(self.num_agents)+ '\n')
+        f.write('number of walls: '+str(self.num_walls)+ '\n')
+        f.write('number of doors: '+str(self.num_doors)+ '\n')
+        f.write('number of exits: '+str(self.num_exits)+ '\n')
+        f.write('\n')
+
+        f.write('time-related paramters: \n')        
+        f.write('DT: '+str(self.DT)+ '\n')
+        f.write('DT_DumpData: '+str(self.DT_DumpData)+ '\n')
+        f.write('t_end: '+str(self.t_end)+ '\n')
+        f.write('DT_OtherList'+str(self.DT_OtherList)+ '\n')
+        f.write('DT_ChangeDoor'+str(self.DT_ChangeDoor))
+
+        f.close()
 
         if self.inputDataCorrect:
             print("Input data format is correct!")
@@ -312,21 +360,20 @@ class simulation(object):
             
         if self.DEBUG:
             print("Now you can check if the input data is correct or not!")
-            #print("If everything is OK, please press ENTER to continue!")
-            #UserInput = raw_input('Check Input Data Here!')
+            print("If everything is OK, please press ENTER to continue!")
+            if sys.version_info[0] == 2: 
+                raw_input('Please check input data here!')
+                #UserInput = raw_input('Check Input Data Here!')
+            if sys.version_info[0] == 3:
+                input('Please check input data here!')
 
-        f.close()
         return self.inputDataCorrect
         # Return a boolean variable to check if the input data format is correct or not
 
-
-
-    def flowMesh(self, showdata=True, savedata=False):
-
+    def buildMesh(self, showdata=False):
+        
         FN_Temp = self.outDataName + ".txt"
         f = open(FN_Temp, "a+")
-        #mode=1 nearest exit strategy
-        #mode=2 each exit is individually calculated
         if self.solver==0:
             print("The solver is 0, and it may not need the flow field.  Please check!")
 
@@ -369,9 +416,9 @@ class simulation(object):
         self.ymax=np.max(yyy)
         
         if self.xpt is None:
-            self.xpt=int(self.xmax-self.xmin)*3
+            self.xpt=int(self.xmax-self.xmin)*3+10
         if self.ypt is None:
-            self.ypt=int(self.ymax-self.ymin)*3
+            self.ypt=int(self.ymax-self.ymin)*3+10
 
         if self.DEBUG:
             print("Range in x axis:", self.xmin, self.xmax, "Num of points in x axis:", self.xpt)
@@ -387,6 +434,96 @@ class simulation(object):
         x_points=self.xpt
         y_points=self.ypt
 
+        f.write('\n\n\n')
+        f.write('x_points:'+str(x_points)+ '\n')
+        f.write('y_points:'+str(y_points)+ '\n')
+        f.write('x_min:'+str(x_min)+ '\n')
+        f.write('x_max:'+str(x_max)+ '\n')
+        f.write('y_min:'+str(y_min)+ '\n')
+        f.write('y_max:'+str(y_max)+ '\n')
+        
+        f.write('delx:'+str(self.dx)+ '\n')
+        f.write('dely:'+str(self.dy)+ '\n')
+        f.write('delt:'+str(self.DT)+ '\n')
+        #f.write('courant number index???:'+str(self.DT/(self.dx+self.dy))+ '\n')
+        
+        BLDinfo = build_compartment(x_min, y_min, x_max, y_max, x_points, y_points, self.walls, self.doors, self.exits)
+        
+        self.bldmesh = BLDinfo
+        f.close()
+
+
+    def flowMesh(self, showdata=False, savedata=False):
+
+        FN_Temp = self.outDataName + ".txt"
+        f = open(FN_Temp, "a+")
+        #mode=1 nearest exit strategy
+        #mode=2 each exit is individually calculated
+        if self.solver==0:
+            print("The solver is 0, and it may not need the flow field.  Please check!")
+        
+        '''
+        xxx=[]
+        yyy=[]
+        for wall in self.walls:
+            if wall.inComp is 0:
+                continue
+            xxx.append(wall.params[0])
+            xxx.append(wall.params[2])
+            yyy.append(wall.params[1])
+            yyy.append(wall.params[3])      
+
+        for door in self.doors:
+            if door.inComp is 0:
+                continue
+            xxx.append(door.params[0])
+            xxx.append(door.params[2])
+            yyy.append(door.params[1])
+            yyy.append(door.params[3])
+
+        for exit in self.exits:
+            if exit.inComp is 0:
+                continue
+            xxx.append(exit.params[0])
+            xxx.append(exit.params[2])
+            yyy.append(exit.params[1])
+            yyy.append(exit.params[3])
+
+        for agent in self.agents:
+            if agent.inComp is 0:
+                continue
+            xxx.append(agent.pos[0])
+            yyy.append(agent.pos[1])
+
+
+        self.xmin=np.min(xxx)
+        self.xmax=np.max(xxx)
+        self.ymin=np.min(yyy)
+        self.ymax=np.max(yyy)
+        
+        if self.xpt is None:
+            self.xpt=int(self.xmax-self.xmin)*3+3
+        if self.ypt is None:
+            self.ypt=int(self.ymax-self.ymin)*3+3
+
+        if self.DEBUG:
+            print("Range in x axis:", self.xmin, self.xmax, "Num of points in x axis:", self.xpt)
+            print("Range in y axis:", self.ymin, self.ymax, "Num of points in y axis:", self.ypt)
+
+        self.dx = (self.xmax-self.xmin)/float(self.xpt - 1)
+        self.dy = (self.ymax-self.ymin)/float(self.ypt - 1)
+        
+        '''
+        
+        x_min=self.xmin
+        y_min=self.ymin
+        x_max=self.xmax
+        y_max=self.ymax
+        x_points=self.xpt
+        y_points=self.ypt
+        BLDinfo = self.bldmesh
+
+        '''
         f.write('x_points:'+str(x_points)+ '\n')
         f.write('y_points:'+str(y_points)+ '\n')
         f.write('x_min:'+str(x_min)+ '\n')
@@ -395,14 +532,15 @@ class simulation(object):
         f.write('y_max:'+str(y_max)+ '\n')
         
         BLDinfo = build_compartment(x_min, y_min, x_max, y_max, x_points, y_points, self.walls, self.doors, self.exits)
-
+        '''
+        
         UU=[]
         VV=[]
         #Show flow field of all exit: The nearest exit strategy
         if self.solver==1:
             b = build_sink(x_min, y_min, x_max, y_max, x_points, y_points, self.exits)
             iterNum = int(x_points + y_points)
-            Ud0, Vd0 = possion_func(x_min, y_min, x_max, y_max, x_points, y_points, b, BLDinfo, 200, True)
+            Ud0, Vd0 = possion_func(x_min, y_min, x_max, y_max, x_points, y_points, b, BLDinfo, iterNum, True)
             if showdata:
                 draw_vel(x_min, y_min, x_max, y_max, Ud0, Vd0, BLDinfo, self.walls, self.doors, self.exits, self.ZOOMFACTOR)
                 print('\n')
@@ -417,10 +555,10 @@ class simulation(object):
 
             # Test of Eular Solver here
             zeroArray = np.zeros(np.shape(Ud0))
-            D_t=2
+            D_t= self.DT #0.05
             t_end=10.0
-            R0 = np.zeros(np.shape(Ud0))
-            # Construct R0 here!
+            R_ini = np.zeros(np.shape(Ud0))
+            # Construct R_ini here!
             for agent in self.agents:
                 if agent.inComp == 0:
                     continue
@@ -429,12 +567,12 @@ class simulation(object):
                 
                 iii=int((agent.pos[0]-self.xmin)/self.dx)
                 jjj=int((agent.pos[1]-self.ymin)/self.dy)
-                R0[iii,jjj]=1
+                R_ini[iii,jjj]=0.5
 
-            print('R0:\n',R0)
-            print('np.sum(R0):',np.sum(R0))
+            print('R_ini:\n',R_ini)
+            print('np.sum(R_ini):',np.sum(R_ini))
             #eular2D(x_min, y_min, x_max, y_max, x_points, y_points, D_t, t_end, bldInfo, R0, U0, V0, Rdes, Udes, Vdes, mode=0, saveData=True, showPlot=True, debug=True):
-            #eular2D(x_min, y_min, x_max, y_max, x_points, y_points, D_t, t_end, BLDinfo, R0, zeroArray, zeroArray, zeroArray, Ud0, Vd0, 2, True)
+            eular2D(x_min, y_min, x_max, y_max, x_points, y_points, D_t, t_end, self.bldmesh, R0=R_ini, U0=zeroArray, V0=zeroArray, Rdes=zeroArray, Udes=Ud0, Vdes=Vd0, mode=3, saveData=True, showPlot=False, debug=True)
             #if self.DEBUG:
                 
         if self.solver==2: # Show flow field of each individual exit
@@ -483,19 +621,21 @@ class simulation(object):
             self.VeachExit=VV
 
         f.close()
-            
-
-    def preprocessGeom(self):
         
-        #===================================================
-        #==========Preprocessing the Geom Data =====================
-        #========= Find Relationship of Door and Wall ==================
+    ##############################################################################
+    # Automatically generate door direction and exit2door matrix based on flow mesh result
+    def computeDoorDirection(self, showdata=False, savedata=False):
 
         FN_Temp = self.outDataName + ".txt"
         f = open(FN_Temp, "a+")
+        #solver=1 nearest exit strategy
+        #solver=2 each exit is individually calculated
+        if self.solver==0:
+            print("The solver is 0, and it may not need the flow field.  Please check!")
+
         if self.DEBUG:
             f.write("\n========================================\n")
-            f.write("Preprocessing the Geom Data"+'\n')
+            f.write("Compute Door Direction by Flow Field"+'\n')
             f.write("=========================================\n")
             
         self.num_agents= len(self.agents)
@@ -503,19 +643,21 @@ class simulation(object):
         self.num_doors = len(self.doors)
         self.num_exits = len(self.exits)
         self.exit2door = np.zeros((self.num_exits, self.num_doors))
-
+        
         ###=== Door Direction for Each Exit ========
-        if self.solver==1:
-            #tableFeatures, LowerIndex, UpperIndex = getData(self.FN_EVAC, '&Exit2Door')
-            #self.exit2door = readFloatArray(tableFeatures, len(self.exits), len(self.doors))
-            #exit2door = readCSV("Exit2Door2018.csv", "float")
+        if self.solver==1: # Use Nearest Exit
+
+            '''
+            tableFeatures, LowerIndex, UpperIndex = getData(self.FN_EVAC, '&Exit2Door')
+            self.exit2door = readFloatArray(tableFeatures, len(self.exits), len(self.doors))
 
             if np.shape(self.exit2door)!= (self.num_exits, self.num_doors): 
                 print('\nError on input data: exits or exit2door \n')
                 #f.write('\nError on input data: exits or exit2door \n')
                 #raw_input('Error on input data: exits or exit2door!  Please check')
                 self.inputDataCorrect = False
-
+            '''
+            
             Utemp = self.UallExit
             Vtemp = self.VallExit
             for iddoor, door in enumerate(self.doors):
@@ -586,8 +728,39 @@ class simulation(object):
                 if Usum<Vsum and Usum<-Vsum:
                     door.arrow=-1
 
+                # Simple Revision
+                '''
+                if len(door.attachedWalls)==1:
+                    wallTemp = door.attachedWalls[0]
+                    xlen = abs(wallTemp.params[0]-wallTemp.params[2])
+                    ylen = abs(wallTemp.params[1]-wallTemp.params[3])
+                    if xlen>ylen:
+                        if Vsum>0:
+                            door.arrow=2
+                        else:
+                            door.arrow=-2
+                    if xlen<ylen:
+                        if Usum>0:
+                            door.arrow=1
+                        else:
+                            #self.exit2door[idexit, iddoor]=-1
+                            door.arrow=-1
+                '''            
+                
+                if len(door.attachedWalls)>0:
+                    r1, r2, r3, r4 = door.dirWithAttachedWalls(mode='average')
+                    if r1 is None and r3 is None:
+                        if Usum>0:
+                            door.arrow=1
+                        else:
+                            #self.exit2door[idexit, iddoor]=-1
+                            door.arrow=-1
+                    if r2 is None and r4 is None:
+                        if Vsum>0:
+                            door.arrow=2
+                        else:
+                            door.arrow=-2
                 print('door.ID:', iddoor, 'door.arrow:', door.arrow, '\t')
-
                 
             for idexit, exit in enumerate(self.exits):
                 Utemp = self.UeachExit[idexit]
@@ -617,6 +790,7 @@ class simulation(object):
 
                     if Usum>=Vsum and Usum>=-Vsum:
                         self.exit2door[idexit, iddoor]=1
+                        # if door.attachedWalls
                     if Usum>=Vsum and Usum<-Vsum:
                         self.exit2door[idexit, iddoor]=-2
                     if Usum<Vsum and Usum>=-Vsum:
@@ -624,6 +798,36 @@ class simulation(object):
                     if Usum<Vsum and Usum<-Vsum:
                         self.exit2door[idexit, iddoor]=-1
 
+                    '''
+                    # Simple Revision
+                    if len(door.attachedWalls)==1:
+                        wallTemp = door.attachedWalls[0]
+                        xlen = abs(wallTemp.params[0]-wallTemp.params[2])
+                        ylen = abs(wallTemp.params[1]-wallTemp.params[3])
+                        if xlen>ylen:
+                            if Vsum>0:
+                                self.exit2door[idexit, iddoor]=2
+                            else:
+                                self.exit2door[idexit, iddoor]=-2
+                        if xlen<ylen:
+                            if Usum>0:
+                                self.exit2door[idexit, iddoor]=1
+                            else:
+                                self.exit2door[idexit, iddoor]=-1
+                    '''
+
+                    if len(door.attachedWalls)>0:
+                        r1, r2, r3, r4 = door.dirWithAttachedWalls(mode='average')
+                        if r1 is None and r3 is None:
+                            if Usum>0:
+                                self.exit2door[idexit, iddoor]=1
+                            else:
+                                self.exit2door[idexit, iddoor]=-1
+                        if r2 is None and r4 is None:
+                            if Vsum>0:
+                                self.exit2door[idexit, iddoor]=2
+                            else:
+                                self.exit2door[idexit, iddoor]=-2
                         
                     '''
                     if Utemp[iii,jjj]>=Vtemp[iii,jjj] and Utemp[iii,jjj]>=-Vtemp[iii,jjj]:
@@ -639,7 +843,32 @@ class simulation(object):
             print('exit2door:\n', self.exit2door, '\n')
             if self.DEBUG:
                 f.write('exit2door:\n' + str(self.exit2door) + '\n')
+
+        f.close()
+            
+    
+    
+    ##############################################################################
+    # Find attached walls and doors and automatically adjust door params if needed
+    def preprocessGeom(self):
         
+        #===================================================
+        #==========Preprocessing the Geom Data =====================
+        #========= Find Relationship of Door and Wall ==================
+
+        FN_Temp = self.outDataName + ".txt"
+        f = open(FN_Temp, "a+")
+        if self.DEBUG:
+            f.write("\n========================================\n")
+            f.write("Preprocessing the Geom Data"+'\n')
+            f.write("=========================================\n")
+            
+        self.num_agents= len(self.agents)
+        self.num_walls = len(self.walls)
+        self.num_doors = len(self.doors)
+        self.num_exits = len(self.exits)
+        self.exit2door = np.zeros((self.num_exits, self.num_doors))
+   
         for wall in self.walls:
             wall.findAttachedDoors(self.doors+self.exits)
             print("wall #No:", wall.id, 'isSingle:', wall.isSingleWall)
@@ -694,7 +923,44 @@ class simulation(object):
                     flag0 = flag5 and flag6
                 if flag0:
                     print("Warning: An exit is placed inside a wall.  Please modify the input file manually.")
-                    
+      
+        
+        for iddoor, door in enumerate(self.doors):
+            if door.inComp == 0:
+                continue
+            
+            if len(door.attachedWalls)>0:
+                r1, r2, r3, r4 = door.dirWithAttachedWalls(mode='maxmin')
+                #for wall in door.attachedWalls:
+                if r1 is not None and r3 is not None:
+                    tempmin=min(door.params[1], door.params[3])
+                    tempmax=max(door.params[1], door.params[3])
+                    if r1[0]-tempmin<0.3 or r3[0]-tempmin<0.3:
+                        if door.params[1]<door.params[3]:
+                            door.params[1]=door.params[1]-0.3
+                        else:
+                            door.params[3]=door.params[3]-0.3
+                    if r1[-1]-tempmax>-0.3 or r3[-1]-tempmax>-0.3:
+                        if door.params[1]<door.params[3]:
+                            door.params[3]=door.params[3]+0.3
+                        else:
+                            door.params[1]=door.params[1]+0.3
+                
+                if r2 is not None and r4 is not None:
+                    tempmin=min(door.params[0], door.params[2])
+                    tempmax=max(door.params[0], door.params[2])
+                    if r2[0]-tempmin<0.3 or r4[0]-tempmin<0.3:
+                        if door.params[0]<door.params[2]:
+                            door.params[0]=door.params[0]-0.3
+                        else:
+                            door.params[2]=door.params[2]-0.3
+                    if r2[-1]-tempmax>-0.3 or r4[-1]-tempmax>-0.3:
+                        if door.params[0]<door.params[2]:
+                            door.params[2]=door.params[2]+0.3
+                        else:
+                            door.params[0]=door.params[0]+0.3
+            #print('door.ID:', iddoor, 'door.arrow:', door.arrow, '\t')                 
+            
 
         if self.DEBUG:
             f.write('\n\n')
@@ -703,6 +969,12 @@ class simulation(object):
 
     def preprocessAgent(self):
 
+        FN_Temp = self.outDataName + ".txt"
+        f = open(FN_Temp, "a+")
+        if self.DEBUG:
+            f.write("\n========================================\n")
+            f.write("Preprocessing the Agent Data"+'\n')
+            f.write("=========================================\n")
         #==============================================================
         # Preprocess agent features including group and exit selection
         #==============================================================
@@ -793,6 +1065,23 @@ class simulation(object):
             #raw_input('Error on input data: exits or agent2exit!  Please check')
             self.inputDataCorrect = False
 
+        # Read in the data for interactive opinion dynamics
+        tableFeatures, LowerIndex, UpperIndex = getData(self.FN_EVAC, '&ExitW')
+        tempW = readFloatArray(tableFeatures, len(self.agents), 3)
+        for idai, ai in enumerate(self.agents):
+            if ai.inComp == 0:
+                continue
+            ai.W1=tempW[idai, 0]
+            ai.W2=tempW[idai, 1]
+            ai.W3=tempW[idai, 2]
+            ai.p = ai.W3
+
+        if np.shape(tempW)!= (self.num_agents, 3): 
+            print('\nError on input data: exits weights W1 W2 W3 \n')
+            #f.write('\nError on input data: exits weights W1 W2 W3 \n')
+            #raw_input('Error on input data: exits weights W1 W2 W3, Please check')
+            self.inputDataCorrect = False
+
         for idai, ai in enumerate(self.agents):
             for idexit, exit in enumerate(self.exits):
                 if ai.inComp == 0 or exit.inComp == 0:
@@ -808,8 +1097,6 @@ class simulation(object):
             sumTemp = sum(person.exit_prob[idai,:])
             person.exit_prob[idai,:] = person.exit_prob[idai,:]/sumTemp
 
-        FN_Temp = self.outDataName + ".txt"
-        f = open(FN_Temp, "a+")
         if self.DEBUG:
             f.write("\n========================================\n")
             f.write("Assign destinations of agents"+'\n')
@@ -828,7 +1115,7 @@ class simulation(object):
             ai.exitInMindIndex = exit_index
             person.exit_selected[idai]=exit_index
             if self.solver==0:
-                ai.pathMap = self.exit2door[exit_index]
+                athMap = self.exit2door[exit_index]
             else:
                 pass
             print('ai:', idai, '--- exit:', exit_index)
@@ -838,547 +1125,6 @@ class simulation(object):
         if self.DEBUG:
             f.write('\n\n')
         f.close()
-
-
-    def simulation_step(self):
-        
-        # Compute the agents in single step
-        for idai,ai in enumerate(self.agents):
-            
-            # Whether ai is in computation
-            if ai.inComp == 0:
-                continue
-            
-            #Pre-Evacuation Time Effect
-            #tt = pygame.time.get_ticks()/1000 - t_pause
-            if (self.t_sim < ai.tpre):
-                ai.desiredSpeed = random.uniform(0.3,1.6)
-            else: 
-                ai.desiredSpeed = random.uniform(2.0,3.0)
-            
-            #ai.dest = ai.memory.peek()
-            
-            ai.direction = normalize(ai.dest - ai.pos)
-            ai.desiredV = ai.desiredSpeed*ai.direction
-            #ai.desiredV = 0.7*ai.desiredV + 0.3*ai.desiredV_old
-            peopleInter = np.array([0.0, 0.0])
-            wallInter = np.array([0.0, 0.0])
-            doorInter = np.array([0.0, 0.0])
-            otherDir = np.array([0.0, 0.0])
-            otherSpeed = 0.0
-            #otherMovingNum = 0
-            
-            ai.actualSpeed = np.linalg.norm(ai.actualV)
-            ai.desiredSpeed = np.linalg.norm(ai.desiredV)
-            
-            #print >> f, "desired speed of agent i:", ai.desiredSpeed, "/n"
-            #print >> f, "actual speed of agent i:", ai.actualSpeed, "/n"
-            
-            if ai.desiredSpeed != 0: 
-                ai.ratioV = ai.actualSpeed/ai.desiredSpeed
-            else: 
-                ai.ratioV = 1
-            
-            ######################
-            # Wall force adjusted
-            # Stress indicator is used (Or known as ratioV)
-            ai.stressLevel = 1 - ai.ratioV
-            ai.test = 0.0 #??
-            #ai.diw_desired = max(0.2, ai.ratioV)*0.6
-            #ai.A_WF = 700*max(0.3, ai.ratioV)
-            #ai.B_WF = 1.6*max(min(0.6, ai.ratioV),0.2)
-            
-            ai.diw_desired = max(0.5, ai.ratioV)*0.6
-            #ai.A_WF = 30*max(0.5, ai.ratioV)
-            ai.B_WF = 2.2*max(min(0.5, ai.ratioV),0.2) 
-                        
-            ######################
-            # Herding indicator adjusted
-            # There are two method:
-            # 1. White Noise Method
-            # 2. Stress Level Method (Or known as ratioV: Helbing's Equation)
-            #if ai.p == 0.0:
-            if ai.pMode == 'random':
-                ai.p = random.uniform(-0.3, 0.6)  # Method-1
-                #ai.p = random.uniform(-0.3, 0.6*ai.stressLevel)
-                #ai.p = 1 - ai.ratioV  	# Method-2
-            elif ai.pMode =='increase':
-                pass
-            elif ai.pMode =='decrease':
-                pass
-                
-            if self.t_sim > self.tt_OtherList:
-                self.tt_OtherList = self.tt_OtherList + self.DT_OtherList
-                #ai.updateAttentionList(self.agents, self.walls, self.WALLBLOCKHERDING)
-                ai.others=[]
-            
-                #############################################
-                # Compute interaction of agents
-                # Group force and herding effect
-                # Find the agents who draw ai's attention
-
-                for idaj,aj in enumerate(self.agents):
-                    
-                    if aj.inComp == 0:
-                        person.comm[idai, idaj] = 0
-                        person.talk[idai, idaj] = 0
-                        continue
-                    
-                    rij = ai.radius + aj.radius
-                    dij = np.linalg.norm(ai.pos - aj.pos)
-                     
-                    #Difference of current destinations
-                    dij_dest = np.linalg.norm(ai.dest - aj.dest)
-                     
-                    #Difference of desired velocities
-                    vij_desiredV = np.linalg.norm(ai.desiredV - aj.desiredV)
-                     
-                    #Difference of actual velocities
-                    vij_actualV = np.linalg.norm(ai.actualV - aj.actualV)
-                     
-                    phiij = vectorAngleCos(ai.actualV , (aj.pos - ai.pos))
-                    anisoF = ai.lamb + (1-ai.lamb)*(1+cos(phiij))*0.5
-                     
-                    #print >> f, "anisotropic factor", anisoF, "/n"
-                     
-                    if idai == idaj:
-                        continue
-
-                    '''
-                    #####################################################
-                    # Check whether there is a wall between agent i and j
-                    no_wall_ij = True
-                    if self.WALLBLOCKHERDING: 
-                        for idwall, wall in enumerate(self.walls):
-                            if wall.inComp ==0:
-                                continue
-                            #result, flag = ai.iswallInBetween(aj, wall)
-                            result, flag = wall.wallInBetween(ai.pos, aj.pos)
-                            if flag==True:
-                                no_wall_ij = False
-                                break
-                                
-                    see_i2j = True
-                    if np.dot(ai.actualV, aj.pos-ai.pos)<0.2:
-                        see_i2j = False
-                    if np.linalg.norm(ai.actualV)<0.2:
-                        temp=random.uniform(-180, 180)
-                        if temp < 70 and temp > -70:
-                            see_i2j =True
-                    '''
-
-
-                    #####################################################
-                    # Check whether there is a wall between agent i and j
-                    no_wall_ij = True
-                    if self.WALLBLOCKHERDING: 
-                        for idwall, wall in enumerate(self.walls):
-                            if wall.inComp ==0:
-                                continue
-                            result, flag = wall.wallInBetween(ai.pos, aj.pos)
-                            if flag==False:
-                                no_wall_ij = True
-                                person.wall_flag[idai, idaj]=1
-                            else:
-                                no_wall_ij = False
-                                person.wall_flag[idai, idaj]=0
-                                break
-                                
-                    if no_wall_ij:
-                        see_i2j = True
-                        if np.dot(ai.actualV, aj.pos-ai.pos)<0.2:
-                            see_i2j = False
-                            person.see_flag[idai, idaj]=0
-                        if np.linalg.norm(ai.actualV)<0.2:
-                            temp=random.uniform(-180, 180)
-                            if temp < 70 and temp > -70:
-                                see_i2j =True
-                                person.see_flag[idai, idaj]=1
-                                
-                     
-                    #############################################
-                    # Turn on or off group social force
-                    # Also known as cohesive social force
-                    #if GROUPBEHAVIOR and no_wall_ij and see_i2j:
-                    #    peopleInter += ai.groupForce(aj, DFactor[idai, idaj], AFactor[idai, idaj], BFactor[idai, idaj])*anisoF
-                 
-                    #############################################
-                    # Traditional Social Force and Physical Force
-                    if no_wall_ij: #and see_i2j:
-                        peopleInter += ai.agentForce(aj)*anisoF
-                                 
-                    person.talk[idai, idaj] = 0
-                    ###################################################
-                    # Interactive Opinion Dynamics Starts here
-                    # Including Herding Effect, Group Effect and Talking Behavior
-                    # There are several persons around you.  Which draws your attention?  
-                    ###################################################
-                    if person.DFactor is None or person.AFactor is None or person.BFactor is None: #or person.PFactor is None:
-                        print("Group parameters Error: Some of DFactor AFactor BFactor PFactor are None Type!")
-                    if dij < ai.B_CF*person.BFactor[idai, idaj] + rij*person.DFactor[idai, idaj] and no_wall_ij and see_i2j:
-                    #if dij < ai.interactionRange and no_wall_ij and see_i2j:
-                        person.comm[idai, idaj] = 1
-                        ai.others.append(aj)
-                        
-                        #DFactor[idai, idaj] = (1-ai.p)*DFactor[idai, idaj]+ai.p*DFactor[idaj, idai]
-                        #AFactor[idai, idaj] = (1-ai.p)*AFactor[idai, idaj]+ai.p*AFactor[idaj, idai]
-                        #BFactor[idai, idaj] = (1-ai.p)*BFactor[idai, idaj]+ai.p*BFactor[idaj, idai]
-                        #ai.desiredV = (1-ai.p)*ai.desiredV + ai.p*aj.desiredV		
-                    else: 
-                        person.comm[idai, idaj] = 0
-
-                    # Loop of idaj,aj ends here
-                    ###########################
-                
-                print ('=== ai id ===::', idai)
-                print ('ai.others len:', len(ai.others))
-
-            
-            for aj in ai.others:
-
-                idaj=aj.ID
-                print ('others ID', idaj)
-                            
-                dij = np.linalg.norm(ai.pos - aj.pos)
-                 
-                #Difference of current destinations
-                dij_dest = np.linalg.norm(ai.dest - aj.dest)
-                 
-                #Difference of desired velocities
-                vij_desiredV = np.linalg.norm(ai.desiredV - aj.desiredV)
-                 
-                #Difference of actual velocities
-                vij_actualV = np.linalg.norm(ai.actualV - aj.actualV)
-
-                phiij = vectorAngleCos(ai.actualV , (aj.pos - ai.pos))
-                anisoF = ai.lamb + (1-ai.lamb)*(1+cos(phiij))*0.5
-                            
-                if dij<ai.interactionRange: #and 0.6<random.uniform(0.0,1.0):
-                #ai.talk_prob<random.uniform(0.0,1.0):
-                    person.DFactor[idai, idaj]=2.0
-                    person.AFactor[idai, idaj]=600
-                    person.BFactor[idai, idaj]=300
-                    ai.tau = ai.talk_tau
-                    person.talk[idai, idaj]=1
-                else:
-                    person.DFactor[idai, idaj]=person.DFactor_Init[idai, idaj]
-                    person.AFactor[idai, idaj]=person.AFactor_Init[idai, idaj]
-                    person.BFactor[idai, idaj]=person.BFactor_Init[idai, idaj]
-                    ai.tau = ai.moving_tau
-                    person.talk[idai, idaj]=0
-
-                #peopleInter += ai.agentForce(aj)*anisoF
-
-                ###############################
-                # Turn on or off group social force
-                # Also known as cohesive social force
-                if self.GROUPBEHAVIOR:
-                    peopleInter += ai.groupForce(aj, person.DFactor[idai, idaj], person.AFactor[idai, idaj], person.BFactor[idai, idaj])*anisoF
-
-                #if tt > aj.tpre: 
-                #    ai.tpre = (1-ai.p)*ai.tpre + ai.p*aj.tpre
-                if dij < ai.interactionRange:
-                    ai.tpre = 0.5*ai.tpre + 0.5*aj.tpre
-
-            #ai.others=list(set(ai.others))
-            #################################
-            # Herding Effect Computed
-            # Also known as opinion dynamics
-            #################################
-            #if otherMovingNum != 0:
-                #ai.direction = (1-ai.p)*ai.direction + ai.p*otherMovingDir
-                #ai.desiredSpeed = (1-ai.p)*ai.desiredSpeed + #ai.p*otherMovingSpeed/otherMovingNum
-                #ai.desiredV = ai.desiredSpeed*ai.direction
-
-                #ai.desiredV = (1-ai.p)*ai.desiredV + ai.p*otherMovingDir
-
-            if len(ai.others)!=0: #and tt>ai.tpre:
-                otherDir, otherSpeed = ai.opinionDynamics()
-                ai.direction = (1-ai.p)*ai.direction + ai.p*otherDir
-                ai.desiredSpeed = (1-ai.p)*ai.desiredSpeed + ai.p*otherSpeed
-                ai.desiredV = ai.desiredSpeed*ai.direction
-            
-            ########################################################
-            # Turn on or off self-repulsion by boolean variable SELFREPULSION
-            # Also known as sub-consciousness effect in crowd dynamics
-            ########################################################
-            if self.SELFREPULSION and (len(ai.others) != 0):
-                selfRepulsion = ai.selfRepulsion(person.DFactor[idai, idai], person.AFactor[idai, idai], person.BFactor[idai, idai])#*ai.direction
-            else: 
-                selfRepulsion = 0.0
-
-            outsideDoor = True
-            for door in self.doors:
-                if door.inComp ==0:
-                    continue
-                #doorInter += ai.doorForce(door)
-                if door.inside(ai.pos):
-                    wallInter = np.array([0.0, 0.0])
-                    outsideDoor = False
-                    #doorInter = ai.doorForce(door)
-                    #break
-
-            #########################
-            # Calculate Wall Repulsion
-            if outsideDoor:
-                for wall in self.walls:
-                    if wall.inComp ==0:
-                        continue
-                    wallInter += ai.wallForce(wall)
-                    #wallInter += wall.wallForce(ai)
-
-            #print('Forces from Walls:', wallInter)
-            #print('Forces from people:', peopleInter)
-            
-            #############################################
-            # Calculate Motive Forces
-            # Consider TPRE features
-            #############################################	
-            #tt = pygame.time.get_ticks()/1000-t_pause
-            if (self.t_sim < ai.tpre and self.TPREMODE == 1):
-                ai.desiredV = ai.direction*0.0
-                ai.desiredSpeed = 0.0
-                #ai.dest = ai.pos
-                ai.tau = random.uniform(2.0,10.0) #ai.tpre_tau
-                motiveForce = ai.adaptMotiveForce()
-            
-            #ai.sumAdapt += motiveForce*0.2  #PID: Integration Test Here
-            
-            if (self.t_sim < ai.tpre and self.TPREMODE == 2):
-                motiveForce = np.array([0.0, 0.0])
-
-            if (self.t_sim < ai.tpre and self.TPREMODE == 3):
-                pass
-                if outsideDoor:
-                    doorInter = np.array([0.0, 0.0])
-                    
-                goSomeone = ai.moveToAgent()
-                if goSomeone != None:
-                    gsid = goSomeone.ID
-                    ai.diretion = normalize(goSomeone.pos - ai.pos)
-                    ai.desiredSpeed = random.uniform(0.6,1.6)
-                    ai.desiredV = ai.diretion*ai.desiredSpeed
-                    ai.tau = random.uniform(0.6,1.6) #ai.tpre_tau
-                    motiveForce = ai.adaptMotiveForce()
-                    print ('ai:', ai.ID, '&&& In Tpre Stage:')
-                    print ('goSomeone:', goSomeone.ID)
-                else:
-                    ai.desiredV = ai.direction*0.0
-                    ai.desiredSpeed = 0.0
-                    ai.tau = random.uniform(2.0,10.0) #ai.tpre_tau
-                    motiveForce = ai.adaptMotiveForce()
-                    print  ('ai:', ai.ID, '&&& In Tpre Stage:')
-                    print ('goSomeone is None.')
-
-            #temp = 0.0
-            #maxWallForce = 0.0
-            #wallDirection = np.array([0.0, 0.0])
-            
-            #for idwall, wall in enumerate(walls):
-            #temp = np.linalg.norm(ai.wallForce(wall))
-            #    if temp > maxWallForce: 
-            #	maxWallForce = temp
-            #	wallDirection = np.array([wall[0],wall[1]]) - np.array([wall[2],wall[3]])
-            #	closeWall = wall
-            
-            if (self.t_sim >= ai.tpre):
-            #################################
-            # Wall Effect Computed: 
-            # Is There Any Wall Nearby On The Route?
-            # If So, Adjust Desired Direction
-
-                #####################################################
-                # Check whether there is a wall between agent i and the destination
-                no_wall_dest = True
-                for idwall, wall in enumerate(self.walls):
-                    if wall.inComp ==0:
-                        continue
-                    result, flag = wall.wallInBetween(ai.pos, ai.dest)
-                    if result != None:
-                        no_wall_dest = False
-                        break
-                   
-                # Start to search visible doors
-                ai.targetDoors=ai.findVisibleTarget(self.walls, self.doors)
-                print ('ai:', ai.ID, 'Length of targetDoors:', len(ai.targetDoors))
-                
-                # Start to search visible exits
-                ai.targetExits=ai.findVisibleTarget(self.walls, self.exits)
-
-                #ai.findVisibleTarget(walls, doors)
-                #ai.findVisibleTarget(walls, exits)
-                
-                goDoor = ai.selectTarget(self.exit2door)
-                #goDoor.computePos()
-                if goDoor==None:
-                    print ('goDoor is None.')
-                    doorInter = np.array([0.0, 0.0])
-                else:
-                    print ('go Door:', goDoor.id, goDoor.pos)
-                    doorInter = ai.doorForce(goDoor, 'edge', 0.3)
-                    
-                #dir1=goDoor.direction()
-                #dir2=goDoor.pos-ai.pos
-                #if goDoor!=None: #and np.dot(dir1, dir2)>=0:
-                    goDoorPx = goDoor.pos #visiblePx(ai, walls)
-                    ai.direction = normalize(goDoorPx-ai.pos)
-                    ai.desiredV = ai.desiredSpeed*ai.direction
-
-                    ### ??? ###
-                    if goDoor.inside(ai.pos):
-                        if len(ai.route)==0:
-                            ai.route.append(goDoor.pos)
-                        #if ai.route[len(ai.route)-1] is not goDoor.pos
-                        #    print 'Error in ai.route!'
-                        elif ai.route[len(ai.route)-1] is not goDoor.pos:
-                            ai.route.append(goDoor.pos)
-
-                # Interaction with enviroment
-                # Search for wall on the route
-                # temp = 0.0
-                closeWall = None #None #walls[0]
-                closeWallDist = 10.0 # Define how close the wall is
-                for wall in self.walls:
-                    if wall.inComp ==0:
-                        continue
-                    crossp, diw, arrow = ai.wallOnRoute(wall, 1.0)
-                    if diw!=None and diw < closeWallDist:
-                        closeWallDist = diw
-                        closeWall = wall
-
-
-                closeWallEffect = True
-                crossp, diw, wallDirection = ai.wallOnRoute(closeWall, 1.0)
-                if diw!=None and goDoor!=None and outsideDoor:
-                    if goDoor.inside(crossp):
-                        wallInter = wallInter - ai.wallForce(closeWall)
-                        closeWallEffect = False
-                    else:
-                        if np.dot(wallDirection, ai.desiredV) < 0.0 and wall.arrow==0:
-                            #0.3*ai.desiredV+0.7*ai.desiredV_old) < 0.0:
-                            wallDirection = -wallDirection
-                        #ai.direction = ai.direction + wallDirection*20/diw
-                        ai.direction = normalize(ai.direction)
-                        ai.desiredV = ai.desiredSpeed*ai.direction
-
-
-                if diw!=None and goDoor==None: # and not ai.targetDoors:
-                #if closeWall!=None:
-                #    diw = ai.wallOnRoute(closeWall)
-                    #wallDirection = np.array([closeWall.params[0],closeWall.params[1]]) - np.array([closeWall.params[2],closeWall.params[3]])
-                    #wallDirection = -normalize(wallDirection)
-                    #if wall.arrow==0 or ai.aType=='search': 
-                    if np.dot(wallDirection, ai.actualV) < 0.0 and wall.arrow==0:
-                        #0.3*ai.desiredV+0.7*ai.desiredV_old) < 0.0:
-                        wallDirection = -wallDirection
-
-                    #if (isnan(closeWall.pointer1[0]) or isnan(closeWall.pointer1[1])) and (isnan(closeWall.pointer2[0]) or isnan(closeWall.pointer2[1])) or ai.aType=='search': 
-                    if isnan(closeWall.pointer1[0]) or isnan(closeWall.pointer1[1]) or ai.aType=='search':
-                        pass
-                        if diw==None:
-                            print ('diw==None')
-                            print ('ai:', idai)
-                            print ('closeWall:', closeWall.id)
-                            print ('################################')
-                        
-                        ai.direction = ai.direction + wallDirection*20/diw
-                        ai.direction = normalize(ai.direction)
-                        ai.desiredV = ai.desiredSpeed*ai.direction
-                        #ai.destmemory.append([wall[2],wall[3]]+0.1*wallDirection)
-                    #elif ai.destmemory[-1] is not [closeWall[5], closeWall[6]]:  
-                        #ai.destmemory[-1][0]!=closeWall[5] or ai.destmemory[-1][1]!= closeWall[6]:
-                        #ai.destmemory.append([wall[0],wall[1]]+0.1*wallDirection)
-                        #ai.destmemory.append([closeWall[5], closeWall[6]])
-                        #ai.direction = normalize(ai.destmemory[-1]-ai.pos)
-                        #ai.desiredV = ai.desiredSpeed*ai.direction
-                    else:
-                        temp1= np.linalg.norm([closeWall.pointer1[0], closeWall.pointer1[1]]-ai.pos)
-                        temp2= np.linalg.norm([closeWall.pointer2[0], closeWall.pointer2[1]]-ai.pos)
-                        for aj in ai.others:
-                            temp1 = temp1+np.linalg.norm([closeWall.pointer1[0], closeWall.pointer1[1]]-aj.pos)
-                            temp2 = temp2+np.linalg.norm([closeWall.pointer2[0], closeWall.pointer2[1]]-aj.pos)
-                        if temp1<temp2:
-                            ai.direction = normalize([closeWall.pointer1[0], closeWall.pointer1[1]]-ai.pos)
-                        else:
-                            ai.direction = normalize([closeWall.pointer2[0], closeWall.pointer2[1]]-ai.pos)
-                        #ai.direction = normalize([closeWall.pointer1[0], closeWall.pointer1[1]]-ai.pos)
-                        ai.desiredV = ai.desiredSpeed*ai.direction
-                
-                    #ai.direction = ai.direction + wallDirection/np.linalg.norm(wallDirection)*20/diw
-                    #ai.desiredV = ai.desiredSpeed*ai.direction
-                
-                #if np.linalg.norm(ai.pos-ai.destmemory[-1])<=1e-3:
-                #    ai.destmemory.pop()
-                ai.tau=ai.moving_tau
-                motiveForce = ai.adaptMotiveForce()	
-                
-                #print 'destmemeory', len(ai.destmemory)
-
-            # Compute total force
-            sumForce = motiveForce + peopleInter + wallInter + doorInter + ai.diss*ai.actualV + selfRepulsion #+ ai.sumAdapt
-
-            # Compute acceleration
-            accl = sumForce/ai.mass
-            
-            # Compute velocity
-            ai.actualV = ai.actualV + accl*self.DT # consider dt = 0.5
-
-            ai.wallrepF = wallInter
-            ai.doorF = doorInter
-            ai.groupF = peopleInter
-            ai.selfrepF = selfRepulsion
-
-            if self.TESTFORCE:
-                print ('@motiveForce:', np.linalg.norm(motiveForce), motiveForce)
-                print ('@peopleInter:', np.linalg.norm(peopleInter), peopleInter)
-                print ('@wallInter:', np.linalg.norm(wallInter), wallInter)
-                print ('@doorInter:', np.linalg.norm(doorInter), doorInter)
-                print ('@diss:', np.linalg.norm(ai.diss*ai.actualV), ai.diss*ai.actualV)
-                print ('@selfRepulsion:', np.linalg.norm(selfRepulsion), selfRepulsion)
-            
-            ###########################################
-            # Solution to Overspeed: Agents will not move too fast
-            ai.actualSpeed = np.linalg.norm(ai.actualV)
-            if (ai.actualSpeed >= ai.maxSpeed):
-                ai.actualV = ai.actualV*ai.maxSpeed/ai.actualSpeed
-                #ai.actualV[0] = ai.actualV[0]*ai.maxSpeed/ai.actualSpeed
-                #ai.actualV[1] = ai.actualV[1]*ai.maxSpeed/ai.actualSpeed
-        
-            # Calculate Positions
-            ai.pos = ai.pos + ai.actualV*self.DT
-            #print(ai.pos)
-            #print(accl,ai.actualV,ai.pos)
-        
-            ai.desiredV_old = ai.desiredV
-            ai.actualV_old = ai.actualV
-        
-            ###########################################
-            ## Output time when agents reach the safety
-            #if TIMECOUNT and (ai.pos[0] >= 35.0) and (ai.Goal == 0):
-            if self.TIMECOUNT and (np.linalg.norm(ai.pos-ai.dest)<=0.2) and (ai.Goal == 0):
-                print ('Reaching the goal:')
-                ai.inComp = 0
-                ai.Goal = 1
-                ai.timeOut = pygame.time.get_ticks()
-                #ai.timeOut = clock.get_time()/1000.0
-                print ('Time to Reach the Goal:', ai.timeOut)
-                #f.write('Time to Reach the Goal:'+str(ai.timeOut))
-            
-            ###########################################
-            ## Remove agent when agent reaches the destination    
-            #if np.linalg.norm(ai.pos-ai.dest)<=1e-3:
-             #   agents.remove(agents[idai])
-
-            ###########################################
-            ## Remove agent when agent reaches the exit    
-            for exit in self.exits:
-                if exit.inComp == 0:
-                    continue
-                if exit.inside(ai.pos):
-                    ai.inComp = 0
-
-        # Update simulation time
-        self.t_sim = self.t_sim + self.DT
 
 
     def simulation_step2022(self):
@@ -1397,8 +1143,21 @@ class simulation(object):
             print("person.see_flag:\n", person.see_flag)
             print("person.comm:\n", person.comm)
             print("person.talk:\n", person.talk)
-        
-        '''        
+
+            FN_Temp = self.outDataName + ".txt"
+            f = open(FN_Temp, "a+")
+            f.write('&SimuTime\n')
+            f.write('Simulation Time:' + str(self.t_sim)+'\n')
+            f.write('&AttentionList\n')
+            f.write("person.see_flag:\n"+str(person.see_flag)+'\n')
+            f.write("person.comm:\n"+str(person.comm)+'\n')
+            f.write("person.talk:\n"+str(person.talk)+'\n')
+            f.write('\nEndAttentionList!')
+            f.write('\n')
+            f.write('\n')
+            f.close()
+                    
+                
         #if (self.t_sim < ai.tpre):
         if self.t_sim > self.tt_ChangeDoor and self.solver!=1:
             print('Time for update ExitProb:', self.t_sim)
@@ -1413,6 +1172,23 @@ class simulation(object):
             
             # Update door selection probability
             print("person.exit_known:\n", person.exit_known)
+
+
+            FN_Temp = self.outDataName + ".txt"
+            f = open(FN_Temp, "a+")
+            f.write('&SimuTime\n')
+            f.write('Simulation Time:' + str(self.t_sim)+'\n')
+            f.write('&DoorProb\n')
+            f.write('person.exit_prob:\n'+str(person.exit_prob)+'\n')
+            for i in range(len(person.exit_prob)):
+                f.write('prob=')
+                f.write(str(person.exit_prob[i]))
+                f.write('\n')
+            f.write('\nWellDone!')
+            f.write('\n')
+            f.write('\n')
+            f.close()
+            
             for idai, ai in enumerate(self.agents):
 
                 if ai.inComp == 0:
@@ -1454,7 +1230,7 @@ class simulation(object):
                 print(person.exit_prob[idai, :])
 
                 if np.sum(ratio_exit_selected)>0:
-                    person.exit_prob[idai, :] = 0.2*person.exit_prob[idai, :] + 0.5*ratio_utility + 0.3*ratio_exit_selected
+                    person.exit_prob[idai, :] = ai.W1*person.exit_prob[idai, :] + ai.W2*ratio_utility + ai.W3*ratio_exit_selected
  
                 temp = np.random.multinomial(1, person.exit_prob[idai, :], size=1)
                 print(person.exit_prob[idai, :])
@@ -1471,7 +1247,27 @@ class simulation(object):
                 print('ai:', idai, '--- exit:', exit_index)
                 if self.DEBUG:
                     f.write('ai:' + str(ai.ID) + '--- exit:' + str(exit_index) +'\n')
-        '''            
+
+            print('Simulation Time:', self.t_sim)
+            print(person.exit_prob)
+            
+
+            '''
+            FN_Temp = self.outDataName + ".txt"
+            f = open(FN_Temp, "a+")
+            f.write('&SimuTime\n')
+            f.write('Simulation Time:' + str(self.t_sim)+'\n')
+            f.write('&DoorProb\n')
+            f.write('person.exit_prob:\n'+str(person.exit_prob)+'\n')
+            for i in range(len(person.exit_prob)):
+                f.write('prob=')
+                f.write(str(person.exit_prob[i]))
+                f.write('\n')
+            f.write('\nWellDone!')
+            f.write('\n')
+            f.write('\n')
+            f.close()
+            '''
                     
         for idai,ai in enumerate(self.agents):
             
@@ -1488,6 +1284,10 @@ class simulation(object):
             peopleInter = np.array([0.0, 0.0])
             wallInter = np.array([0.0, 0.0])
             doorInter = np.array([0.0, 0.0])
+            
+            phyInter = np.array([0.0, 0.0])
+            phySFInter = np.array([0.0, 0.0])
+            phyWFInter = np.array([0.0, 0.0])
             
             ai.actualSpeed = np.linalg.norm(ai.actualV)
             ai.desiredSpeed = np.linalg.norm(ai.desiredV)
@@ -1563,6 +1363,9 @@ class simulation(object):
             #peopleInter = + ai.adaptPhyForce(self.agents)
             wallInter, doorInter, outsideDoor = ai.adaptWallDoorForce(self.walls, self.doors)
             
+            phySFInter = ai.updatePhysicSF(self.agents)
+            phyWFInter = ai.updatePhysicWF(self.walls)
+            phyInter = phySFInter + phyWFInter
             
             #############################################
             # Calculate Motive Forces
@@ -1650,8 +1453,8 @@ class simulation(object):
 
                 
             # Compute total force
-            sumForce = motiveForce + peopleInter + wallInter + doorInter + ai.diss*ai.actualV + selfRepulsion #+ ai.sumAdapt
-
+            sumForce = motiveForce + peopleInter + wallInter + doorInter + ai.diss*ai.actualV + selfRepulsion + phyInter #+ ai.sumAdapt + phyInter
+ 
             # Compute acceleration
             accl = sumForce/ai.mass
             
@@ -1727,12 +1530,15 @@ if __name__=="__main__":
     myTest.select_file(None, None, "smallGUI")
     #myTest.read_data()
     show_geom(myTest)
-    myTest.flowMesh()
+    
     myTest.preprocessGeom()
     myTest.preprocessAgent()
-    show_flow(myTest)
+    myTest.buildMesh()
+    myTest.flowMesh()
+    myTest.computeDoorDirection()
     
     if myTest.continueToSimu:
+        show_flow(myTest)
         show_simu(myTest)
     #myTest.quit()
 

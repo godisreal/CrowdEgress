@@ -113,9 +113,13 @@ class GUI(object):
 
         self.buttonFlow = Button(self.frameRun, text='read now: test flow', command=self.testFlow)
         self.buttonFlow.pack()
+
+        self.buttonComp = Button(self.frameRun, text='compute now: only compute simulation', command=self.compSim)
+        self.buttonComp.pack()
         
-        self.buttonStart = Button(self.frameRun, text='start now: start simulation', command=self.startSim)
+        self.buttonStart = Button(self.frameRun, text='start now: show simulation', command=self.startSim)
         self.buttonStart.pack()
+
         #buttonStart.place(x=5,y=220)
         print(self.fname_FDS, self.fname_EVAC)
 
@@ -149,12 +153,18 @@ class GUI(object):
         self.SHOWFORCE_CB=Checkbutton(self.frameParameters, text= 'Show forces on agents in simulation', variable=self.SHOWFORCE_Var, onvalue=1, offvalue=0)
         self.SHOWFORCE_CB.place(x=300, y=36)
         self.showHelp(self.SHOWFORCE_CB, "Show various forces on agents in the simulation.")
-
+        
         self.NearExit_Var = IntVar()
         self.NearExit_Var.set(1)
         self.NearExit_CB=Checkbutton(self.frameParameters, text= 'Use nearest exit strategy', variable=self.NearExit_Var, onvalue=1, offvalue=0)
         self.NearExit_CB.place(x=2, y=66)
         self.showHelp(self.NearExit_CB, "Use nearest exit strategy to guide evacuee agents.")
+        
+        self.DumpData_Var = IntVar()
+        self.DumpData_Var.set(1)
+        self.DumpData_CB=Checkbutton(self.frameParameters, text= 'Output data to a binary file', variable=self.DumpData_Var, onvalue=1, offvalue=0)
+        self.DumpData_CB.place(x=300, y=66)
+        self.showHelp(self.DumpData_CB, "Output data to a binary file such that it can be visualized.")        
 
         #print self.SHOWTIME_Var.get()
 
@@ -172,6 +182,7 @@ class GUI(object):
     def updateCtrlParam(self):
         self.currentSimu.SHOWTIME = self.SHOWTIME_Var.get()
         self.currentSimu.SHOWSTRESS = self.SHOWSTRESS_Var.get()
+        self.currentSimu.dumpBin = self.DumpData_Var.get()
         
         if self.SHOWGEOM_Var.get():
             self.currentSimu.SHOWWALLDATA=True
@@ -251,10 +262,15 @@ class GUI(object):
         sunpro2.start()
         #sunpro2.join()
         if self.currentSimu.continueToSimu:
+            #self.currentSimu.preprocessGeom()
+            #self.currentSimu.preprocessAgent()
+            #self.currentSimu.flowMesh()
             self.updateCtrlParam()
-            self.currentSimu.flowMesh()
             self.currentSimu.preprocessGeom()
             self.currentSimu.preprocessAgent()
+            self.currentSimu.buildMesh()
+            self.currentSimu.flowMesh()
+            self.currentSimu.computeDoorDirection()
             sunpro1 = mp.Process(target=show_simu(self.currentSimu))
             #sunpro1 = mp.Process(target=self.currentSimu.flowMesh())
             sunpro1.start()
@@ -267,12 +283,17 @@ class GUI(object):
     def testFlow(self):
         self.currentSimu = simulation()
         self.currentSimu.select_file(self.fname_EVAC, self.fname_FDS, "non-debug")
-        self.updateCtrlParam()
         show_geom(self.currentSimu)
         #sunpro2 = mp.Process(target=show_geom(self.currentSimu)) 
         #sunpro2.start()
         #sunpro2.join()
+        self.updateCtrlParam()
+        self.currentSimu.preprocessGeom()
+        self.currentSimu.preprocessAgent()
+        self.currentSimu.buildMesh()
         self.currentSimu.flowMesh()
+        self.currentSimu.computeDoorDirection()
+        show_flow(self.currentSimu)
 
     def startSim(self):
         self.currentSimu = simulation()
@@ -280,9 +301,11 @@ class GUI(object):
         #self.textInformation.insert(END, "Start Simulation Now!")
         self.setStatusStr("Simulation starts!  GUI window is not effective when Pygame screen is displayed!")
         self.updateCtrlParam()
-        self.currentSimu.flowMesh()
         self.currentSimu.preprocessGeom()
         self.currentSimu.preprocessAgent()
+        self.currentSimu.buildMesh()
+        self.currentSimu.flowMesh()
+        self.currentSimu.computeDoorDirection()
         sunpro1 = mp.Process(target=show_simu(self.currentSimu))        
         sunpro1.start()
         #sunpro1.join()
@@ -291,6 +314,24 @@ class GUI(object):
         #myTest.show_simulation()
         self.currentSimu.quit()
 
+    def compSim(self):
+        self.currentSimu = simulation()
+        self.currentSimu.select_file(self.fname_EVAC, self.fname_FDS, "non-debug")
+        #self.textInformation.insert(END, "Start Simulation Now!")
+        self.setStatusStr("Simulation starts!  GUI window is not effective now")
+        self.updateCtrlParam()
+        self.currentSimu.preprocessGeom()
+        self.currentSimu.preprocessAgent()
+        self.currentSimu.buildMesh()
+        self.currentSimu.flowMesh()
+        self.currentSimu.computeDoorDirection()
+        sunpro1 = mp.Process(target=compute_simu(self.currentSimu))        
+        sunpro1.start()
+        #sunpro1.join()
+        self.setStatusStr("Simulation not yet started!")
+        #show_geom(myTest)
+        #myTest.show_simulation()
+        self.currentSimu.quit()
             
 #==========================================
 #===This is a small GUI widget used for debug mode=======
