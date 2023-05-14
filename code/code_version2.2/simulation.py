@@ -299,7 +299,7 @@ class simulation(object):
             if temp is not None and tempTEND is not None:
                 self.DT = float(tempDT)
                 self.DT_DumpData = float(temp)
-                #self.t_end = float(tempTEND)
+                self.t_end = float(tempTEND)
                 
         else:
             self.walls = readWalls(FN_EVAC)  #readWalls(FN_Walls) #readWalls("obstData2018.csv")
@@ -416,9 +416,9 @@ class simulation(object):
         self.ymax=np.max(yyy)
         
         if self.xpt is None:
-            self.xpt=int(self.xmax-self.xmin)*3+10
+            self.xpt=int(self.xmax-self.xmin)*3+30
         if self.ypt is None:
-            self.ypt=int(self.ymax-self.ymin)*3+10
+            self.ypt=int(self.ymax-self.ymin)*3+30
 
         if self.DEBUG:
             print("Range in x axis:", self.xmin, self.xmax, "Num of points in x axis:", self.xpt)
@@ -572,7 +572,7 @@ class simulation(object):
             print('R_ini:\n',R_ini)
             print('np.sum(R_ini):',np.sum(R_ini))
             #eular2D(x_min, y_min, x_max, y_max, x_points, y_points, D_t, t_end, bldInfo, R0, U0, V0, Rdes, Udes, Vdes, mode=0, saveData=True, showPlot=True, debug=True):
-            eular2D(x_min, y_min, x_max, y_max, x_points, y_points, D_t, t_end, self.bldmesh, R0=R_ini, U0=zeroArray, V0=zeroArray, Rdes=zeroArray, Udes=Ud0, Vdes=Vd0, mode=3, saveData=True, showPlot=False, debug=True)
+            #eular2D(x_min, y_min, x_max, y_max, x_points, y_points, D_t, t_end, self.bldmesh, R0=R_ini, U0=zeroArray, V0=zeroArray, Rdes=zeroArray, Udes=Ud0, Vdes=Vd0, mode=3, saveData=True, showPlot=False, debug=True)
             #if self.DEBUG:
                 
         if self.solver==2: # Show flow field of each individual exit
@@ -1146,7 +1146,7 @@ class simulation(object):
 
             FN_Temp = self.outDataName + ".txt"
             f = open(FN_Temp, "a+")
-            f.write('&SimuTime\n')
+            f.write('\n\n&SimuTime\n')
             f.write('Simulation Time:' + str(self.t_sim)+'\n')
             f.write('&AttentionList\n')
             f.write("person.see_flag:\n"+str(person.see_flag)+'\n')

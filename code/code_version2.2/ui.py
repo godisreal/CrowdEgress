@@ -39,7 +39,7 @@ class GUI(object):
         
         self.window = Tk()
         self.window.title('crowd egress simulator')
-        self.window.geometry('700x420')
+        self.window.geometry('700x500')
 
         self.statusStr = ""
         self.statusText = StringVar(self.window, value=self.statusStr) # at this point, statusStr = ""
@@ -152,7 +152,7 @@ class GUI(object):
         self.SHOWFORCE_Var.set(1)
         self.SHOWFORCE_CB=Checkbutton(self.frameParameters, text= 'Show forces on agents in simulation', variable=self.SHOWFORCE_Var, onvalue=1, offvalue=0)
         self.SHOWFORCE_CB.place(x=300, y=36)
-        self.showHelp(self.SHOWFORCE_CB, "Show various forces on agents in the simulation.")
+        self.showHelp(self.SHOWFORCE_CB, "Show various forces on agents in the simulation. \n  Motive Force: Red;  Interpersonal Force: Pink; Wall Force: Purple;  Door Force: Green")
         
         self.NearExit_Var = IntVar()
         self.NearExit_Var.set(1)
@@ -162,9 +162,9 @@ class GUI(object):
         
         self.DumpData_Var = IntVar()
         self.DumpData_Var.set(1)
-        self.DumpData_CB=Checkbutton(self.frameParameters, text= 'Output data to a binary file', variable=self.DumpData_Var, onvalue=1, offvalue=0)
+        self.DumpData_CB=Checkbutton(self.frameParameters, text= 'Dump data to a binary file', variable=self.DumpData_Var, onvalue=1, offvalue=0)
         self.DumpData_CB.place(x=300, y=66)
-        self.showHelp(self.DumpData_CB, "Output data to a binary file such that it can be visualized.")        
+        self.showHelp(self.DumpData_CB, "Dump data to a binary file such that it can be visualized by our small program evac-prt5-tool.")        
 
         #print self.SHOWTIME_Var.get()
 

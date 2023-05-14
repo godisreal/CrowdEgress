@@ -330,8 +330,8 @@ def drawDirection(screen, door, arrow, ZOOMFACTOR=10.0, xSpace=0.0, ySpace=0.0):
     arrowPx = endPx - dir*0.2
     arrowPx1 = arrowPx + 0.6*dir2
     arrowPx2 = arrowPx - 0.6*dir2
-    pygame.draw.line(screen, red, endPx*ZOOMFACTOR+xyShift, arrowPx1*ZOOMFACTOR+xyShift, 2)
-    pygame.draw.line(screen, red, endPx*ZOOMFACTOR+xyShift, arrowPx2*ZOOMFACTOR+xyShift, 2)
+    pygame.draw.line(screen, green, endPx*ZOOMFACTOR+xyShift, arrowPx1*ZOOMFACTOR+xyShift, 2)
+    pygame.draw.line(screen, green, endPx*ZOOMFACTOR+xyShift, arrowPx2*ZOOMFACTOR+xyShift, 2)
 
 
 def show_vel(screen, x_min, y_min, x_max, y_max, Ud, Vd, ZOOMFACTOR=10.0, xSpace=0.0, ySpace=0.0, SHOWDATA=False):
@@ -395,7 +395,8 @@ def show_geom(simu):
     f = open(FN_Temp, "a+")
     #simu.outFileName=f
 
-    f.write("Test Geometry of Compartment.")
+    f.write("\n\n")
+    f.write("Test Geometry of Compartment. \n")
     # f.write('FN_FDS=', simu.FN_FDS)
     # f.write('FN_EVAC=', simu.FN_EVAC #,'\n')
 
@@ -859,7 +860,6 @@ def show_geom(simu):
         pygame.display.flip()
         clock.tick(20)
         
-    f.close()
     simu.ZOOMFACTOR = ZOOMFACTOR
     simu.xSpace = xSpace
     simu.ySpace = ySpace
@@ -868,6 +868,13 @@ def show_geom(simu):
     simu.exits = exits
     simu.agents = agents
     #simu.exit2door = exit2door
+
+    f.write('Display a summary of input data after TestGeom as below.\n')
+    f.write('number of walls: '+str(len(simu.walls))+ '\n')
+    f.write('number of doors: '+str(len(simu.doors))+ '\n')
+    f.write('number of exits: '+str(len(simu.exits))+ '\n\n')
+        
+    f.close()
     pygame.display.quit()
 
 
