@@ -473,18 +473,20 @@ def show_geom(simu):
                          if mouseX<120 and mouseX>0 and mouseY<40 and mouseY>23:
                              # dump door direction data
                              print ("Output door data into doorDataRev.csv! Please check!")
-                             updateDoorData(simu.doors, 'doorDataRev.csv')
+                             updateDoorData(doors, 'doorDataRev.csv') #simu.outDataName+'doorDataRev.csv')
                              menu_01 =False
                          elif mouseX<120 and mouseX>0 and mouseY<60 and mouseY>43:
                              # dump exit2door data
-                             print ("Output exit2door data into Exit2DoorRev.csv! Please check!")
-                             updateExit2Doors(simu.exit2door, 'Exit2DoorRev.csv')
+                             #print ("Output exit2door data into Exit2DoorRev.csv! Please check!")
+                             #updateExit2Doors(simu.exit2door, 'Exit2DoorRev.csv')
+                             print ("Output exit data into exitDataRev.csv! Please check!")
+                             updateExitData(exits, 'exitDataRev.csv') #simu.outDataName+'exitDataRev.csv')
                              menu_01 =False
                          elif mouseX<120 and mouseX>0 and mouseY<80 and mouseY>63:
                              # dump wall data
                              print ("Output wall data into wallDataRev.csv! Please check!")
                              #updateWallData(simu.walls, 'wallDataRev.csv')
-                             updateWallData(walls, 'wallDataRev.csv')
+                             updateWallData(walls, 'wallDataRev.csv') #simu.outDataName+'wallDataRev.csv')
                              menu_01 =False
                           # elif mouseX<120 and mouseX>0 and mouseY<100 and mouseY>83:
                           # To add something else in future development
@@ -651,6 +653,8 @@ def show_geom(simu):
                     draw_arrows = []
                     draw_arrows.append((mouse_pos-xyShift)*(1/ZOOMFACTOR))
                     draw_arrows.append((mouse_pos2-xyShift)*(1/ZOOMFACTOR))
+                    
+                    '''
                     for door in simu.doors:
                         if door.inside((mouse_pos2-xyShift)*(1/ZOOMFACTOR)):
                             w1=draw_arrows[-2]
@@ -669,6 +673,7 @@ def show_geom(simu):
                             elif result4 != None:
                                 simu.exit2door[draw_exit.id, door.id]= 2
                                 #door.arrow=2
+                    '''
                         
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_KP1:
@@ -683,7 +688,7 @@ def show_geom(simu):
                     #updateExit2Doors(simu.exit2door, 'Exit2DoorRev.csv')
                     updateWallData(walls, 'wallDataRev.csv')
                     updateDoorData(doors, 'doorDataRev.csv')
-                    updateExit2Doors(simu.exit2door, 'Exit2DoorRev.csv')
+                    updateExitData(exits, 'exitDataRev.csv')
                 elif event.key == pygame.K_PAGEUP:
                     ZOOMFACTOR = ZOOMFACTOR +1
                 elif event.key == pygame.K_PAGEDOWN:
@@ -743,9 +748,10 @@ def show_geom(simu):
             h= ZOOMFACTOR*(draw_exit.params[3] - draw_exit.params[1])
                 
             pygame.draw.rect(screen, orange, [x, y, w, h], LINEWIDTH+2)
-
-            for door in simu.doors:
-                drawDirection(screen, door, simu.exit2door[draw_exit.id, door.id], ZOOMFACTOR, xSpace, ySpace)
+            
+            print("draw_exit.id", draw_exit.id)  #"door.id", door.id
+            #for door in doors: #simu.doors:
+            #    drawDirection(screen, door, simu.exit2door[draw_exit.id, door.id], ZOOMFACTOR, xSpace, ySpace)
             
             #if len(draw_lines)>1:
             #    for i in range(len(draw_lines)-1):
@@ -763,7 +769,7 @@ def show_geom(simu):
             myfont=pygame.font.SysFont("arial",14)
             text_surface=myfont.render('output_doors', True, white, tan)
             screen.blit(text_surface, [0,23])#+[0.0,20.0]) #+xyShift)
-            text_surface=myfont.render('output_exit2door', True, white, tan)
+            text_surface=myfont.render('output_exits', True, white, tan)
             screen.blit(text_surface, [0,43])#+[0.0,40.0]) #+xyShift)
             text_surface=myfont.render('output_walls', True, white, tan)
             screen.blit(text_surface, [0,63])#+[0.0,60.0]) #+xyShift)
@@ -1034,6 +1040,15 @@ def show_flow(simu):
                 show_vel(screen, simu.xmin, simu.ymin, simu.xmax, simu.ymax, Ud, Vd, ZOOMFACTOR, xSpace, ySpace)
                 for door in simu.doors:
                     drawDirection(screen, door, simu.exit2door[idexit, door.id], ZOOMFACTOR, xSpace, ySpace)
+                
+                # High light the target exit in pygame display: Trial well, but not that useful
+                #targeExit=simu.exits[idexit]
+                #x= ZOOMFACTOR*targeExit.params[0]+xSpace
+                #y= ZOOMFACTOR*targeExit.params[1]+ySpace
+                #w= ZOOMFACTOR*(targeExit.params[2] - targeExit.params[0])
+                #h= ZOOMFACTOR*(targeExit.params[3] - targeExit.params[1])
+                #pygame.draw.rect(screen, orange, [x, y, w, h], LINEWIDTH+2)
+            
             elif idexit == len(simu.exits):
                 # Show nearest-exit field
                 Ud=simu.UallExit[1:-1, 1:-1]

@@ -32,7 +32,17 @@ class GUI(object):
                 if re.match('FN_EVAC', line):
                     temp =  line.split('=')
                     FN_EVAC = temp[1].strip()
-
+                if re.match('ZOOM', line):
+                    temp =  line.split('=')
+                    ZOOM = float(temp[1].strip())                    
+                if re.match('xSpace', line):
+                    temp =  line.split('=')
+                    xSpa = float(temp[1].strip())
+                if re.match('ySpace', line):
+                    temp =  line.split('=')
+                    ySpa = float(temp[1].strip())
+                    
+                    
         self.fname_FDS = FN_FDS
         self.fname_EVAC = FN_EVAC
         self.currentSimu = None
@@ -94,7 +104,7 @@ class GUI(object):
         self.buttonSelectCSV =Button(self.frameRun, text='choose csv file for EVAC data', command=self.selectEvacFile)
         #self.buttonSelectCSV.place(x=2, y=120)
         self.buttonSelectCSV.pack()
-        self.showHelp(self.buttonSelectCSV, "Select .csv file to set up the agent and exit for the simulation")
+        self.showHelp(self.buttonSelectCSV, "Select .csv file to set up the agent parameters for the simulation")
         #Button(window, text='choose csv file for door data', command=lambda: selectFile(2)).pack()
 
         self.buttonSelectFDS =Button(self.frameRun, text='choose fds file for FDS data', command=self.selectFDSFile)
@@ -108,17 +118,25 @@ class GUI(object):
         
         #self.buttonRead = Button(self.frameRun, text='read now: read in data', command=self.readData)
         #self.buttonRead.pack()
-        self.buttonGeom = Button(self.frameRun, text='read now: test geom', command=self.testGeom)
+        self.buttonGeom = Button(self.frameRun, text='read now: create simulation data', command=self.testGeom)
         self.buttonGeom.pack()
+        self.showHelp(self.buttonGeom, "Create or modify the simulation data by reading the input file (FDS or CSV files as selected above).  \n Users can easily modify the data such as adding doors, walls or exits.")
 
-        self.buttonFlow = Button(self.frameRun, text='read now: test flow', command=self.testFlow)
+        #self.buttonDel = Button(self.frameRun, text='delete now: delete simulation data', command=self.deleteGeom)
+        #self.buttonDel.pack()
+        #self.showHelp(self.buttonDel, "Delete the existing simulation so that users can create a new one.")
+
+        self.buttonFlow = Button(self.frameRun, text='compute now: flow field', command=self.testFlow)
         self.buttonFlow.pack()
-
+        self.showHelp(self.buttonFlow, "Generate the door flow field.  \n Users should first select either the nearest-exit method (default) or exit probablity method")
+        
         self.buttonComp = Button(self.frameRun, text='compute now: only compute simulation', command=self.compSim)
         self.buttonComp.pack()
+        self.showHelp(self.buttonComp, "Only compute the numerical result without displaying in pygame.  \n Users can use another python program evac-prt5-tool to display the the numerical result.")
         
-        self.buttonStart = Button(self.frameRun, text='start now: show simulation', command=self.startSim)
+        self.buttonStart = Button(self.frameRun, text='start now: compute and show simulation', command=self.startSim)
         self.buttonStart.pack()
+        self.showHelp(self.buttonStart, "Compute the numerical result and display the result timely in pygame.  \n Please select the items in parameter panel to adjust the appearance in pygame window. ")
 
         #buttonStart.place(x=5,y=220)
         print(self.fname_FDS, self.fname_EVAC)
@@ -135,14 +153,14 @@ class GUI(object):
         self.showHelp(self.SHOWTIME_CB, "Show time counts in the simulation.")
         
         self.SHOWSTRESS_Var = IntVar()
-        self.SHOWSTRESS_Var.set(1)
+        self.SHOWSTRESS_Var.set(0)
         self.SHOWSTRESS_CB=Checkbutton(self.frameParameters, text= 'Show Stress Level in Simulation', variable=self.SHOWSTRESS_Var, onvalue=1, offvalue=0)
         #self.SHOWSTRESS_CB.pack(side=TOP, padx=2, pady=2)
         self.SHOWSTRESS_CB.place(x=2, y=36)
         self.showHelp(self.SHOWSTRESS_CB, "Show agents' stress level data in the simulation.  Try to press key <S> in pyagme screen!")
 
         self.SHOWGEOM_Var = IntVar()
-        self.SHOWGEOM_Var.set(1)
+        self.SHOWGEOM_Var.set(0)
         self.SHOWGEOM_CB=Checkbutton(self.frameParameters, text= 'Show compartment data in simulation', variable=self.SHOWGEOM_Var, onvalue=1, offvalue=0)
         #self.SHOWGEOM_CB.pack(side=TOP, padx=2, pady=2)
         self.SHOWGEOM_CB.place(x=300, y=6)
@@ -161,10 +179,16 @@ class GUI(object):
         self.showHelp(self.NearExit_CB, "Use nearest exit strategy to guide evacuee agents.")
         
         self.DumpData_Var = IntVar()
-        self.DumpData_Var.set(1)
+        self.DumpData_Var.set(0)
         self.DumpData_CB=Checkbutton(self.frameParameters, text= 'Dump data to a binary file', variable=self.DumpData_Var, onvalue=1, offvalue=0)
         self.DumpData_CB.place(x=300, y=66)
         self.showHelp(self.DumpData_CB, "Dump data to a binary file such that it can be visualized by our small program evac-prt5-tool.")        
+
+        self.GroupBehavior_Var = IntVar()
+        self.GroupBehavior_Var.set(0)
+        self.GroupBehavior_CB=Checkbutton(self.frameParameters, text= 'Compute Group Behavior', variable=self.GroupBehavior_Var, onvalue=1, offvalue=0)
+        self.GroupBehavior_CB.place(x=300, y=96)
+        self.showHelp(self.GroupBehavior_CB, "Compute Group Social Force and Self Repulsion.  \n Check this button only if you have specified the group parameters in input file.")  #Uncheck it if you do not know what it means.")  
 
         #print self.SHOWTIME_Var.get()
 
@@ -208,7 +232,14 @@ class GUI(object):
             self.currentSimu.solver=1
         else:
             self.currentSimu.solver=2
-            
+
+        if self.GroupBehavior_Var.get():
+            self.currentSimu.GROUPBEHAVIOR=True
+            self.currentSimu.SELFREPULSION=True
+        else:
+            self.currentSimu.GROUPBEHAVIOR=False
+            self.currentSimu.SELFREPULSION=False
+
     def start(self):
         self.window.mainloop()
 
@@ -255,7 +286,11 @@ class GUI(object):
     #    self.currentSimu.select_file(self.fname_EVAC, self.fname_FDS, "non-gui")
     #    #myTest.read_data()
 
+    #def deleteGeom(self):
+    #    self.currentSimu = None
+
     def testGeom(self):
+        #if self.currentSimu is None:
         self.currentSimu = simulation()
         self.currentSimu.select_file(self.fname_EVAC, self.fname_FDS, "non-debug")
         sunpro2 = mp.Process(target=show_geom(self.currentSimu)) 
@@ -278,11 +313,12 @@ class GUI(object):
 
         #show_geom(myTest)
         #myTest.show_simulation()
-        self.currentSimu.quit()
+        #self.currentSimu.quit()
 
     def testFlow(self):
-        self.currentSimu = simulation()
-        self.currentSimu.select_file(self.fname_EVAC, self.fname_FDS, "non-debug")
+        if self.currentSimu is None:
+            self.currentSimu = simulation()
+            self.currentSimu.select_file(self.fname_EVAC, self.fname_FDS, "non-debug")
         show_geom(self.currentSimu)
         #sunpro2 = mp.Process(target=show_geom(self.currentSimu)) 
         #sunpro2.start()
@@ -295,9 +331,11 @@ class GUI(object):
         self.currentSimu.computeDoorDirection()
         show_flow(self.currentSimu)
 
+    # Compute the numerical result and display the result timely in pygame
     def startSim(self):
-        self.currentSimu = simulation()
-        self.currentSimu.select_file(self.fname_EVAC, self.fname_FDS, "non-debug")
+        if self.currentSimu is None:
+            self.currentSimu = simulation()
+            self.currentSimu.select_file(self.fname_EVAC, self.fname_FDS, "non-debug")
         #self.textInformation.insert(END, "Start Simulation Now!")
         self.setStatusStr("Simulation starts!  GUI window is not effective when Pygame screen is displayed!")
         self.updateCtrlParam()
@@ -313,10 +351,12 @@ class GUI(object):
         #show_geom(myTest)
         #myTest.show_simulation()
         self.currentSimu.quit()
-
+    
+    # Only compute the numerical result without displaying in pygame
     def compSim(self):
-        self.currentSimu = simulation()
-        self.currentSimu.select_file(self.fname_EVAC, self.fname_FDS, "non-debug")
+        if self.currentSimu is None:
+            self.currentSimu = simulation()
+            self.currentSimu.select_file(self.fname_EVAC, self.fname_FDS, "non-debug")
         #self.textInformation.insert(END, "Start Simulation Now!")
         self.setStatusStr("Simulation starts!  GUI window is not effective now")
         self.updateCtrlParam()
