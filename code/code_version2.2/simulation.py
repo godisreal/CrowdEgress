@@ -1066,21 +1066,21 @@ class simulation(object):
             self.inputDataCorrect = False
 
         # Read in the data for interactive opinion dynamics
-        tableFeatures, LowerIndex, UpperIndex = getData(self.FN_EVAC, '&ExitW')
-        tempW = readFloatArray(tableFeatures, len(self.agents), 3)
-        for idai, ai in enumerate(self.agents):
-            if ai.inComp == 0:
-                continue
-            ai.W1=tempW[idai, 0]
-            ai.W2=tempW[idai, 1]
-            ai.W3=tempW[idai, 2]
-            ai.p = ai.W3
+        #tableFeatures, LowerIndex, UpperIndex = getData(self.FN_EVAC, '&ExitW')
+        #tempW = readFloatArray(tableFeatures, len(self.agents), 3)
+        #for idai, ai in enumerate(self.agents):
+        #    if ai.inComp == 0:
+        #        continue
+        #    ai.W1=tempW[idai, 0]
+        #    ai.W2=tempW[idai, 1]
+        #    ai.W3=tempW[idai, 2]
+        #    ai.p = ai.W3
 
-        if np.shape(tempW)!= (self.num_agents, 3): 
-            print('\nError on input data: exits weights W1 W2 W3 \n')
+        #if np.shape(tempW)!= (self.num_agents, 3): 
+        #    print('\nError on input data: exits weights W1 W2 W3 \n')
             #f.write('\nError on input data: exits weights W1 W2 W3 \n')
             #raw_input('Error on input data: exits weights W1 W2 W3, Please check')
-            self.inputDataCorrect = False
+        #    self.inputDataCorrect = False
 
         for idai, ai in enumerate(self.agents):
             for idexit, exit in enumerate(self.exits):
