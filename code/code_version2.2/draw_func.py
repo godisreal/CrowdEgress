@@ -472,21 +472,22 @@ def show_geom(simu):
                      if  menu_01:
                          if mouseX<120 and mouseX>0 and mouseY<40 and mouseY>23:
                              # dump door direction data
-                             print ("Output door data into doorDataRev.csv! Please check!")
-                             updateDoorData(doors, 'doorDataRev.csv') #simu.outDataName+'doorDataRev.csv')
+                             print ("Output door data into bldDataRev.csv! Please check!")
+                             updateDoorData(doors, 'bldDataRev.csv')
+                              #simu.FN_EVAC+simu.FN_FDS) #simu.outDataName+'doorDataRev.csv')
                              menu_01 =False
                          elif mouseX<120 and mouseX>0 and mouseY<60 and mouseY>43:
                              # dump exit2door data
                              #print ("Output exit2door data into Exit2DoorRev.csv! Please check!")
                              #updateExit2Doors(simu.exit2door, 'Exit2DoorRev.csv')
-                             print ("Output exit data into exitDataRev.csv! Please check!")
-                             updateExitData(exits, 'exitDataRev.csv') #simu.outDataName+'exitDataRev.csv')
+                             print ("Output exit data into bldDataRev.csv! Please check!")
+                             updateExitData(exits, 'bldDataRev.csv') #simu.outDataName+'exitDataRev.csv')
                              menu_01 =False
                          elif mouseX<120 and mouseX>0 and mouseY<80 and mouseY>63:
                              # dump wall data
-                             print ("Output wall data into wallDataRev.csv! Please check!")
+                             print ("Output wall data into bldDataRev.csv! Please check!")
                              #updateWallData(simu.walls, 'wallDataRev.csv')
-                             updateWallData(walls, 'wallDataRev.csv') #simu.outDataName+'wallDataRev.csv')
+                             updateWallData(walls, 'bldDataRev.csv') #simu.outDataName+'wallDataRev.csv')
                              menu_01 =False
                           # elif mouseX<120 and mouseX>0 and mouseY<100 and mouseY>83:
                           # To add something else in future development
@@ -591,6 +592,7 @@ def show_geom(simu):
                         y1 = px1[1]
                         x2 = px2[0]
                         y2 = px2[1]
+                        # It seems that it is not necessary to check x1<x2 and y1<y2
                         #if x1<x2 and y1<y2:
                         #    pass
                         addWall(simu.walls, px1, px2, mode='rect')
@@ -686,9 +688,9 @@ def show_geom(simu):
                     #updateWallData(simu.walls, 'wallDataRev.csv')
                     #updateDoorData(simu.doors, 'doorDataRev.csv')
                     #updateExit2Doors(simu.exit2door, 'Exit2DoorRev.csv')
-                    updateWallData(walls, 'wallDataRev.csv')
-                    updateDoorData(doors, 'doorDataRev.csv')
-                    updateExitData(exits, 'exitDataRev.csv')
+                    updateWallData(walls, 'bldDataRev.csv')
+                    updateDoorData(doors, 'bldDataRev.csv')
+                    updateExitData(exits, 'bldDataRev.csv')
                 elif event.key == pygame.K_PAGEUP:
                     ZOOMFACTOR = ZOOMFACTOR +1
                 elif event.key == pygame.K_PAGEDOWN:
@@ -842,17 +844,17 @@ def show_geom(simu):
         screen.blit(text_surface, [390,3]) #+xyShift)
         
         # Show Mouse Position
-        (mouseX2, mouseY2) = pygame.mouse.get_pos()
-        mouse_pos2 = np.array([mouseX2, mouseY2])
+        (mouseX3, mouseY3) = pygame.mouse.get_pos()
+        mouse_pos3 = np.array([mouseX3, mouseY3])
         #pygame.mouse.set_visible(False)
         #pygame.mouse.get_pressed() -> button1, button2, button3
         
         # Show Mouse Absolute and Relative Positions on the Screen
         myfont=pygame.font.SysFont("arial",16)
-        text_surface=myfont.render(str((mouse_pos2-xyShift)*(1/ZOOMFACTOR)), True, tan, black)
-        screen.blit(text_surface, mouse_pos2+[0.0, 18.0])
-        text_surface=myfont.render(str(mouse_pos2), True, lightblue, black)
-        screen.blit(text_surface, mouse_pos2+[0.0, 36.0])
+        text_surface=myfont.render(str((mouse_pos3-xyShift)*(1/ZOOMFACTOR)), True, tan, black)
+        screen.blit(text_surface, mouse_pos3+[0.0, 18.0])
+        text_surface=myfont.render(str(mouse_pos3), True, lightblue, black)
+        screen.blit(text_surface, mouse_pos3+[0.0, 36.0])
 
         # The Zoom and xSpace ySpace Info
         myfont=pygame.font.SysFont("arial",14)
@@ -914,6 +916,10 @@ def show_flow(simu):
     #if simu.solver=2:
     #    (dimX,dimY)=np.shape(simu.UeachExit)
     
+    change_arrows = False
+    draw_state = False
+    move_agent_state = False
+    
     ##########################################
     ### Show flow field here with Pygame
     ##########################################
@@ -941,8 +947,70 @@ def show_flow(simu):
                 simu.quit()
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 (mouseX, mouseY) = pygame.mouse.get_pos()
-                #button = pygame.mouse.get_pressed()            
-            # elif event.type == pygame.MOUSEBUTTONUP:
+                #button = pygame.mouse.get_pressed()      
+                mouse_pos = np.array([mouseX, mouseY])
+                if not draw_state:
+                    for exit in simu.exits:
+                        if exit.inside((mouse_pos-xyShift)*(1/ZOOMFACTOR)):
+                            draw_state = True
+                            draw_exit = exit
+                            #draw_lines = []
+                else:
+                    if draw_exit.inside((mouse_pos-xyShift)*(1/ZOOMFACTOR)):
+                        draw_state = False
+                        
+            elif event.type == pygame.MOUSEBUTTONUP:
+                (mouseX2, mouseY2) = pygame.mouse.get_pos()
+                mouse_pos2 = np.array([mouseX2, mouseY2])
+                
+                change_arrows = True
+                if not draw_state:
+                    draw_arrows = []
+                    draw_arrows.append((mouse_pos-xyShift)*(1/ZOOMFACTOR))
+                    draw_arrows.append((mouse_pos2-xyShift)*(1/ZOOMFACTOR))
+                    for door in simu.doors:
+                        if door.inside((mouse_pos2-xyShift)*(1/ZOOMFACTOR)):
+                            w1=draw_arrows[-2]
+                            w2=draw_arrows[-1]
+                            result1, result2, result3, result4 = door.intersecWithLine(w1, w2, '4arc')
+                            #print('result1, result2, result3, result4:', result1, result2, result3, result4)
+                            if result1 != None:
+                                #exit2door[draw_exit.id, door.id]=1
+                                door.arrow=1
+                            elif result2 != None:
+                                #exit2door[draw_exit.id, door.id]= -2
+                                door.arrow=-2
+                            elif result3 != None:
+                                #exit2door[draw_exit.id, door.id]= -1
+                                door.arrow=-1
+                            elif result4 != None:
+                                #exit2door[draw_exit.id, door.id]= 2
+                                door.arrow=2
+                else:
+                    draw_arrows = []
+                    draw_arrows.append((mouse_pos-xyShift)*(1/ZOOMFACTOR))
+                    draw_arrows.append((mouse_pos2-xyShift)*(1/ZOOMFACTOR))
+
+                    for door in simu.doors:
+                        if door.inside((mouse_pos2-xyShift)*(1/ZOOMFACTOR)):
+                            w1=draw_arrows[-2]
+                            w2=draw_arrows[-1]
+                            result1, result2, result3, result4 = door.intersecWithLine(w1, w2, '4arc')
+                            #print('result1, result2, result3, result4:', result1, result2, result3, result4)
+                            if result1 != None:
+                                simu.exit2door[draw_exit.id, door.id]=1
+                                #door.arrow=1
+                            elif result2 != None:
+                                simu.exit2door[draw_exit.id, door.id]= -2
+                                #door.arrow=-2
+                            elif result3 != None:
+                                simu.exit2door[draw_exit.id, door.id]= -1
+                                #door.arrow=-1
+                            elif result4 != None:
+                                simu.exit2door[draw_exit.id, door.id]= 2
+                                #door.arrow=2
+
+                    
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_PAGEUP:
                     ZOOMFACTOR = ZOOMFACTOR +1
@@ -986,9 +1054,31 @@ def show_flow(simu):
         #    simu.t_pause = t_now-tt
         #    continue
 
-        # Computation Step
-        #simu.simulation_step2022()
-        #simu.t_sim = simu.t_sim + simu.DT  # Maybe it should be in step()
+        if draw_state:
+
+            # Draw Selected Exit
+            startPos = np.array([draw_exit.params[0],draw_exit.params[1]])
+            endPos = np.array([draw_exit.params[2],draw_exit.params[3]])
+
+            x= ZOOMFACTOR*draw_exit.params[0]+xSpace
+            y= ZOOMFACTOR*draw_exit.params[1]+ySpace
+            w= ZOOMFACTOR*(draw_exit.params[2] - draw_exit.params[0])
+            h= ZOOMFACTOR*(draw_exit.params[3] - draw_exit.params[1])
+                
+            pygame.draw.rect(screen, orange, [x, y, w, h], LINEWIDTH+2)
+            
+            print("draw_exit.id", draw_exit.id)
+            #for door in doors: #simu.doors:
+            #    drawDirection(screen, door, simu.exit2door[draw_exit.id, door.id], ZOOMFACTOR, xSpace, ySpace)
+            
+            #if len(draw_lines)>1:
+            #    for i in range(len(draw_lines)-1):
+            #        #print('i in draw_lines:', i)
+            #        pygame.draw.line(screen, red, draw_lines[i]*ZOOMFACTOR, draw_lines[i+1]*ZOOMFACTOR, LINEWIDTH)
+        
+        if change_arrows:
+            if len(draw_arrows)>1:
+                pygame.draw.line(screen, red, draw_arrows[0]*ZOOMFACTOR+xyShift, draw_arrows[1]*ZOOMFACTOR+xyShift, LINEWIDTH)
         
         #############################
         ######### Drawing Process ######
@@ -1001,10 +1091,10 @@ def show_flow(simu):
         myfont=pygame.font.SysFont("arial",14)
         time_surface=myfont.render("xmin:" + str(simu.xmin), True, (0,0,0), (255,255,255))
         screen.blit(time_surface, [20,3]) #[750,350]*ZOOMFACTOR)
-        time_surface=myfont.render("xmax:" + str(simu.xmax), True, (0,0,0), (255,255,255))
+        time_surface=myfont.render("ymin:" + str(simu.ymin), True, (0,0,0), (255,255,255))
         screen.blit(time_surface, [20,23]) #[750,350]*ZOOMFACTOR)
 
-        time_surface=myfont.render("ymin:" + str(simu.ymin), True, (0,0,0), (255,255,255))
+        time_surface=myfont.render("xmax:" + str(simu.xmax), True, (0,0,0), (255,255,255))
         screen.blit(time_surface, [100,3]) #[750,350]*ZOOMFACTOR)
         time_surface=myfont.render("ymax:" + str(simu.ymax), True, (0,0,0), (255,255,255))
         screen.blit(time_surface, [100,23]) #[750,350]*ZOOMFACTOR)

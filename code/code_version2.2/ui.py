@@ -67,13 +67,13 @@ class GUI(object):
         self.frameRun = Frame(self.window)
         #self.frameSettings = Frame(self.window)
         self.frameParameters = Frame(self.window)
-        self.frameInformation = Frame(self.window)
+        self.frameGuide = Frame(self.window)
 
 
         self.notebook.add(self.frameRun,text="RunSimulation")
         #self.notebook.add(self.frameSettings,text="Settings")
         self.notebook.add(self.frameParameters,text="Parameters")
-        self.notebook.add(self.frameInformation,text="Information")
+        self.notebook.add(self.frameGuide,text="Readme")
         self.notebook.pack(expand=NO, fill=BOTH, padx=5, pady=5 ,side=TOP)
         # self.notebook.grid(row=0, column=0, padx=5, pady=5, sticky='nswe')   # commented out by toshi on 2016-06-21(Tue) 18:31:02
         
@@ -102,13 +102,13 @@ class GUI(object):
 
 
         self.buttonSelectCSV =Button(self.frameRun, text='choose csv file for EVAC data', command=self.selectEvacFile)
-        #self.buttonSelectCSV.place(x=2, y=120)
+        #self.buttonSelectCSV.place(x=12, y=120, anchor='nw')
         self.buttonSelectCSV.pack()
         self.showHelp(self.buttonSelectCSV, "Select .csv file to set up the agent parameters for the simulation")
         #Button(window, text='choose csv file for door data', command=lambda: selectFile(2)).pack()
 
         self.buttonSelectFDS =Button(self.frameRun, text='choose fds file for FDS data', command=self.selectFDSFile)
-        #self.buttonSelectFDS.place(x=2, y=60)
+        #self.buttonSelectFDS.place(x=12, y=150, anchor='nw')
         self.buttonSelectFDS.pack()
         self.showHelp(self.buttonSelectFDS, "Select FDS file to set up the compartment geometry for the simulation")
         
@@ -119,6 +119,7 @@ class GUI(object):
         #self.buttonRead = Button(self.frameRun, text='read now: read in data', command=self.readData)
         #self.buttonRead.pack()
         self.buttonGeom = Button(self.frameRun, text='read now: create simulation data', command=self.testGeom)
+        #self.buttonGeom.place(x=12, y=180, anchor='nw')
         self.buttonGeom.pack()
         self.showHelp(self.buttonGeom, "Create or modify the simulation data by reading the input file (FDS or CSV files as selected above).  \n Users can easily modify the data such as adding doors, walls or exits.")
 
@@ -127,14 +128,17 @@ class GUI(object):
         #self.showHelp(self.buttonDel, "Delete the existing simulation so that users can create a new one.")
 
         self.buttonFlow = Button(self.frameRun, text='compute now: flow field', command=self.testFlow)
+        self.buttonFlow.place(x=262, y=120, anchor='nw')
         self.buttonFlow.pack()
-        self.showHelp(self.buttonFlow, "Generate the door flow field.  \n Users should first select either the nearest-exit method (default) or exit probablity method")
+        #self.showHelp(self.buttonFlow, "Generate the door flow field.  \n Users should first select either the nearest-exit method (default) or exit probablity method")
         
         self.buttonComp = Button(self.frameRun, text='compute now: only compute simulation', command=self.compSim)
+        #self.buttonComp.place(x=262, y=150, anchor='nw')
         self.buttonComp.pack()
         self.showHelp(self.buttonComp, "Only compute the numerical result without displaying in pygame.  \n Users can use another python program evac-prt5-tool to display the the numerical result.")
         
         self.buttonStart = Button(self.frameRun, text='start now: compute and show simulation', command=self.startSim)
+        #self.buttonStart.place(x=262, y=180, anchor='nw')
         self.buttonStart.pack()
         self.showHelp(self.buttonStart, "Compute the numerical result and display the result timely in pygame.  \n Please select the items in parameter panel to adjust the appearance in pygame window. ")
 
@@ -192,16 +196,49 @@ class GUI(object):
 
         #print self.SHOWTIME_Var.get()
 
+
         # --------------------------------------------
-        # frameInformation
+        # frameGuide
         # --------------------------------------------
-        scrollInfo = Scrollbar(self.frameInformation)
-        self.textInformation = Text(self.frameInformation, width=45,height=13,bg='lightgray',wrap=WORD,font=("Courier",10))
+        scrollInfo = Scrollbar(self.frameGuide)
+        self.textGuide = Text(self.frameGuide, width=45,height=13,bg='white',wrap=WORD,font=("Courier",10))
+        #self.textGuide = Text(self.frameGuide, width=45,height=13,bg='lightgrey',wrap=WORD,font=("Courier",10))
         scrollInfo.pack(side=RIGHT, fill=Y)
-        self.textInformation.pack(side=LEFT,fill=BOTH,expand=YES)
-        scrollInfo.config(command=self.textInformation.yview)
-        self.textInformation.config(yscrollcommand=scrollInfo.set)
+        self.textGuide.pack(side=LEFT,fill=BOTH,expand=YES)
+        scrollInfo.config(command=self.textGuide.yview)
+        self.textGuide.config(yscrollcommand=scrollInfo.set)
         
+        self.textGuide.insert(END, 'QuickStart: \nStep1: Please select csv file or fds file to read in evac data and compartement geometry data!\n')
+        self.textGuide.insert(END, 'Step2: Create simulation object!\n')
+        self.textGuide.insert(END, 'Step3: Compute and visualize simulation!\n')
+        self.textGuide.insert(END, '\nWhen simulation starts, please try to press the following keys in your keybroad, and you will see the effects on the screen. \n')
+        self.textGuide.insert(END, 'Press <pageup/pagedown> to zoom in or zoom out.\n')
+        self.textGuide.insert(END, 'Press arrow keys to move the entities vertically or horizonally in screen.\n')
+        self.textGuide.insert(END, 'Press 1/2/3 in number panel (Right side in the keyboard) to display the door or exit data on the screen.\n')
+        self.textGuide.insert(END, 'Press <o> and <p> to show the egress flow field. \n')
+        self.textGuide.insert(END, 'Press <space> to pause or resume the simulaton. \n\n')
+        
+        self.textGuide.insert(END, '---------------------------------------------------\n')
+        
+        self.textGuide.insert(END, 'This manual introduces a simulation tool to study complex crowd behavior in social context. The agent-based model is extended based on the well-known social force model, and it mainly describes how agents interact with each other, and also with surrounding facilities such as walls, doors and exits. The simulation platform is compatible to the FDS+Evac, and the input data in FDS+Evac could be imported into our simulation platform to create single-floor compartment geometry, and a flow solver is used to generate the egress flow field towards exits. Most importantly, we plan to integrate advanced social and psychological theory into our simulation platform, especially investigating human behavior in emergency evacuation, such as pre-evacuation behavior, exit-selection activities, social group and herding effect and so forth.  \n\nThe program mainly consists of three component: User Interface, Simulation Core, Data and Visualization Tool. \n\n')
+        
+        self.textGuide.insert(END, '\nAgent-based model (ABM) describes interactions among individual agents and their surroundings. In the simulation there are four types of entities: agents, walls, doors and exits.  As below we will introduce how to specify these entities.')
+        
+        self.textGuide.insert(END, '\n\nThe walls, doors and exits are alternatively specified by FDS input files. Users are welcome to use existing FDS input files to create compartment geometries. In current version only one-floor crowd simulation is supported. So if there are multiple evacuation meshes in FDS input files, they should all belong to the same z interval in the vertical direction (z axis). By using FDS input files the walls are created by \&OBST, and the doors are specified by \&HOLE or \&DOOR. The exits are obtained from \&EXIT in FDS input files. If users want to find more about how FDS define a compartment area, please refer to FDS UserGuide for more information.  If users do not use FDS input files, the above entities can alternatively be specified by using csv files as introduced below.')
+        
+        
+        self.textGuide.insert(END, '\n\n{Walls}: Walls are obstruction in a compartment geometry that confine agent movement, and they set up the boundary of a room or certain space that agents cannot go through. In our program wall are either lines or rectangular areas. If any users are interested, please feel free to extend the wall types to circular or polyangular areas. If users import walls from a FDS input file, the walls are created as a rectangular type and it corresponds to \&OBST in FDS input file.  \nIf users specify a line obstruction, it is expected to input the position of starting point and ending point of a line. If users specify a rectangular obstruction, it is expected to input the diagonal position of upper left point and lower right point of a rectangular area.')
+
+        self.textGuide.insert(END, '\n\n<startX, startY>: Upper left point for rectangular obstruction; Or starting point for line obstruction. \n<endX, endY>:Lower right point for rectangular obstruction; Or ending point for line obstruction. \n\n<arrow>: Direction assigned to the obstruction so that agents will be guided when seeing this obstruction, especially when they do not have any target door or exit. The direction implies if the obstruction provides evacuees with any egress information such as exit signs on the walls or not. The value could be +1 for positive x direction, -1 for negative x direction, +2 for positive y direction and -2 for negative y direction. If no direction is given, the value is 0. \n\n|id|: id number assigned to this obstruction; id number is optionally shown in the pygame screen so that users can easily modify the obstruction. \n\n|inComp|: a boolean variable to indicate if the obstruction is in computation loop or not. Normally it is given true/1. If users want to quickly remove a obstruction in simulation, it is assigned be to false/0. \n\n|mode|: Either rectangular or line obstruction in current program; the default mode is rectangular model.')
+
+        self.textGuide.insert(END, '\n\n{Doors and Exit}: Doors are passageways that direct agents toward certain areas, and they may be placed over a wall so that agents can get through the wall by the door. Doors can also be placed as a waypoint if not attached to any walls, and they can be considered as arrows or markers on the ground that guide agent egress movement. In brief doors affect agent way-finding activities and they help agents to form a roadmap to exits. In current program doors are only specified as rectangular object.  Exits are a special types of doors which represent paths to the safety. Thus they may be deemed as safety areas, and computation of an agent is complete when the agent reaches an exit.  An exit is usually placed over a wall like doors, but it can also be put anywhere independently without walls. In the program exits are only defined as rectangular areas. The specific features of doors and exits are given as below.')  
+
+        self.textGuide.insert(END, '\n\n<startX, startY>: Upper left point for rectangular door/ exit. \n<endX, endY>:Lower right point for rectangular door/exit. \n\n|arrow|: Direction assigned to the door or exit so that agents will be guided when seeing this entity, especially when they do not have any target door or exit. The direction implies if the door or exit provides evacuees with any egress information such as exit signs or not. The value could be +1 for positive x direction, -1 for negative x direction, +2 for positive y direction and -2 for negative y direction. If no direction is given, the value is zero. Please refer to FDS+Evac manual to better understand the direction setting. \n\n|id|: id number assigned to the door/exit; id number is optionally shown in the pygame screen so that users can easily identify the door information. \n\n|inComp|: a boolean variable to indicate if the door/exit is in computation loop or not. Normally it is given true/1. If users want to quickly remove a door/exit in simulation, they could assign it be to false/0 for a quick test. \n\n|exitSign|: a boolean variable to indicate if the door/exit is attached with an exit sign or not. If there is an exit sign the boolean variable is given true/1. Actually it is not that useful in existing door selection algorithm.  So users may omit this feature currently. ')
+        
+        
+        self.textGuide.insert(END, '\n\n{Agents}: Finally and most importantly, agents are the core entity in computation process. They interact with each other to form collective behavior of crowd. They also interact with above types of entities to form egress motion toward exits. The resulting program is essentially a multi-agent simulation of pedestrian crowd. Each agent is modeled by extending the well-known social force model. The model is further advanced by integrating several features including pre-evacuation behavior, group behavior, way-finding behavior and so forth.')  
+
+        self.textGuide.insert(END, '\n\n<InitalX, InitialY>: Initial position of an agent in 2D planar space. \n\n<DestX, DestY>: Destination position in 2D planar space.  This value is almost not used in current computational loop because the destination position is automatically determined by the exit selection algorithm.  When the exit is selected by an agent, the destination position is given by the exit position. \n\n|mass|: The mass of agents.  \n\n|tau|: Tau parameter in the social force model, or as usually called relaxation time in many-particle systems or statistical physics, and it critically affects how fast the actual velocity converges to the desired velocity.  \n\n|tpre|: Time period for pre-evacuation stage. \n\n|interRange|: The range when agents have herding effect, which means they may exchange opinions by talking. \n\n|p|: parameter p in opinion dynamics, and it affects herding effect.  \n\n|pMode|: This parameter affects how parameter p is dynamically changing.  Currently it is not used in computational loop.  \n\n|aType|: The type of way-finding behaviors.  Some agents may actively search for exits while others may just follow the crowd.  In current simulation all agents follow the egress flow field, and thus this parameter is not actually used in existing version of code.  \n\n|ID|: ID number assigned to this agent. ID number is optionally shown in the pygame screen. \n\n|inComp|: a boolean variable to indicate if the agent is in computation loop or not. Normally it is given true. If users want to remove an agent in simulation, they could assign it be to false for test.')
 
     def updateCtrlParam(self):
         self.currentSimu.SHOWTIME = self.SHOWTIME_Var.get()

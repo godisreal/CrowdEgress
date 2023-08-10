@@ -33,6 +33,7 @@ import random
 import csv
 #from ctypes import *
 import struct
+import time
 
 
 def readCSV_base(fileName):
@@ -67,6 +68,7 @@ def getData(fileName, strNote):
 
     Num_Data = len(dataFeatures)
 
+    print(dataFeatures)
     for i in range(Num_Data):
         if dataFeatures[i]:
             if dataFeatures[i][0]==strNote:
@@ -746,19 +748,43 @@ def readEXIT(FileName, Keyword='&EXIT', Zmin=0.0, Zmax=3.0, outputFile=None, deb
     return exits
 
 
-def updateDoorData(doors, outputFile):
-    with open(outputFile, mode='w+') as door_test_file:
+def updateDoorData(doors, outputFile, inputFile=None):
+    with open(outputFile, mode='a+') as door_test_file:
         csv_writer = csv.writer(door_test_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+        csv_writer.writerow([''])
+        if inputFile is not None:
+            csv_writer.writerow([inputFile])
+        csv_writer.writerow(['DOOR/PATH data in TestGeom: '])
+        csv_writer.writerow(['time:', time.strftime('%Y-%m-%d_%H_%M_%S')])
         csv_writer.writerow(['&Door', '0/startX', '1/startY', '2/endX', '3/endY', '4/arrow', '5/id', '6/inComp', '7/exitSign'])
         index_temp=0
         for door in doors:
             csv_writer.writerow(['--', str(door.params[0]), str(door.params[1]), str(door.params[2]), str(door.params[3]), str(door.arrow), str(door.id), str(door.inComp), str(door.exitSign)])
             index_temp=index_temp+1
 
+def updateExitData(doors, outputFile, inputFile=None):
+    with open(outputFile, mode='a+') as exit_test_file:
+        csv_writer = csv.writer(exit_test_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+        csv_writer.writerow([''])
+        if inputFile is not None:
+            csv_writer.writerow([inputFile])
+        csv_writer.writerow(['EXIT data in TestGeom: '])
+        csv_writer.writerow(['time:', time.strftime('%Y-%m-%d_%H_%M_%S')])
+        csv_writer.writerow(['&Exit', '0/startX', '1/startY', '2/endX', '3/endY', '4/arrow', '5/id', '6/inComp', '7/exitSign'])
+        index_temp=0
+        for door in doors:
+            csv_writer.writerow(['--', str(door.params[0]), str(door.params[1]), str(door.params[2]), str(door.params[3]), str(door.arrow), str(door.id), str(door.inComp), str(door.exitSign)])
+            index_temp=index_temp+1
+            
 
-def updateWallData(walls, outputFile):
-    with open(outputFile, mode='w+') as wall_test_file:
+def updateWallData(walls, outputFile, inputFile=None):
+    with open(outputFile, mode='a+') as wall_test_file:
         csv_writer = csv.writer(wall_test_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+        csv_writer.writerow([''])
+        if inputFile is not None:
+            csv_writer.writerow([inputFile])
+        csv_writer.writerow(['WALL/OBST data in TestGeom: '])
+        csv_writer.writerow(['time:', time.strftime('%Y-%m-%d_%H_%M_%S')])
         csv_writer.writerow(['&Wall', '0/startX', '1/startY', '2/endX', '3/endY', '4/arrow', '5/id', '6/inComp', '7/mode'])
         index_temp=0
         for wall in walls:
@@ -766,6 +792,8 @@ def updateWallData(walls, outputFile):
             index_temp=index_temp+1
             
 
+# Not used after the flow solver is integrated into our program
+# This function was originally developed to dump exit2door data in TestGeom
 def updateExit2Doors(exit2doors, fileName):
     (I, J) = np.shape(exit2doors)
     #print "The size of exit2door:", [I, J]
@@ -863,7 +891,7 @@ def readFRec(infile,fmt):
 def intiPrt(fileName, debug=True):
     
     n_part=1  # Number of PARTicle classes
-    [n_quant,zero_int]=[2,0]  # Number of particle features
+    [n_quant,zero_int]=[6,0]  # Number of particle features
     
     #filename=open('test.bin', 'wb+')
     writeFRec(fileName, 'I', [1])      #! Integer 1 to check Endian-ness
@@ -882,8 +910,24 @@ def intiPrt(fileName, debug=True):
                 writeFRec(fileName,'s', "m/s")        # units
                 #q_units.append(units)  
                 #q_labels.append(smv_label)
-            # if n_quant ==2:
-                #pass  #Agent features to be added
+            if nq ==2:
+                writeFRec(fileName,'s', "actual Vx") # smv_label
+                writeFRec(fileName,'s', "m/s")        # units
+            if nq ==3:
+                writeFRec(fileName,'s', "actual Vy") # smv_label
+                writeFRec(fileName,'s', "m/s") 
+            if nq ==4:
+                writeFRec(fileName,'s', "motive Fx") # smv_label
+                writeFRec(fileName,'s', "N")        # units
+            if nq ==5:
+                writeFRec(fileName,'s', "motive Fy") # smv_label
+                writeFRec(fileName,'s', "N")        # units
+#            if nq ==6:
+#                writeFRec(fileName,'s', "group Fx") # smv_label
+#                writeFRec(fileName,'s', "N")        # units
+#            if nq ==7:
+#                writeFRec(fileName,'s', "group Fy") # smv_label
+#                writeFRec(fileName,'s', "N")        # units            
                 
 
 #################################################
@@ -903,9 +947,15 @@ def dump_evac(agents, fileName, T, debug=True):
     ap4=[]
     
     tag=[]
-    # n_quant
-    Q1_desiredVx=[]
-    Q2_desiredVy=[]
+    # n_quant = ?  Please revise in intiPrt()
+    Q_desiredVx=[]
+    Q_desiredVy=[]
+    Q_actualVx=[]
+    Q_actualVy=[]
+    Q_motiveFx=[]
+    Q_motiveFy=[]
+    Q_groupFx=[]
+    Q_groupFy=[]
     
     for agent in agents:
         if agent.inComp == 0:
@@ -924,15 +974,24 @@ def dump_evac(agents, fileName, T, debug=True):
         
         tag.append(agent.ID)
 
-        Q1_desiredVx.append(agent.desiredV[0])
-        Q2_desiredVy.append(agent.desiredV[1])
-
+        Q_desiredVx.append(agent.desiredV[0])
+        Q_desiredVy.append(agent.desiredV[1])
+        Q_actualVx.append(agent.actualV[0])
+        Q_actualVy.append(agent.actualV[1])
+        Q_motiveFx.append(agent.motiveF[0])
+        Q_motiveFy.append(agent.motiveF[1])
+        Q_groupFx.append(agent.groupF[0])
+        Q_groupFy.append(agent.groupF[1])
+        
+        #self.groupF        
+        #self.selfrepF
+        
     NPLIM=np.size(tag)
     # ??? what happens if tag is an empty list
     # if tag is empty, do not write agent data to the binary file
     xyz=x+y+z+ap1+ap2+ap3+ap4
     # tag=tag  tag is already OK
-    Q=Q1_desiredVx+Q2_desiredVy
+    Q=Q_desiredVx+Q_desiredVy+Q_actualVx+Q_actualVy +Q_motiveFx+Q_motiveFy #+Q_groupFx+Q_groupFy
 
     writeFRec(fileName, 'f', [T])
     writeFRec(fileName, 'I', [NPLIM])
