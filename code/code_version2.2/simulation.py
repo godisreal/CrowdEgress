@@ -41,8 +41,8 @@ class simulation(object):
     ################################################################
 
     ZOOMFACTOR = 20.0    	
-    xSpace=10.0
-    ySpace=10.0
+    xSpace=30.0
+    ySpace=60.0
     #self.xyShift = np.array([xSpace, ySpace])
 
     #SCREEN_WIDTH, SCREEN_HEIGHT = 700, 700
@@ -96,11 +96,11 @@ class simulation(object):
         # Below are variables to set up the simulation
         ################################################################
         self.TIMECOUNT = True
-        self.SELFREPULSION = True	# Enable self repulsion
         self.WALLBLOCKHERDING = True
-        self.TPREMODE = 3        ### Instructinn: 1 -- DesiredV = 0  2 -- Motive Force =0: 
         self.TESTFORCE = True
+        self.TPREMODE = 3        ### Instructinn: 1 -- DesiredV = 0  2 -- Motive Force =0: 
         self.GROUPBEHAVIOR = False     # Enable the group social force
+        self.SELFREPULSION = False	# Enable self repulsion
         self.DEBUG = False #True
         #self.DEBUGFORCE = False
         #self.DEBUGTAR = False
@@ -227,6 +227,8 @@ class simulation(object):
                 
         temp = os.path.split(FN_EVAC)
         self.fpath = temp[0]
+        #temp = os.path.split(FN_FDS)
+        #self.fdspath = temp[0]
         #self.fpath = os.path.split(FN_EVAC)[0]
         self.outDataName= re.split('.csv', FN_EVAC)[0]+'_'+time.strftime('%Y-%m-%d_%H_%M_%S')
 
@@ -284,9 +286,9 @@ class simulation(object):
         #self.num_exits = len(self.exits)
 
         if FN_FDS!="" and FN_FDS!="None" and FN_FDS is not None:
-            self.walls = readOBST(FN_FDS, '&OBST', 0.0, 3.0, 'obst_test.csv')
-            self.doors = readPATH(FN_FDS, '&HOLE', 0.0, 3.0, 'hole_test.csv')
-            self.exits = readEXIT(FN_FDS, '&EXIT', 0.0, 3.0, 'exit_test.csv')
+            self.walls = readOBST(FN_FDS, '&OBST', 0.0, 3.0, 'obst_fromFDS.csv')
+            self.doors = readPATH(FN_FDS, '&HOLE', 0.0, 3.0, 'hole_fromFDS.csv')
+            self.exits = readEXIT(FN_FDS, '&EXIT', 0.0, 3.0, 'exit_fromFDS.csv')
             self.num_walls = len(self.walls)
             self.num_doors = len(self.doors)
             self.num_exits = len(self.exits)
@@ -308,7 +310,9 @@ class simulation(object):
             self.num_walls = len(self.walls)
             self.num_doors = len(self.doors)
             self.num_exits = len(self.exits)                
-
+        
+        self.exit2door = np.zeros((self.num_exits, self.num_doors)) # This is almost useless because users can add doors or exits in testGeom.  So the size of self.exit2door will be changed in testGeom.  
+        
         '''
         if self.inputDataCorrect:
             print("Input data format is correct!")
@@ -325,12 +329,19 @@ class simulation(object):
         print('number of exits: '+str(self.num_exits)+ '\n')
         print('\n')
 
-        print('time-related paramters: \n')        
-        print('DT: '+str(self.DT)+ '\n')
-        print('DT_DumpData: '+str(self.DT_DumpData)+ '\n')
+        print('time-related paramters:') #\n')        
+        print('DT: '+str(self.DT)) #+ '\n')
+        print('DT_DumpData: '+str(self.DT_DumpData)) #+'\n')
         print('t_end: '+str(self.t_end)+ '\n')
-        print('DT_OtherList'+str(self.DT_OtherList)+ '\n')
-        print('DT_ChangeDoor'+str(self.DT_ChangeDoor)+ '\n')
+        print('DT_OtherList'+str(self.DT_OtherList)) #+ '\n')
+        print('DT_ChangeDoor'+str(self.DT_ChangeDoor)) #+ '\n')
+        
+        print('\n')
+        
+        print('simulation paramters:') # \n')        
+        print('TPRE Mode: '+str(self.TPREMODE)) #+ '\n')
+        print('Group: '+str(self.GROUPBEHAVIOR)) #+ '\n')
+        print('Self Repulsion: '+str(self.SELFREPULSION)) #+ '\n')
 
         print('\n')
         
@@ -416,9 +427,9 @@ class simulation(object):
         self.ymax=np.max(yyy)
         
         if self.xpt is None:
-            self.xpt=int(self.xmax-self.xmin)*3+30
+            self.xpt=int(self.xmax-self.xmin)*3+20
         if self.ypt is None:
-            self.ypt=int(self.ymax-self.ymin)*3+30
+            self.ypt=int(self.ymax-self.ymin)*3+20
 
         if self.DEBUG:
             print("Range in x axis:", self.xmin, self.xmax, "Num of points in x axis:", self.xpt)
@@ -444,7 +455,7 @@ class simulation(object):
         
         f.write('delx:'+str(self.dx)+ '\n')
         f.write('dely:'+str(self.dy)+ '\n')
-        f.write('delt:'+str(self.DT)+ '\n')
+        #f.write('delt:'+str(self.DT)+ '\n')
         #f.write('courant number index???:'+str(self.DT/(self.dx+self.dy))+ '\n')
         
         BLDinfo = build_compartment(x_min, y_min, x_max, y_max, x_points, y_points, self.walls, self.doors, self.exits)
@@ -453,7 +464,7 @@ class simulation(object):
         f.close()
 
 
-    def flowMesh(self, showdata=False, savedata=False):
+    def flowMesh(self, showdata=False, savedata=True):
 
         FN_Temp = self.outDataName + ".txt"
         f = open(FN_Temp, "a+")
@@ -572,8 +583,9 @@ class simulation(object):
             print('R_ini:\n',R_ini)
             print('np.sum(R_ini):',np.sum(R_ini))
             #eular2D(x_min, y_min, x_max, y_max, x_points, y_points, D_t, t_end, bldInfo, R0, U0, V0, Rdes, Udes, Vdes, mode=0, saveData=True, showPlot=True, debug=True):
-            #eular2D(x_min, y_min, x_max, y_max, x_points, y_points, D_t, t_end, self.bldmesh, R0=R_ini, U0=zeroArray, V0=zeroArray, Rdes=zeroArray, Udes=Ud0, Vdes=Vd0, mode=3, saveData=True, showPlot=False, debug=True)
-            #if self.DEBUG:
+            exitpoints=build_exitpt(x_min, y_min, x_max, y_max, x_points, y_points, self.exits)
+            RRt, UUt, VVt = lwr2D(x_min, y_min, x_max, y_max, x_points, y_points, t_end, self.bldmesh, R0=R_ini, U0=zeroArray, V0=zeroArray, Rdes=zeroArray, Udes=Ud0, Vdes=Vd0, exitpt=exitpoints, mode=6, debug=False)
+            ##saveData=False, showPlot=False
                 
         if self.solver==2: # Show flow field of each individual exit
 
@@ -605,7 +617,7 @@ class simulation(object):
 
         if savedata:
             if self.solver==1:
-                np.savez("vel_flow0.npz", Ud0, Vd0)
+                np.savez("vel_flow0.npz", Ud0, Vd0, RRt, UUt, VVt, BLDinfo, [x_min, y_min, x_max, y_max, x_points,y_points] )
             if self.solver==2:
                 np.savez("vel_flow0.npz", Ud0, Vd0)
                 np.savez("vel_flow.npz", UU, VV)
@@ -694,7 +706,22 @@ class simulation(object):
 
                 print('door.ID:', iddoor, 'door.arrow:', door.arrow, '\t')
                 
-                
+                if len(door.attachedWalls)>0:
+                    r1, r2, r3, r4 = door.dirWithAttachedWalls(mode='average')
+                    if r1 is None and r3 is None:
+                        if Usum>0:
+                            door.arrow=1
+                        else:
+                            #self.exit2door[idexit, iddoor]=-1
+                            door.arrow=-1
+                    if r2 is None and r4 is None:
+                        if Vsum>0:
+                            door.arrow=2
+                        else:
+                            door.arrow=-2
+                print('door.ID:', iddoor, 'door.arrow:', door.arrow, '\t')
+
+
         if self.solver == 2:
 
             Utemp = self.UallExit
@@ -1065,22 +1092,24 @@ class simulation(object):
             #raw_input('Error on input data: exits or agent2exit!  Please check')
             self.inputDataCorrect = False
 
-        # Read in the data for interactive opinion dynamics
-        #tableFeatures, LowerIndex, UpperIndex = getData(self.FN_EVAC, '&ExitW')
-        #tempW = readFloatArray(tableFeatures, len(self.agents), 3)
-        #for idai, ai in enumerate(self.agents):
-        #    if ai.inComp == 0:
-        #        continue
-        #    ai.W1=tempW[idai, 0]
-        #    ai.W2=tempW[idai, 1]
-        #    ai.W3=tempW[idai, 2]
-        #    ai.p = ai.W3
+        if self.solver == 2:
+			pass
+            # Read in the data for interactive opinion dynamics
+            #tableFeatures, LowerIndex, UpperIndex = getData(self.FN_EVAC, '&ExitW')
+            #tempW = readFloatArray(tableFeatures, len(self.agents), 3)
+            #for idai, ai in enumerate(self.agents):
+            #    if ai.inComp == 0:
+            #        continue
+            #    ai.W1=tempW[idai, 0]
+            #    ai.W2=tempW[idai, 1]
+            #    ai.W3=tempW[idai, 2]
+            #    ai.p = ai.W3
 
-        #if np.shape(tempW)!= (self.num_agents, 3): 
-        #    print('\nError on input data: exits weights W1 W2 W3 \n')
-            #f.write('\nError on input data: exits weights W1 W2 W3 \n')
-            #raw_input('Error on input data: exits weights W1 W2 W3, Please check')
-        #    self.inputDataCorrect = False
+            #if np.shape(tempW)!= (self.num_agents, 3): 
+            #    print('\nError on input data: exits weights W1 W2 W3 \n')
+                #f.write('\nError on input data: exits weights W1 W2 W3 \n')
+                #raw_input('Error on input data: exits weights W1 W2 W3, Please check')
+            #    self.inputDataCorrect = False
 
         for idai, ai in enumerate(self.agents):
             for idexit, exit in enumerate(self.exits):
@@ -1176,7 +1205,7 @@ class simulation(object):
 
             FN_Temp = self.outDataName + ".txt"
             f = open(FN_Temp, "a+")
-            f.write('&SimuTime\n')
+            f.write('\n\n&SimuTime\n')
             f.write('Simulation Time:' + str(self.t_sim)+'\n')
             f.write('&DoorProb\n')
             f.write('person.exit_prob:\n'+str(person.exit_prob)+'\n')
@@ -1526,7 +1555,7 @@ class simulation(object):
 
 if __name__=="__main__":
     #from ui import*
-    myTest = simulation("E:\gitwork\CrowdEgress\examples\DoorAlgorithm\testnote")
+    myTest = simulation() #("E:\gitwork\CrowdEgress\examples\DoorAlgorithm\testnote")
     myTest.select_file(None, None, "smallGUI")
     #myTest.read_data()
     show_geom(myTest)

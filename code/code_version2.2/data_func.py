@@ -34,6 +34,60 @@ import csv
 #from ctypes import *
 import struct
 import time
+import matplotlib.pyplot as plt
+
+
+def readDoorProb(FileName, doorIndex=2, showdata=True):
+    findMESH=False
+    doorProb=[]
+    for line in open(FileName):
+        if re.match('&DoorProb', line):
+            findMESH=True
+            row=[]
+        if  findMESH:
+            if re.search('prob=', line):
+                dataTemp=line.split('prob=')
+                #print('dataTemp:', dataTemp[1:])
+
+                #for index in range(len(dataTemp[1:])):
+                #    probDist=dataTemp[index+1].lstrip('[').strip('=').rstrip(']')
+                probDist=dataTemp[1].lstrip('[').strip('=').rstrip(']')
+                temp2 =  re.split(r'[\s\,]+', probDist)
+                print(temp2)
+                prob = float(temp2[doorIndex].lstrip('[').strip('=').rstrip(']'))
+                row.append(prob)
+                #print(row)
+
+                    #xpoints = temp2[0]
+                    #ypoints = temp2[1]
+            '''
+            if re.search('XB', line):
+                temp1=line.split('XB')
+                line1=temp1[1].strip().strip('=').strip()
+                temp2 =  re.split(r'[\s\,]+', line1)
+                xmax = temp2[1]-temp2[0]
+                ymax = temp2[3]-temp2[2]
+            '''
+            if re.search('WellDone!', line):
+                findMESH = False
+                #doorProb.append(dataTemp[1:])
+                doorProb.append(row)
+                # return xpoints, ypoints, xmax, ymax
+                # Only find the first &MESH line
+                # The second or other MESH lines are ignored
+
+    print('doorProb', doorProb)
+    (NRow, NColomn) = np.shape(doorProb)  
+    matrix = np.zeros((NRow, NColomn))
+    for i in range(NRow):
+            for j in range(NColomn):
+                matrix[i,j] = float(doorProb[i][j])
+    print('matrix', matrix)
+    if showdata:
+		plt.plot(matrix)
+		plt.grid()
+		plt.show()
+    return matrix
 
 
 def readCSV_base(fileName):
@@ -41,6 +95,7 @@ def readCSV_base(fileName):
     # read .csv file
     csvFile = open(fileName, "r")
     reader = csv.reader(csvFile)
+    print(reader)
     strData = []
     for item in reader:
         #print(item)
@@ -67,15 +122,21 @@ def getData(fileName, strNote):
     dataFeatures = readCSV_base(fileName)
 
     Num_Data = len(dataFeatures)
-
-    print(dataFeatures)
+    
+    IPedStart=0
+    #print(dataFeatures)
     for i in range(Num_Data):
-        if dataFeatures[i]:
+        if len(dataFeatures[i]):
             if dataFeatures[i][0]==strNote:
                 IPedStart=i
-                
+
+    IPedEnd=IPedStart
     for j in range(IPedStart, Num_Data):
-        if dataFeatures[j]==[]:
+        if len(dataFeatures[j]):
+            if dataFeatures[j][0]=='':
+                IPedEnd=j
+                break
+        else: #len(dataFeatures[j])==0: Namely dataFeatures[j]==[]
             IPedEnd=j
             break
         if j==Num_Data-1:
@@ -171,7 +232,7 @@ def readAgents(FileName, debug=True, marginTitle=1, ini=1):
     #dataFeatures = readCSV_base(FileName)
     #[Num_Data, Num_Features] = np.shape(dataFeatures)   
 
-    agentFeatures, lowerIndex, UpperIndex = getData(FileName, '&Ped')
+    agentFeatures, lowerIndex, upperIndex = getData(FileName, '&Ped')
     Num_Agents=len(agentFeatures)-marginTitle
 
     if debug: 
@@ -218,7 +279,7 @@ def readWalls(FileName, debug=True, marginTitle=1, ini=1):
     #obstFeatures = readCSV(FileName, "string")
     #[Num_Obsts, Num_Features] = np.shape(obstFeatures)
 
-    obstFeatures, lowerIndex, UpperIndex = getData(FileName, '&Wall')
+    obstFeatures, lowerIndex, upperIndex = getData(FileName, '&Wall')
     Num_Obsts=len(obstFeatures)-marginTitle
 
     if debug:
@@ -275,8 +336,11 @@ def readDoors(FileName, debug=True, marginTitle=1, ini=1):
     #doorFeatures = readCSV(FileName, "string")
     #[Num_Doors, Num_Features] = np.shape(doorFeatures)
 
-    doorFeatures, lowerIndex, UpperIndex = getData(FileName, '&Door')
+    doorFeatures, lowerIndex, upperIndex = getData(FileName, '&Door')
     Num_Doors=len(doorFeatures)-marginTitle
+    if Num_Doors == 0:
+		doorFeatures, lowerIndex, upperIndex = getData(FileName, '&door')
+		Num_Doors=len(doorFeatures)-marginTitle
 
     if debug:
         print ('Number of Doors:', Num_Doors, '\n')
@@ -335,7 +399,7 @@ def readExits(FileName, debug=True, marginTitle=1, ini=1):
     #exitFeatures = readCSV(FileName, "string")
     #[Num_Exits, Num_Features] = np.shape(exitFeatures)
 
-    exitFeatures, lowerIndex, UpperIndex = getData(FileName, '&Exit')
+    exitFeatures, lowerIndex, upperIndex = getData(FileName, '&Exit')
     Num_Exits=len(exitFeatures)-marginTitle
 
     if debug: 
@@ -508,7 +572,7 @@ def readOBST(FileName, Keyword='&OBST', Zmin=0.0, Zmax=3.0, outputFile=None, deb
                 obstFeature.append(float(coords[1]))
                 obstFeature.append(float(coords[3]))
                 obstFeature.append(float(coords[4]))
-                obstFeature.append(float(coords[5]))
+                obstFeature.append(float(coords[5].rstrip('/')))
                 obstFeatures.append(obstFeature)
                 findOBST=False
 
@@ -591,7 +655,7 @@ def readPATH(FileName, Keyword='&HOLE', Zmin=0.0, Zmax=3.0, outputFile=None, deb
                 holeFeature.append(float(coords[1]))
                 holeFeature.append(float(coords[3]))
                 holeFeature.append(float(coords[4]))
-                holeFeature.append(float(coords[5]))
+                holeFeature.append(float(coords[5].rstrip('/')))
                 holeFeatures.append(holeFeature)
                 findPATH=False
 
@@ -676,7 +740,7 @@ def readEXIT(FileName, Keyword='&EXIT', Zmin=0.0, Zmax=3.0, outputFile=None, deb
                 exitFeature.append(float(coords[1]))
                 exitFeature.append(float(coords[3]))
                 exitFeature.append(float(coords[4]))
-                exitFeature.append(float(coords[5]))
+                exitFeature.append(float(coords[5].rstrip('/')))
                 exitFeatures.append(exitFeature)
                 findEXIT=False
 
@@ -1258,38 +1322,41 @@ def compute_simu(simu):
 
 if __name__ == '__main__':
 
-    #test = readCSV("agentData2018.csv", 'string')
-    doorFeatures = getData("newDataForm.csv", '&Door')
-    print (doorFeatures)
+    test = readCSV_base(r"/mnt/sda6/gitwork2022/CrowdEgress/examples/ped2023Jan_problem.csv")
+    print(test)
+    doorFeatures = getData(r"/mnt/sda6/gitwork2022/CrowdEgress/examples/ped2023Jan_problem.csv", '&Door')
+    
+    #print (doorFeatures)
     print (np.shape(doorFeatures))
 
-    pedFeatures = getData("newDataForm.csv", '&Ped')
-    print (pedFeatures)
+    pedFeatures = getData(r"/mnt/sda6/gitwork2022/CrowdEgress/examples/ped2023Jan_problem.csv", '&Ped')
+    #print (pedFeatures)
     print (np.shape(pedFeatures))
 
-    agents = readAgents("newDataForm.csv")
-    walls = readWalls("newDataForm.csv")
-    doors = readDoors("newDataForm.csv")
-    exits = readExits("newDataForm.csv")
+    agents = readAgents("/mnt/sda6/gitwork2022/CrowdEgress/examples/ped2023Jan_problem.csv")
+    walls = readWalls("/mnt/sda6/gitwork2022/CrowdEgress/examples/ped2023Jan_problem.csv")
+    doors = readDoors("/mnt/sda6/gitwork2022/CrowdEgress/examples/ped2023Jan_problem.csv")
+    exits = readExits("/mnt/sda6/gitwork2022/CrowdEgress/examples/ped2023Jan_problem.csv")
     
     print ('Length of agents:', len(agents))
     print ('Length of walls:', len(walls))
-
-    ped2ExitFeatures, LowerIndex, UpperIndex = getData("newDataForm.csv", '&Ped2Exit')
-    print (ped2ExitFeatures)
+    
+    ped2ExitFeatures, LowerIndex, UpperIndex = getData(r"/mnt/sda6/gitwork2022/CrowdEgress/examples/ped2023Jan_problem.csv", '&Ped2Exit')
+    #print (ped2ExitFeatures)
     matrix = np.zeros((len(agents), len(exits)))
+    
     for i in range(len(agents)):
             for j in range(len(exits)):
                 matrix[i,j] = float(ped2ExitFeatures[i+1][j+1])
     print ('matrix', matrix)
 
-    Exit2DoorFeatures, LowerIndex, UpperIndex = getData("newDataForm.csv", '&Exit2Door')
-    print (Exit2DoorFeatures)
-    matrix = np.zeros((len(exits), len(doors)))
-    for i in range(len(exits)):
-            for j in range(len(doors)):
-                matrix[i,j] = float(Exit2DoorFeatures[i+1][j+1])
-    print ('matrix', matrix)
+    #Exit2DoorFeatures, LowerIndex, UpperIndex = getData("newDataForm.csv", '&Exit2Door')
+    #print (Exit2DoorFeatures)
+    #matrix = np.zeros((len(exits), len(doors)))
+    #for i in range(len(exits)):
+    #        for j in range(len(doors)):
+    #            matrix[i,j] = float(Exit2DoorFeatures[i+1][j+1])
+    #print ('matrix', matrix)
     
         #for index in range(Num_Data):
         #if dataFeatures[0,index]=='&Ped':
@@ -1309,7 +1376,7 @@ if __name__ == '__main__':
     #AFactor_Init = readCSV("A_Data2018.csv", 'float')
     #BFactor_Init = readCSV("B_Data2018.csv", 'float')
 
-    tableFeatures, LowerIndex, UpperIndex = getData("newDataForm.csv", '&groupB')
+    tableFeatures, LowerIndex, UpperIndex = getData(r"/mnt/sda6/gitwork2022/CrowdEgress/examples/ped2023Jan_problem.csv", '&groupB')
     BFactor_Init = readFloatArray(tableFeatures, len(agents), len(agents))
     BFactor_Init
 
@@ -1322,8 +1389,11 @@ if __name__ == '__main__':
 
     print('\n', 'Test Output: exit2door.csv')
     exit2door=np.array([[ 1.0,  1.0,  1.0], [ 1.0,  -1.0,  -2.0], [ 1.0,  1.0,  1.0]])
-    print(exit2door)
+    #print(exit2door)
     updateExit2Doors(exit2door, 'test_exit2door.csv')
+    
+    readDoorProb(r'/mnt/sda6/gitwork2022/CrowdEgress/examples/3Doors/ped2023Jan_2023-05-16_02_11_26.txt')
+    
     
 """ Test struct to read and write binary data
     n_part=2
