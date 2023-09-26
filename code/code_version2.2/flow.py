@@ -190,10 +190,10 @@ def build_compartment(x_min, y_min, x_max, y_max, x_points, y_points, walls, doo
                                 
                     
     for exit in exits:
-        pxl=int((exit.params[0]-x_min)/del_x)
-        pyl=int((exit.params[1]-y_min)/del_y)
-        pxh=int((exit.params[2]-x_min)/del_x)
-        pyh=int((exit.params[3]-y_min)/del_y)
+        pxl=int(round((exit.params[0]-x_min)/del_x))
+        pyl=int(round((exit.params[1]-y_min)/del_y))
+        pxh=int(round((exit.params[2]-x_min)/del_x))
+        pyh=int(round((exit.params[3]-y_min)/del_y))
         for i in range(pxl, pxh+1):
             for j in range(pyl, pyh+1):
                 meshBLD[i,j]=1.0
@@ -434,6 +434,120 @@ def draw_vel(x_min, y_min, x_max, y_max, Ud, Vd, BLDindex, walls, doors, exits, 
         pygame.display.flip()
         clock.tick(20)
 
+#def lwr2D()
+
+'''
+def convec2D(x_min, y_min, x_max, y_max, x_points, y_points, D_t, t_end, bldInfo, R0, U0, V0, Rdes, Udes, Vdes, mode=1, saveData=True, showPlot=False, debug=True):
+
+    vf=1.36
+    rm=1.0
+
+    D_x = (x_max-x_min)/float(x_points - 1)
+    D_y = (y_max-y_min)/float(y_points - 1)
+
+    x = np.linspace(x_min, x_max, x_points)
+    y = np.linspace(y_min, y_max, y_points)
+    
+    Nx=len(x)
+    Ny=len(y)
+    Nt=int(floor(t_end/D_t))
+
+    Rt=np.zeros((Nx+2,Ny+2,Nt))
+    BLD=np.ones((Nx+2,Ny+2))
+
+    # Set Rect Area for Computation
+    BLD[0,:]=0.0
+    BLD[:,0]=0.0
+    BLD[Nx+1,:]=0.0 #BLD[-1,:]=0.0
+    BLD[:,Ny+1]=0.0 #BLD[:,-1]=0.0
+
+    if np.shape(bldInfo)!= (Nx+2, Ny+2): 
+        print('\nError in input data BLD \n')
+        #f.write('\nError in input data BLD \n')
+        input('\nError in input data BLD \n Please check!')
+    BLD=bldInfo
+    print(BLD)
+    
+    R=np.zeros((Nx+2,Ny+2))
+    U=np.zeros((Nx+2,Ny+2))
+    V=np.zeros((Nx+2,Ny+2))
+
+    Rd=np.zeros((Nx+2,Ny+2))
+    Ud=np.zeros((Nx+2,Ny+2))
+    Vd=np.zeros((Nx+2,Ny+2))
+        
+    if np.shape(R0)!= (Nx+2,Ny+2) or np.shape(U0)!= (Nx+2,Ny+2) or np.shape(V0)!= (Nx+2,Ny+2): 
+        print('\nError in input initial data R/U/V \n')
+        f.write('\nError in input initial data R/U/V \n')
+        input('\nError in input initial data R/U/V \n Please check!')
+    if np.shape(Rdes)!= (Nx+2,Ny+2) or np.shape(Udes)!= (Nx+2,Ny+2) or np.shape(Vdes)!= (Nx+2,Ny+2): 
+        print('\nError in input desired matrix Rd/Ud/Vd \n')
+        f.write('\nError in input desired matrix Rd/Ud/Vd \n')
+        input('\nError in input desired matrix Rd/Ud/Vd \n Please check!')
+
+    #Initialize Mesh Data
+    R=R0
+    U=U0
+    V=V0
+
+    # Give the driving force term
+    Rd=Rdes  # Only used in mode=2 currently
+    Ud=Udes
+    Vd=Vdes
+    
+    if debug:
+        input("Please check input data here!")
+
+    for t in np.arange(0,Nt): #1,2...Nt
+
+        f.write("Time Step:"+str(t)+"==========\n")
+        R=R*BLD
+        U=U*BLD
+        V=V*BLD
+        U=U*UBLD
+        V=V*VBLD
+        #V[3:N-3,int(N/2)-1]=0.0
+        #V[3:N-3,int(N/2)+1]=0.0
+        
+        # Write in time index
+        Rt[:,:,t]=R
+        Ut[:,:,t]=U 
+        Vt[:,:,t]=V ##=np.zeros((N+3,N+3,Nt+1))
+
+    #u = np.ones((x_points,y_points))
+    #for i in range(0, x_points):    # Specifying the boundary conditions
+    #    for j in range(0, y_points):
+    #        if (x[i] > 0.5 and x[i] < 1.0):
+    #            if (y[j] > 0.5 and y[j] < 1.0):
+    #                u[i,j] = 2.0
+    
+    # Looping for time steps
+    u_new = np.ones((x_points, y_points))
+
+    for it in range(0, t_points):
+        for ix in range(1, x_points):
+            for iy in range(1, y_points):
+                u_new[ix,iy] = u[ix,iy] - c*(del_t/float(del_x))*(u[ix,iy] - u[ix-1,iy]) - c*(del_t/float(del_y))*(u[ix,iy] - u[ix,iy-1])
+                u_new[0,:] = 1.0
+                u_new[:,-1] = 1.0
+                u_new[-1,:] = 1.0
+                u_new[:,0] = 1.0
+
+        u = u_new.copy()
+
+    if saveData:
+        np.save("Rt.npy",Rt)
+        np.save("Ut.npy",Ut)
+        np.save("Vt.npy",Vt)
+        
+    # Plotting the 2D surface
+    fig = plt.figure()
+    ax = fig.gca(projection = '3d')
+    X,Y = np.meshgrid(x,y)
+    surf = ax.plot_surface(X, Y, u[:], cmap=cm.coolwarm)
+    plt.show()
+'''
+    
 
 def lwr2D(x_min, y_min, x_max, y_max, x_points, y_points, t_end, bldInfo, R0, U0, V0, Rdes, Udes, Vdes, exitpt, mode=1, debug=True): #saveData=False, showPlot=False, 
 

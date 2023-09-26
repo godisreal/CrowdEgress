@@ -34,10 +34,10 @@ import csv
 #from ctypes import *
 import struct
 import time
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 
 
-def readDoorProb(FileName, doorIndex=2, showdata=True):
+def readDoorProb(FileName, doorIndex, showdata=True):
     findMESH=False
     doorProb=[]
     for line in open(FileName):
@@ -54,7 +54,7 @@ def readDoorProb(FileName, doorIndex=2, showdata=True):
                 probDist=dataTemp[1].lstrip('[').strip('=').rstrip(']')
                 temp2 =  re.split(r'[\s\,]+', probDist)
                 print(temp2)
-                prob = float(temp2[doorIndex].lstrip('[').strip('=').rstrip(']'))
+                prob = float(temp2[doorIndex+1].lstrip('[').strip('=').rstrip(']'))
                 row.append(prob)
                 #print(row)
 
@@ -84,9 +84,9 @@ def readDoorProb(FileName, doorIndex=2, showdata=True):
                 matrix[i,j] = float(doorProb[i][j])
     print('matrix', matrix)
     if showdata:
-		plt.plot(matrix)
-		plt.grid()
-		plt.show()
+        plt.plot(matrix)
+        plt.grid()
+        plt.show()
     return matrix
 
 
@@ -124,26 +124,36 @@ def getData(fileName, strNote):
     Num_Data = len(dataFeatures)
     
     IPedStart=0
+    Find = False
     #print(dataFeatures)
     for i in range(Num_Data):
         if len(dataFeatures[i]):
             if dataFeatures[i][0]==strNote:
                 IPedStart=i
-
-    IPedEnd=IPedStart
-    for j in range(IPedStart, Num_Data):
-        if len(dataFeatures[j]):
-            if dataFeatures[j][0]=='':
+                Find = True
+    
+    if Find is False:
+        return [], 0, 0
+        #IPedStart = None
+        #IPedEnd = None
+        #dataOK = None
+        #return dataOK, IPedStart, IPedEnd
+        #return [], 0, 0
+    else:
+        IPedEnd=IPedStart
+        for j in range(IPedStart, Num_Data):
+            if len(dataFeatures[j]):
+                if dataFeatures[j][0]=='' or dataFeatures[j][0]==' ':
+                    IPedEnd=j
+                    break
+            else: #len(dataFeatures[j])==0: Namely dataFeatures[j]==[]
                 IPedEnd=j
                 break
-        else: #len(dataFeatures[j])==0: Namely dataFeatures[j]==[]
-            IPedEnd=j
-            break
-        if j==Num_Data-1:
-            IPedEnd=Num_Data
+            if j==Num_Data-1:
+                IPedEnd=Num_Data
 
-    dataOK = dataFeatures[IPedStart : IPedEnd]
-    return dataOK, IPedStart, IPedEnd
+        dataOK = dataFeatures[IPedStart : IPedEnd]
+        return dataOK, IPedStart, IPedEnd
 
     #data_result = np.array(dataOK)
     #return data_result[1:, 1:]
@@ -234,6 +244,12 @@ def readAgents(FileName, debug=True, marginTitle=1, ini=1):
 
     agentFeatures, lowerIndex, upperIndex = getData(FileName, '&Ped')
     Num_Agents=len(agentFeatures)-marginTitle
+    if Num_Agents <= 0:
+        agentFeatures, lowerIndex, upperIndex = getData(FileName, '&agent')
+        Num_Agents=len(agentFeatures)-marginTitle
+    if Num_Agents <= 0:
+        agentFeatures, lowerIndex, upperIndex = getData(FileName, '&Agent')
+        Num_Agents=len(agentFeatures)-marginTitle
 
     if debug: 
         print ('Number of Agents:', Num_Agents, '\n')
@@ -281,6 +297,9 @@ def readWalls(FileName, debug=True, marginTitle=1, ini=1):
 
     obstFeatures, lowerIndex, upperIndex = getData(FileName, '&Wall')
     Num_Obsts=len(obstFeatures)-marginTitle
+    if Num_Obsts <= 0:
+        obstFeatures, lowerIndex, upperIndex = getData(FileName, '&wall')
+        Num_Obsts=len(obstFeatures)-marginTitle
 
     if debug:
         print ('Number of Walls:', Num_Obsts, '\n')
@@ -338,9 +357,9 @@ def readDoors(FileName, debug=True, marginTitle=1, ini=1):
 
     doorFeatures, lowerIndex, upperIndex = getData(FileName, '&Door')
     Num_Doors=len(doorFeatures)-marginTitle
-    if Num_Doors == 0:
-		doorFeatures, lowerIndex, upperIndex = getData(FileName, '&door')
-		Num_Doors=len(doorFeatures)-marginTitle
+    if Num_Doors <= 0:
+        doorFeatures, lowerIndex, upperIndex = getData(FileName, '&door')
+        Num_Doors=len(doorFeatures)-marginTitle
 
     if debug:
         print ('Number of Doors:', Num_Doors, '\n')
@@ -401,6 +420,9 @@ def readExits(FileName, debug=True, marginTitle=1, ini=1):
 
     exitFeatures, lowerIndex, upperIndex = getData(FileName, '&Exit')
     Num_Exits=len(exitFeatures)-marginTitle
+    if Num_Exits <= 0:
+        exitFeatures, lowerIndex, upperIndex = getData(FileName, '&exit')
+        Num_Exits=len(exitFeatures)-marginTitle
 
     if debug: 
         print ('Number of Exits:', Num_Exits, '\n')
