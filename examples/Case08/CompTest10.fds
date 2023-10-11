@@ -1,0 +1,239 @@
+ FDS+Evac version: FDS+Evac 5.1.6
+ All material properties etc. are completely fabricated.
+
+ IMO MSC/Circ.1033 (6 June 2002) 'Interim Guidelines For
+ Evacuation Analyses for New and Existing Passenger Ships',
+ Annex 3 
+
+ Component testing, Test 10: Exit route allocation
+
+&HEAD CHID='CompTest10',TITLE='IMO Component Test10' /
+
+&MESH IJK=90,120,26, XB=0.0,9.0, 0.0,12.0, 0.0,2.6 /
+
+&MESH IJK=90,120,1, XB=0.0,9.0, 0.0,12.0, 0.95,1.05, EVACUATION=.TRUE., EVAC_HUMANS=.TRUE., EVAC_Z_OFFSET=1.0, ID = 'FF1stFloor' /
+
+&MESH IJK=90,120,1, XB=0.0,9.0, 0.0,12.0, 0.95,1.05, EVACUATION=.TRUE., EVAC_HUMANS=.FALSE., ID = 'MainExit' /
+
+&MESH IJK=90,120,1, XB=0.0,9.0, 0.0,12.0, 0.95,1.05, EVACUATION=.TRUE., EVAC_HUMANS=.FALSE., ID = 'SecoExit' /
+
+&TIME T_END=30.0, DT=0.2 /
+
+&MISC SURF_DEFAULT = 'WALL',
+      RADIATION=.FALSE.
+      EVAC_SURF_DEFAULT = 'EVAC_WALL'  /
+
+&DUMP SMOKE3D=.TRUE.,
+      NFRAMES=200,
+      DT_PART=0.5,
+      DT_HRR=1.0,
+      DT_SLCF=1.0,
+      DT_BNDF=5.0,
+      DT_PL3D=1000.0,
+      DT_ISOF=5.0 /
+
+&REAC ID         = 'POLYURETHANE'
+      FYI        = 'C_6.3 H_7.1 N O_2.1, NFPA Handbook, Babrauskas'
+      SOOT_YIELD = 0.10
+      N          = 1.0
+      C          = 6.3
+      H          = 7.1
+      O          = 2.1  /
+
+&SURF ID='BURNER', HRRPUA=1000., COLOR='RASPBERRY' /
+
+&MATL ID            = 'GYPSUM PLASTER'
+      FYI           = 'Quintiere, Fire Behavior'
+      CONDUCTIVITY  = 0.48
+      SPECIFIC_HEAT = 0.84
+      DENSITY       = 1440. /
+
+&SURF ID             = 'WALL'
+      RGB            = 160,160,160
+      MATL_ID        = 'GYPSUM PLASTER'
+      THICKNESS      = 0.012 /
+
+ Boundary condition for the evacuation flow fields:
+&SURF ID = 'OUTFLOW', VEL = +0.000001, TAU_V=0.1 /
+
+ Default material for evacuation meshes is INERT and its color
+ can not be changed esily in Smokeview. Thus, an evacuation 
+ material is defined below, which has only color:
+&SURF ID    = 'EVAC_WALL'
+      RGB   = 200,0,200 / or COLOR
+ 
+=======================================================
+============= FIRE FDS GEOMETRY STARTS ================
+=======================================================
+
+&OBST XB = 0.0, 9.0, 11.9,12.0, 0.0,2.6, SURF_ID='WALL' / 
+&OBST XB = 0.0, 9.0,  0.0, 0.1, 0.0,2.6, SURF_ID='WALL' / 
+
+&OBST XB = 0.0, 9.0,  6.9,7.0, 0.0,2.6, SURF_ID='WALL' / 
+&OBST XB = 0.0, 9.0,  4.9,5.0, 0.0,2.6, SURF_ID='WALL' / 
+
+&OBST XB = 0.0, 0.1,  0.0,12.0, 0.0,2.6, SURF_ID='WALL' / 
+&OBST XB = 8.9, 9.0,  0.0,12.0, 0.0,2.6, SURF_ID='WALL' / 
+
+&OBST XB = 3.0, 3.1,  0.0,5.0, 0.0,2.6, SURF_ID='WALL' / 
+&OBST XB = 6.0, 6.1,  0.0,5.0, 0.0,2.6, SURF_ID='WALL' / 
+
+&OBST XB = 3.0, 3.1,  6.9,12.0, 0.0,2.6, SURF_ID='WALL' / 
+&OBST XB = 6.0, 6.1,  6.9,12.0, 0.0,2.6, SURF_ID='WALL' /   
+
+ Cabin doors
+&HOLE XB = 1.2, 1.8,  4.8, 5.1, 0.0,2.0, EVACUATION=.FALSE. /
+&HOLE XB = 4.0, 4.9,  4.8, 5.1, 0.0,2.0, EVACUATION=.FALSE. /
+&HOLE XB = 7.0, 7.9,  4.8, 5.1, 0.0,2.0, EVACUATION=.FALSE. /
+
+&HOLE XB = 1.2, 1.8,  6.8, 7.1, 0.0,2.0, EVACUATION=.FALSE. /
+&HOLE XB = 4.0, 4.9,  6.8, 7.1, 0.0,2.0, EVACUATION=.FALSE. /
+&HOLE XB = 7.0, 7.9,  6.8, 7.1, 0.0,2.0, EVACUATION=.FALSE. /
+
+&HOLE XB = 5.9, 6.2,  1.8, 2.7, 0.0,2.0, EVACUATION=.FALSE. /
+&HOLE XB = 2.9, 3.2,  8.8, 9.7, 0.0,2.0, EVACUATION=.FALSE. /
+&HOLE XB = 5.9, 6.2,  8.9, 9.5, 0.0,2.0, EVACUATION=.FALSE. /
+
+&HOLE XB = -0.1, 0.2,  5.6, 6.2, 0.0,2.0, EVACUATION=.FALSE. /
+&HOLE XB = 8.8, 9.1,  5.3, 6.5, 0.0,2.0, EVACUATION=.FALSE. /
+
+ The fire as an burner.
+&OBST XB= 1.00, 2.00, 2.00, 3.00, 0.00, 0.60, SURF_ID='INERT' /
+&VENT XB= 1.00, 2.00, 2.00, 3.00, 0.60, 0.60, SURF_ID='BURNER' /
+
+&VENT MB='YMIN',SURF_ID='OPEN' / 
+&VENT MB='YMAX',SURF_ID='OPEN' / 
+
+=======================================================
+============= FIRE FDS GEOMETRY ENDS ==================
+=======================================================
+
+=======================================================
+============= EVAC GEOMETRY STARTS ====================
+=======================================================
+
+ Cabin doors (Note: HOLEs should be duplicated for evacuation meshes) 
+&HOLE XB = 1.2, 1.8,  4.8, 5.1, 0.9,1.1, EVACUATION=.TRUE., MESH_ID='FF1stFloor' /
+&HOLE XB = 4.0, 4.9,  4.8, 5.1, 0.9,1.1, EVACUATION=.TRUE., MESH_ID='FF1stFloor' /
+&HOLE XB = 7.0, 7.9,  4.8, 5.1, 0.9,1.1, EVACUATION=.TRUE., MESH_ID='FF1stFloor' /
+
+&HOLE XB = 1.2, 1.8,  6.8, 7.1, 0.9,1.1, EVACUATION=.TRUE., MESH_ID='FF1stFloor' /
+&HOLE XB = 4.0, 4.9,  6.8, 7.1, 0.9,1.1, EVACUATION=.TRUE., MESH_ID='FF1stFloor' /
+&HOLE XB = 7.0, 7.9,  6.8, 7.1, 0.9,1.1, EVACUATION=.TRUE., MESH_ID='FF1stFloor' /
+
+&HOLE XB = 5.9, 6.2,  1.8, 2.7, 0.9,1.1, EVACUATION=.TRUE., MESH_ID='FF1stFloor' /
+&HOLE XB = 2.9, 3.2,  8.8, 9.7, 0.9,1.1, EVACUATION=.TRUE., MESH_ID='FF1stFloor' /
+&HOLE XB = 5.9, 6.2,  8.9, 9.5, 0.9,1.1, EVACUATION=.TRUE., MESH_ID='FF1stFloor' /
+
+&HOLE XB = -0.1, 0.2,  5.6, 6.2, 0.9,1.1, EVACUATION=.TRUE., MESH_ID='FF1stFloor' /
+&HOLE XB = 8.8, 9.1,  5.3, 6.5, 0.9,1.1, EVACUATION=.TRUE., MESH_ID='FF1stFloor' /
+
+ Cabin doors for the door flow fields (Note: grid is 0.1 m x 0.1 m, i.e., quite
+ fine, so flow fields should have a little bit narrower doors than the actual
+ door width. Actual door width should be used for the main evac field.)
+&HOLE XB = 1.2, 1.8,  4.8, 5.1, 0.9,1.1, EVACUATION=.TRUE., MESH_ID='MainExit' /
+&HOLE XB = 4.0, 4.9,  4.8, 5.1, 0.9,1.1, EVACUATION=.TRUE., MESH_ID='MainExit' /
+&HOLE XB = 7.0, 7.9,  4.8, 5.1, 0.9,1.1, EVACUATION=.TRUE., MESH_ID='MainExit' /
+
+&HOLE XB = 1.2, 1.8,  6.8, 7.1, 0.9,1.1, EVACUATION=.TRUE., MESH_ID='MainExit' /
+&HOLE XB = 4.0, 4.9,  6.8, 7.1, 0.9,1.1, EVACUATION=.TRUE., MESH_ID='MainExit' /
+&HOLE XB = 7.0, 7.9,  6.8, 7.1, 0.9,1.1, EVACUATION=.TRUE., MESH_ID='MainExit' /
+
+&HOLE XB = 5.9, 6.2,  1.8, 2.7, 0.9,1.1, EVACUATION=.TRUE., MESH_ID='MainExit' /
+&HOLE XB = 2.9, 3.2,  8.8, 9.7, 0.9,1.1, EVACUATION=.TRUE., MESH_ID='MainExit' /
+&HOLE XB = 5.9, 6.2,  8.9, 9.5, 0.9,1.1, EVACUATION=.TRUE., MESH_ID='MainExit' /
+
+&HOLE XB = -0.1, 0.2,  5.6, 6.2, 0.9,1.1, EVACUATION=.TRUE., MESH_ID='MainExit' /
+
+
+&HOLE XB = 1.2, 1.8,  4.8, 5.1, 0.9,1.1, EVACUATION=.TRUE., MESH_ID='SecoExit' /
+&HOLE XB = 4.0, 4.9,  4.8, 5.1, 0.9,1.1, EVACUATION=.TRUE., MESH_ID='SecoExit' /
+&HOLE XB = 7.0, 7.9,  4.8, 5.1, 0.9,1.1, EVACUATION=.TRUE., MESH_ID='SecoExit' /
+
+&HOLE XB = 1.2, 1.8,  6.8, 7.1, 0.9,1.1, EVACUATION=.TRUE., MESH_ID='SecoExit' /
+&HOLE XB = 4.0, 4.9,  6.8, 7.1, 0.9,1.1, EVACUATION=.TRUE., MESH_ID='SecoExit' /
+&HOLE XB = 7.0, 7.9,  6.8, 7.1, 0.9,1.1, EVACUATION=.TRUE., MESH_ID='SecoExit' /
+
+&HOLE XB = 5.9, 6.2,  1.8, 2.7, 0.9,1.1, EVACUATION=.TRUE., MESH_ID='SecoExit' /
+&HOLE XB = 2.9, 3.2,  8.8, 9.7, 0.9,1.1, EVACUATION=.TRUE., MESH_ID='SecoExit' /
+&HOLE XB = 5.9, 6.2,  8.9, 9.5, 0.9,1.1, EVACUATION=.TRUE., MESH_ID='SecoExit' /
+
+&HOLE XB = 8.8, 9.1,  5.3, 6.5, 0.9,1.1, EVACUATION=.TRUE., MESH_ID='SecoExit' /
+
+ Main evac grid vents, there should be a VENT on every place,
+ where agents can go out of the calculation in the main evacuation
+ mesh.
+&VENT XB= 0.0,0.0, 5.5,6.3, 0.95,1.05, SURF_ID='OUTFLOW',
+      EVACUATION=.TRUE., MESH_ID='FF1stFloor' / Exit1
+&VENT XB=9.0,9.0,  5.3, 6.6, 0.95,1.05, SURF_ID='OUTFLOW',
+      EVACUATION=.TRUE., MESH_ID='FF1stFloor' / Exit2
+
+&EXIT ID='MainExit', IOR = -1,
+      FYI = 'Comment line',
+      VENT_FFIELD='MainExit',
+      COUNT_ONLY=.FALSE. ,
+      XYZ= 0.2, 5.9, 1.0,
+      XB = 0.2,0.2,  5.5,6.3,  0.95,1.05 /
+&VENT XB= 0.0,0.0, 5.6,6.2, 0.95,1.05, SURF_ID='OUTFLOW',
+      EVACUATION=.TRUE., MESH_ID='MainExit' / Exit1
+
+&EXIT ID='SecoExit', IOR = +1,
+      FYI = 'Comment line',
+      VENT_FFIELD='MainSeco',
+      COUNT_ONLY=.FALSE. ,
+      XYZ= 8.8, 5.9, 1.0,
+      XB = 8.8,8.8,   5.2, 6.7,  0.95,1.05 /
+&VENT XB=9.0,9.0,  5.3, 6.6, 0.95,1.05, SURF_ID='OUTFLOW',
+      EVACUATION=.TRUE., MESH_ID='SecoExit' / Exit2
+
+=======================================================
+============= EVAC GEOMETRY ENDS ======================
+=======================================================
+
+ Human start to walk at t=0.0 s.
+&PERS ID='Imo1',
+      FYI='Imo, 30-50 males',
+      DEFAULT_PROPERTIES='Male',
+      VELOCITY_DIST=1, VEL_MEAN=1.295,VEL_PARA=0.05,VEL_LOW=0.97,VEL_HIGH=1.62,
+      PRE_EVAC_DIST=0, PRE_MEAN=0.0,
+      DET_EVAC_DIST=0, DET_MEAN=0.0,
+      COLOR_METHOD = 0,
+	DENS_INIT=4.0 /
+
+ Initial position of the humans
+&EVAC 	ID = 'Cabin_1', 
+        NUMBER_INITIAL_PERSONS = 15,
+        FYI = 'Comment line',
+	XB = 0.2, 2.8, 7.0,10.0, 1.0,1.0
+	QUANTITY = 'BLACK',
+	KNOWN_DOOR_NAMES = 'MainExit','SecoExit',
+	KNOWN_DOOR_PROBS = 1.0, 1.0,
+        PERS_ID = 'Imo1' / 
+
+&EVAC 	ID = 'Cabin_8', 
+        NUMBER_INITIAL_PERSONS = 5,
+        FYI = 'Comment line',
+	XB = 3.2, 5.8, 1.0, 4.0, 1.0,1.0
+	QUANTITY = 'BLACK',
+	KNOWN_DOOR_NAMES = 'SecoExit',
+	KNOWN_DOOR_PROBS = 1.0,
+        PERS_ID = 'Imo1' / 
+
+ An evacuation hole, i.e., do not put humans here (an EVHO is to an EVAC what a HOLE is for an OBST). By default an EVHO applies to all EVAC-lines.
+    EVAC_ID(optional): Only for humans from that EVAC-line
+    PERS_ID(optional): Only for those humans, whose PERS_ID matches
+&EVHO ID = 'Evho_Fire',
+      FYI = 'Do not put humans close to the fire',
+      XB = 0.0,3.0, 1.0,4.0, 0.95,1.05 /
+
+Fire calculation output.
+
+ BNDF QUANTITY='WALL_TEMPERATURE' / 
+&SLCF PBX=2.50, QUANTITY='TEMPERATURE' /
+&SLCF PBX=4.50, QUANTITY='TEMPERATURE' /
+&SLCF PBX=6.50, QUANTITY='TEMPERATURE' /
+
+ Next line could be used to plot the evacuation flow fields:
+ SLCF PBZ = 1.500, QUANTITY = 'VELOCITY', VECTOR = .TRUE./ 
+
+&TAIL /
