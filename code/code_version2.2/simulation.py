@@ -148,21 +148,25 @@ class simulation(object):
         self.bldmesh = None
 
         #Human Mesh Data
-        self.xmin=0.0
-        self.xmax=0.0
-        self.ymin=0.0
-        self.ymax=0.0
+        self.xmin=None
+        self.xmax=None
+        self.ymin=None
+        self.ymax=None
         self.xpt=None
         self.ypt=None
 
+        self.zmin=None
+        self.zmax=None
+        # self.zpt is always one because this is 2D problem
+        
         self.UallExit=None
         self.VallExit=None
 
         self.UeachExit=None
         self.VeachExit=None
 
-        self.dx=None
-        self.dy=None
+        #self.dx=None
+        #self.dy=None
     
     
     """
@@ -284,11 +288,18 @@ class simulation(object):
         # In version 2.2 exits are alternatively read from fds input file.  
         #self.exits = readExits(FN_EVAC)
         #self.num_exits = len(self.exits)
-
+        
+        # Here we give the default values of zmin and zmax
+        # These values are used if no specific values are input in tab Parameters in GUI
+        if self.zmin is None:
+            self.zmin=0.0
+        if self.zmax is None:
+            self.zmax=3.0
+            
         if FN_FDS!="" and FN_FDS!="None" and FN_FDS is not None:
-            self.walls = readOBST(FN_FDS, '&OBST', 0.0, 3.0, 'obst_fromFDS.csv')
-            self.doors = readPATH(FN_FDS, '&HOLE', 0.0, 3.0, 'hole_fromFDS.csv')
-            self.exits = readEXIT(FN_FDS, '&EXIT', 0.0, 3.0, 'exit_fromFDS.csv')
+            self.walls = readOBST(FN_FDS, '&OBST', self.zmin, self.zmax, 'obst_fromFDS.csv')
+            self.doors = readPATH(FN_FDS, '&HOLE', self.zmin, self.zmax, 'hole_fromFDS.csv')
+            self.exits = readEXIT(FN_FDS, '&EXIT', self.zmin, self.zmax, 'exit_fromFDS.csv')
             self.num_walls = len(self.walls)
             self.num_doors = len(self.doors)
             self.num_exits = len(self.exits)
@@ -419,12 +430,17 @@ class simulation(object):
                 continue
             xxx.append(agent.pos[0])
             yyy.append(agent.pos[1])
-
-
-        self.xmin=np.min(xxx)
-        self.xmax=np.max(xxx)
-        self.ymin=np.min(yyy)
-        self.ymax=np.max(yyy)
+        
+        # Here we give the values of xmin xmax ymin ymax xpt ypt by using automatic method
+        # These values are used if no specific values are input in tab Egressflow in GUI
+        if self.xmin is None:
+            self.xmin=np.min(xxx)
+        if self.xmax is None:
+            self.xmax=np.max(xxx)
+        if self.ymin is None:
+            self.ymin=np.min(yyy)
+        if self.ymax is None:
+            self.ymax=np.max(yyy)
         
         if self.xpt is None:
             self.xpt=int(self.xmax-self.xmin)*3+20
@@ -617,10 +633,10 @@ class simulation(object):
 
         if savedata:
             if self.solver==1:
-                np.savez("vel_flow0.npz", Ud0, Vd0, RRt, UUt, VVt, BLDinfo, [x_min, y_min, x_max, y_max, x_points,y_points] )
+                np.savez(os.path.join(self.fpath, "vel_flow1.npz"), Ud0, Vd0, RRt, UUt, VVt, BLDinfo, [x_min, y_min, x_max, y_max, x_points,y_points] )
             if self.solver==2:
-                np.savez("vel_flow0.npz", Ud0, Vd0)
-                np.savez("vel_flow.npz", UU, VV)
+                np.savez(os.path.join(self.fpath, "vel_flow2.npz"), Ud0, Vd0, UU, VV)
+                #np.savez(os.path.join(self.fpath, "vel_flow2.npz"), UU, VV)
 
         if self.solver==1:
             self.UallExit=Ud0
@@ -1083,34 +1099,45 @@ class simulation(object):
         ### This is not yet used in the door selection routine
         ###=== Probablity of Selecting an Exit ================
         tableFeatures, LowerIndex, UpperIndex = getData(self.FN_EVAC, '&Ped2Exit')
+        if len(tableFeatures)<=0:
+            tableFeatures, LowerIndex, UpperIndex = getData(self.FN_EVAC, '&Agent2Exit')
+        if len(tableFeatures)<=0:
+            tableFeatures, LowerIndex, UpperIndex = getData(self.FN_EVAC, '&agent2exit')
+        
         self.agent2exit = readFloatArray(tableFeatures, len(self.agents), len(self.exits))
-        #agent2exit = readCSV("Agent2Exit2018.csv", "float")
 
         if np.shape(self.agent2exit)!= (self.num_agents, self.num_exits): #or np.shape(agent2exit)[1]!=
             print('\n!!! Error on input data: exits or agent2exit !!! \n')
             f.write('\n!!! Error on input data: exits or agent2exit !!! \n')
             #raw_input('Error on input data: exits or agent2exit!  Please check')
             self.inputDataCorrect = False
-
+        
+        '''
         if self.solver == 2:
-			pass
             # Read in the data for interactive opinion dynamics
-            #tableFeatures, LowerIndex, UpperIndex = getData(self.FN_EVAC, '&ExitW')
-            #tempW = readFloatArray(tableFeatures, len(self.agents), 3)
-            #for idai, ai in enumerate(self.agents):
-            #    if ai.inComp == 0:
-            #        continue
-            #    ai.W1=tempW[idai, 0]
-            #    ai.W2=tempW[idai, 1]
-            #    ai.W3=tempW[idai, 2]
-            #    ai.p = ai.W3
+            try:
+                tableFeatures, LowerIndex, UpperIndex = getData(self.FN_EVAC, '&ExitW')
+                tempW = readFloatArray(tableFeatures, len(self.agents), 3)
+                for idai, ai in enumerate(self.agents):
+                    if ai.inComp == 0:
+                        continue
+                    ai.W1=tempW[idai, 0]
+                    ai.W2=tempW[idai, 1]
+                    ai.W3=tempW[idai, 2]
+                    ai.p = ai.W3
+            except:
+                # if no &ExitW is defined, then exit selection probability is not updated and agent2exit is thus not updated
+                tempW = np.zeros((self.num_agents, 3))
+                for i in range(self.num_agents):
+                    tempW[i,0]=1.0
 
-            #if np.shape(tempW)!= (self.num_agents, 3): 
-            #    print('\nError on input data: exits weights W1 W2 W3 \n')
+            if np.shape(tempW)!= (self.num_agents, 3): 
+                print('\nError on input data: exits weights W1 W2 W3 \n')
                 #f.write('\nError on input data: exits weights W1 W2 W3 \n')
                 #raw_input('Error on input data: exits weights W1 W2 W3, Please check')
-            #    self.inputDataCorrect = False
-
+                self.inputDataCorrect = False
+        '''
+        
         for idai, ai in enumerate(self.agents):
             for idexit, exit in enumerate(self.exits):
                 if ai.inComp == 0 or exit.inComp == 0:
@@ -1138,13 +1165,14 @@ class simulation(object):
             temp = np.random.multinomial(1, person.exit_prob[idai, :], size=1)
             print(person.exit_prob[idai, :])
             print(temp)
+            #if len(self.exits)>0:
             exit_index = np.argmax(temp)
             ai.dest = self.exits[exit_index].pos
             ai.exitInMind = self.exits[exit_index]   # This is the exit in one's original mind
             ai.exitInMindIndex = exit_index
             person.exit_selected[idai]=exit_index
             if self.solver==0:
-                athMap = self.exit2door[exit_index]
+                ai.pathMap = self.exit2door[exit_index]
             else:
                 pass
             print('ai:', idai, '--- exit:', exit_index)
@@ -1188,7 +1216,7 @@ class simulation(object):
                     
                 
         #if (self.t_sim < ai.tpre):
-        if self.t_sim > self.tt_ChangeDoor and self.solver!=1:
+        if self.t_sim > self.tt_ChangeDoor: # and self.solver!=1:
             print('Time for update ExitProb:', self.t_sim)
             self.tt_ChangeDoor = self.tt_ChangeDoor + self.DT_ChangeDoor
 
@@ -1231,6 +1259,8 @@ class simulation(object):
                 ai.targetExits=ai.findVisibleTarget(self.walls, self.exits)
                 #goDoor = ai.selectTarget(self.exit2door)
 
+                if np.sum(person.comm[idai, :])<=1:
+                    continue
                 ratio_utility = np.zeros((1,self.num_exits))
                 for idexit, exit in enumerate(self.exits):
                     if exit.inComp == 0:
@@ -1259,7 +1289,11 @@ class simulation(object):
                 print(person.exit_prob[idai, :])
 
                 if np.sum(ratio_exit_selected)>0:
-                    person.exit_prob[idai, :] = ai.W1*person.exit_prob[idai, :] + ai.W2*ratio_utility + ai.W3*ratio_exit_selected
+                    #person.exit_prob[idai, :] = ai.p1*(ai.p1+ai.p2)*(1-ai.p)*person.exit_prob[idai, :] + ai.p2*(ai.p1+ai.p2)*(1-ai.p)*ratio_utility + ai.p*ratio_exit_selected
+                    
+                    #person.exit_prob[idai, :] = ai.W1*person.exit_prob[idai, :] + ai.W2*ratio_utility + ai.W3*ratio_exit_selected
+                    
+                    person.exit_prob[idai, :] = (1-ai.p)*person.exit_prob[idai, :] +ai.p*ratio_exit_selected
  
                 temp = np.random.multinomial(1, person.exit_prob[idai, :], size=1)
                 print(person.exit_prob[idai, :])

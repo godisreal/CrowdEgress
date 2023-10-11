@@ -20,6 +20,7 @@ import numpy as np
 from math_func import *
 from data_func import *
 from agent import *
+import sys
 
 #from math_func import *
 
@@ -43,7 +44,7 @@ magenta = 255, 0, 255
 lightpink =255, 174, 185
 lightblue =178, 223, 238
 Cyan = 0, 255, 255
-LightCyan = 224, 255, 255
+lightcyan = 224, 255, 255
 lightgreen = 193, 255, 193
 
 # Some Constant Parameters for Pygame 
@@ -74,9 +75,9 @@ def drawWalls(screen, walls, ZOOMFACTOR=10.0, SHOWDATA=False, xSpace=0.0, ySpace
 
             if SHOWDATA:
                 myfont=pygame.font.SysFont("arial",14)
-                text_surface=myfont.render(str(startPos), True, (255,0,0), (255,255,255))
+                text_surface=myfont.render(str(startPos), True, purple, (255,255,255))
                 screen.blit(text_surface, startPos*ZOOMFACTOR +xyShift)
-                text_surface=myfont.render(str(endPos), True, (255,0,0), (255,255,255))
+                text_surface=myfont.render(str(endPos), True, purple, (255,255,255))
                 screen.blit(text_surface, endPos*ZOOMFACTOR +xyShift)
 
         elif wall.mode=='rect':
@@ -94,10 +95,10 @@ def drawWalls(screen, walls, ZOOMFACTOR=10.0, SHOWDATA=False, xSpace=0.0, ySpace
 
                 myfont=pygame.font.SysFont("arial",10)
 
-                #text_surface=myfont.render(str(startPos), True, red, (255,255,255))
+                #text_surface=myfont.render(str(startPos), True, purple, (255,255,255))
                 #screen.blit(text_surface, startPos*ZOOMFACTOR+xyShift)
 
-                #text_surface=myfont.render(str(endPos), True, red, (255,255,255))
+                #text_surface=myfont.render(str(endPos), True, purple, (255,255,255))
                 #screen.blit(text_surface, endPos*ZOOMFACTOR+xyShift)
 
 
@@ -118,9 +119,9 @@ def drawSingleWall(screen, wall, ZOOMFACTOR=10.0, SHOWDATA=False, xSpace=0.0, yS
 
         if SHOWDATA:
             myfont=pygame.font.SysFont("arial",14)
-            text_surface=myfont.render(str(startPos), True, (255,0,0), (255,255,255))
+            text_surface=myfont.render(str(startPos), True, purple, (255,255,255))
             screen.blit(text_surface, startPos*ZOOMFACTOR +xyShift)
-            text_surface=myfont.render(str(endPos), True, (255,0,0), (255,255,255))
+            text_surface=myfont.render(str(endPos), True, purple, (255,255,255))
             screen.blit(text_surface, endPos*ZOOMFACTOR +xyShift)
 
     elif wall.mode=='rect':
@@ -138,10 +139,10 @@ def drawSingleWall(screen, wall, ZOOMFACTOR=10.0, SHOWDATA=False, xSpace=0.0, yS
 
             myfont=pygame.font.SysFont("arial",10)
 
-            #text_surface=myfont.render(str(startPos), True, red, (255,255,255))
+            #text_surface=myfont.render(str(startPos), True, purple, (255,255,255))
             #screen.blit(text_surface, startPos*ZOOMFACTOR+xyShift)
 
-            #text_surface=myfont.render(str(endPos), True, red, (255,255,255))
+            #text_surface=myfont.render(str(endPos), True, purple, (255,255,255))
             #screen.blit(text_surface, endPos*ZOOMFACTOR+xyShift)
     
 
@@ -322,19 +323,81 @@ def drawDirection(screen, door, arrow, ZOOMFACTOR=10.0, xSpace=0.0, ySpace=0.0):
     
     startPx=door.pos
     endPx=door.pos+direction
-    pygame.draw.line(screen, red, startPx*ZOOMFACTOR+xyShift, endPx*ZOOMFACTOR+xyShift, 2)
+    pygame.draw.line(screen, green, startPx*ZOOMFACTOR+xyShift, endPx*ZOOMFACTOR+xyShift, 2)
 
-    dir = endPx - startPx
-    dir2 = np.array([-dir[0], dir[1]])
+    #dir = endPx - startPx
+    #dir2 = np.array([-dir[0], dir[1]])
     #dir2 = normalize(dir2)
-    arrowPx = endPx - dir*0.2
-    arrowPx1 = arrowPx + 0.6*dir2
-    arrowPx2 = arrowPx - 0.6*dir2
-    pygame.draw.line(screen, green, endPx*ZOOMFACTOR+xyShift, arrowPx1*ZOOMFACTOR+xyShift, 2)
-    pygame.draw.line(screen, green, endPx*ZOOMFACTOR+xyShift, arrowPx2*ZOOMFACTOR+xyShift, 2)
+    #arrowPx = endPx - dir*0.2
+    #arrowPx1 = arrowPx + 0.6*dir2
+    #arrowPx2 = arrowPx - 0.6*dir2
+    #pygame.draw.line(screen, green, endPx*ZOOMFACTOR+xyShift, arrowPx1*ZOOMFACTOR+xyShift, 2)
+    #pygame.draw.line(screen, green, endPx*ZOOMFACTOR+xyShift, arrowPx2*ZOOMFACTOR+xyShift, 2)
 
 
-def show_vel(screen, x_min, y_min, x_max, y_max, Ud, Vd, ZOOMFACTOR=10.0, xSpace=0.0, ySpace=0.0, SHOWDATA=False):
+def show_mesh(screen, x_min, y_min, x_max, y_max, x_points, y_points, BLDindex, ZOOMFACTOR=10.0, xSpace=0.0, ySpace=0.0, SHOWDATA=False):
+    
+    print(np.shape(BLDindex))
+    (dimX,dimY)=np.shape(BLDindex)
+    
+    #print(dimX, dimY)
+    #dimX is x_points+2
+    #dimY is y_points+2
+    
+    if np.shape(BLDindex)!= (x_points+2, y_points+2): 
+        print('\nError in input data BLDindex \n')
+        #f.write('\nError in input data BLDindex \n')
+        if sys.version_info[0] == 2:
+            raw_input('\nError in input data BLDindex \n Please check!')
+        if sys.version_info[0] == 3:
+            input('\nError in input data BLDindex \n Please check!')
+
+    del_x = (x_max-x_min)/float(x_points - 1)
+    del_y = (y_max-y_min)/float(y_points - 1)
+    
+    xDim=np.linspace(x_min-del_x, x_max+del_x, x_points+2) #Should be the same as x
+    yDim=np.linspace(y_min-del_y, y_max+del_y, y_points+2) #Should be the same as y
+    
+    print("Dim info:\n")
+    print(xDim)
+    print(yDim)
+
+    xyShift = np.array([xSpace, ySpace])
+
+    for i in range(dimX):
+        for j in range(dimY):
+            
+            '''
+            if BLDindex[i,j]==0:
+                startPos = np.array([xDim[i],yDim[j]]) #np.array([int(xDim[i]),int(yDim[j])])
+                endPos = np.array([int(xDim[i]),int(yDim[j])])
+                pygame.draw.circle(screen, [0,60,0], startPos*ZOOMFACTOR, 6, 2)
+                pygame.draw.line(screen, [0,60,0], startPos*ZOOMFACTOR-[0,0.8]+xyShift, startPos*ZOOMFACTOR+[0,0.8]+xyShift, 2)
+            else:
+                startPos = np.array([xDim[i],yDim[j]]) #np.array([int(xDim[i]),int(yDim[j])])
+                endPos = np.array([int(xDim[i]),int(yDim[j])])
+                pygame.draw.circle(screen, [0,60,0], startPos*ZOOMFACTOR, 6, 2)
+                pygame.draw.line(screen, [0,60,0], startPos*ZOOMFACTOR-[0,0.8]+xyShift, startPos*ZOOMFACTOR+[0,0.8]+xyShift, 2)                
+            '''
+                
+            if BLDindex[i,j]==0:
+                ghostcellpos=np.array([xDim[i],yDim[j]])
+                pygame.draw.line(screen, Cyan, ghostcellpos*ZOOMFACTOR-[0,0.6]+xyShift, ghostcellpos*ZOOMFACTOR+[0,0.6]+xyShift, 15)
+                #ghostcellpos=np.array([xDim[i],yDim[j]])
+                pygame.draw.line(screen, Cyan, ghostcellpos*ZOOMFACTOR-[0.6,0]+xyShift, ghostcellpos*ZOOMFACTOR+[0.6,0]+xyShift, 15)
+            else:
+                fieldcell=np.array([0,0])
+                fieldcell[0]=int(xDim[i]*ZOOMFACTOR+xSpace)
+                fieldcell[1]=int(yDim[j]*ZOOMFACTOR+ySpace)
+                pygame.draw.circle(screen, red, fieldcell, 2, 2)
+                                
+            #vec=np.array([Ud[i,j],Vd[i,j]])
+            #startPos = np.array([xDim[i],yDim[j]])
+            #endPos = startPos + VECFACTOR*normalize(vec) #
+            #pygame.draw.line(screen, [255,60,0], startPos*ZOOMFACTOR+xyShift, endPos*ZOOMFACTOR+xyShift, 2)
+            
+
+def show_vel(screen, x_min, y_min, x_max, y_max, x_points, y_points, Ud, Vd, ZOOMFACTOR=10.0, xSpace=0.0, ySpace=0.0, SHOWDATA=False):
 
     #Ud=np.load("Ud.npy")
     #Vd=np.load("Vd.npy")
@@ -342,16 +405,25 @@ def show_vel(screen, x_min, y_min, x_max, y_max, Ud, Vd, ZOOMFACTOR=10.0, xSpace
     (dimX,dimY)=np.shape(Ud)
 
     #dim=np.shape(U)
-    print(dimX, dimY)
+    #print(dimX, dimY)
 
-    #dimX is x_points
-    #dimY is y_points
+    #dimX is x_points+2
+    #dimY is y_points+2
 
-    del_x = (x_max-x_min)/float(dimX - 1)
-    del_y = (y_max-y_min)/float(dimY - 1)
+    if (dimX, dimY)!= (x_points+2, y_points+2): 
+        print('\nError in input data Ud or Vd \n')
+        #f.write('\nError in input data Ud or Vd \n')
+        if sys.version_info[0] == 2:
+            raw_input('\nError in input data Ud or Vd \n Please check!')
+        if sys.version_info[0] == 3:
+            input('\nError in input data Ud or Vd \n Please check!')
+
+    del_x = (x_max-x_min)/float(x_points - 1)
+    del_y = (y_max-y_min)/float(y_points - 1)
     
-    xDim=np.linspace(x_min, x_max, dimX) #Should be the same as x
-    yDim=np.linspace(y_min, y_max, dimY) #Should be the same as y
+    xDim = np.linspace(x_min-del_x, x_max+del_x, x_points+2) #Should be the same as x
+    yDim = np.linspace(y_min-del_y, y_max+del_y, y_points+2) #Should be the same as y
+    
     print("Dim info:\n")
     print(xDim)
     print(yDim)
@@ -1016,24 +1088,24 @@ def show_flow(simu):
                     ZOOMFACTOR = ZOOMFACTOR +1
                 elif event.key == pygame.K_PAGEDOWN:
                     ZOOMFACTOR = max(6.0, ZOOMFACTOR -1)
-                elif event.key == pygame.K_SPACE:
-                    simu.PAUSE = not simu.PAUSE
-                elif event.key == pygame.K_v:
-                    simu.SHOWVELOCITY = not simu.SHOWVELOCITY
-                elif event.key == pygame.K_i:
-                    simu.SHOWINDEX = not simu.SHOWINDEX
-                elif event.key == pygame.K_d:
-                    simu.DRAWDOORFORCE = not simu.DRAWDOORFORCE
-                elif event.key == pygame.K_r:
-                    simu.DRAWSELFREPULSION = not simu.DRAWSELFREPULSION
+                #elif event.key == pygame.K_SPACE:
+                #    simu.PAUSE = not simu.PAUSE
+                #elif event.key == pygame.K_v:
+                #    simu.SHOWVELOCITY = not simu.SHOWVELOCITY
+                #elif event.key == pygame.K_i:
+                #    simu.SHOWINDEX = not simu.SHOWINDEX
+                #elif event.key == pygame.K_d:
+                #    simu.DRAWDOORFORCE = not simu.DRAWDOORFORCE
+                #elif event.key == pygame.K_r:
+                #    simu.DRAWSELFREPULSION = not simu.DRAWSELFREPULSION
                 elif event.key == pygame.K_KP1:
                     simu.SHOWWALLDATA = not simu.SHOWWALLDATA
                 elif event.key == pygame.K_KP2:
                     simu.SHOWDOORDATA = not simu.SHOWDOORDATA
                 elif event.key == pygame.K_KP3:
                     simu.SHOWEXITDATA = not simu.SHOWEXITDATA
-                elif event.key == pygame.K_s:
-                    simu.SHOWSTRESS = not simu.SHOWSTRESS
+                #elif event.key == pygame.K_s:
+                #    simu.SHOWSTRESS = not simu.SHOWSTRESS
                 elif event.key == pygame.K_UP:
                     ySpace=ySpace-10
                 elif event.key == pygame.K_DOWN:
@@ -1104,30 +1176,32 @@ def show_flow(simu):
         time_surface=myfont.render("num of y points:" + str(simu.ypt), True, (0,0,0), (255,255,255))
         screen.blit(time_surface, [200,23]) #[750,350]*ZOOMFACTOR)
         
+        show_mesh(screen, simu.xmin, simu.ymin, simu.xmax, simu.ymax, simu.xpt, simu.ypt, simu.bldmesh, ZOOMFACTOR, xSpace, ySpace)
+        
         # Show flow field in the background
         if simu.solver==1 and exitIndex%2==0: # and exitIndex==-1:
-            Ud=simu.UallExit[1:-1, 1:-1]
-            Vd=simu.VallExit[1:-1, 1:-1]
-            show_vel(screen, simu.xmin, simu.ymin, simu.xmax, simu.ymax, Ud, Vd, ZOOMFACTOR, xSpace, ySpace)
+            Ud=simu.UallExit#[1:-1, 1:-1]
+            Vd=simu.VallExit#[1:-1, 1:-1]
+            show_vel(screen, simu.xmin, simu.ymin, simu.xmax, simu.ymax, simu.xpt, simu.ypt, Ud, Vd, ZOOMFACTOR, xSpace, ySpace)
             for door in simu.doors:
-                    drawDirection(screen, door, door.arrow, ZOOMFACTOR, xSpace, ySpace)
+                drawDirection(screen, door, door.arrow, ZOOMFACTOR, xSpace, ySpace)
                     
         if simu.solver==2:
             #for idexit, exit in enumerate(simu.exits):
             #    if exitIndex%len(simu.exits) == idexit:
             #        Utemp = simu.UeachExit[idexit] 
             #        Vtemp = simu.VeachExit[idexit]
-            #        Ud = Utemp[1:-1, 1:-1]
-            #        Vd = Vtemp[1:-1, 1:-1]
-            #show_vel(screen, simu.xmin, simu.ymin, simu.xmax, simu.ymax, Ud, Vd, ZOOMFACTOR, xSpace, ySpace)
+            #        Ud = Utemp#[1:-1, 1:-1]
+            #        Vd = Vtemp#[1:-1, 1:-1]
+            #show_vel(screen, simu.xmin, simu.ymin, simu.xmax, simu.ymax, simu.xpt, simu.ypt, Ud, Vd, ZOOMFACTOR, xSpace, ySpace)
 
             idexit = exitIndex%(len(simu.exits)+2)
             if idexit < len(simu.exits):
                 Utemp = simu.UeachExit[idexit] 
                 Vtemp = simu.VeachExit[idexit]
-                Ud = Utemp[1:-1, 1:-1]
-                Vd = Vtemp[1:-1, 1:-1]
-                show_vel(screen, simu.xmin, simu.ymin, simu.xmax, simu.ymax, Ud, Vd, ZOOMFACTOR, xSpace, ySpace)
+                Ud = Utemp#[1:-1, 1:-1]
+                Vd = Vtemp#[1:-1, 1:-1]
+                show_vel(screen, simu.xmin, simu.ymin, simu.xmax, simu.ymax, simu.xpt, simu.ypt, Ud, Vd, ZOOMFACTOR, xSpace, ySpace)
                 for door in simu.doors:
                     drawDirection(screen, door, simu.exit2door[idexit, door.id], ZOOMFACTOR, xSpace, ySpace)
                 
@@ -1141,9 +1215,9 @@ def show_flow(simu):
             
             elif idexit == len(simu.exits):
                 # Show nearest-exit field
-                Ud=simu.UallExit[1:-1, 1:-1]
-                Vd=simu.VallExit[1:-1, 1:-1]
-                show_vel(screen, simu.xmin, simu.ymin, simu.xmax, simu.ymax, Ud, Vd, ZOOMFACTOR, xSpace, ySpace)
+                Ud=simu.UallExit#[1:-1, 1:-1]
+                Vd=simu.VallExit#[1:-1, 1:-1]
+                show_vel(screen, simu.xmin, simu.ymin, simu.xmax, simu.ymax, simu.xpt, simu.ypt, Ud, Vd, ZOOMFACTOR, xSpace, ySpace)
                 for door in simu.doors:
                     drawDirection(screen, door, door.arrow, ZOOMFACTOR, xSpace, ySpace)
             
@@ -1160,15 +1234,16 @@ def show_flow(simu):
                     startPos = np.array([xDim[i],yDim[j]])
                     endPos = startPos + VECFACTOR*normalize(vec) #
                     pygame.draw.line(screen, [255,60,0], startPos*ZOOMFACTOR+xyShift, endPos*ZOOMFACTOR+xyShift, 2)
-
         '''
         
         drawWalls(screen, simu.walls, ZOOMFACTOR, simu.SHOWWALLDATA, xSpace, ySpace)
         drawDoors(screen, simu.doors, ZOOMFACTOR, simu.SHOWDOORDATA, xSpace, ySpace)
         drawExits(screen, simu.exits, ZOOMFACTOR, simu.SHOWEXITDATA, xSpace, ySpace)
 
+
+        '''
         # pygame.draw.circle(screen, AGENTCOLOR, (np.array(SCREENSIZE)/2).tolist(), agent.size, LINEWIDTH)
-        
+
         ####################
         # Drawing the agents
         ####################
@@ -1258,7 +1333,8 @@ def show_flow(simu):
                     pygame.draw.line(screen, green, scPos, scPosDir, 4)
             
             #print(scPos)
-
+        '''
+        
         # Show Mouse Position
         (mouseX2, mouseY2) = pygame.mouse.get_pos()
         mouse_pos2 = np.array([mouseX2, mouseY2])
@@ -1436,9 +1512,9 @@ def show_simu(simu):
 
         # Show flow field in the background
         if simu.solver==1 and exitIndex%2==0: # and exitIndex==-1:
-            Ud=simu.UallExit[1:-1, 1:-1]
-            Vd=simu.VallExit[1:-1, 1:-1]
-            show_vel(screen, simu.xmin, simu.ymin, simu.xmax, simu.ymax, Ud, Vd, ZOOMFACTOR, xSpace, ySpace)
+            Ud=simu.UallExit#[1:-1, 1:-1]
+            Vd=simu.VallExit#[1:-1, 1:-1]
+            show_vel(screen, simu.xmin, simu.ymin, simu.xmax, simu.ymax, simu.xpt, simu.ypt, Ud, Vd, ZOOMFACTOR, xSpace, ySpace)
             for door in simu.doors:
                     drawDirection(screen, door, door.arrow, ZOOMFACTOR, xSpace, ySpace)
                     
@@ -1449,22 +1525,22 @@ def show_simu(simu):
             #        Vtemp = simu.VeachExit[idexit]
             #        Ud = Utemp[1:-1, 1:-1]
             #        Vd = Vtemp[1:-1, 1:-1]
-            #show_vel(screen, simu.xmin, simu.ymin, simu.xmax, simu.ymax, Ud, Vd, ZOOMFACTOR, xSpace, ySpace)
+            #show_vel(screen, simu.xmin, simu.ymin, simu.xmax, simu.ymax, simu.xpt, simu.ypt, Ud, Vd, ZOOMFACTOR, xSpace, ySpace)
 
             idexit = exitIndex%(len(simu.exits)+2)
             if idexit < len(simu.exits):
                 Utemp = simu.UeachExit[idexit] 
                 Vtemp = simu.VeachExit[idexit]
-                Ud = Utemp[1:-1, 1:-1]
-                Vd = Vtemp[1:-1, 1:-1]
-                show_vel(screen, simu.xmin, simu.ymin, simu.xmax, simu.ymax, Ud, Vd, ZOOMFACTOR, xSpace, ySpace)
+                Ud = Utemp#[1:-1, 1:-1]
+                Vd = Vtemp#[1:-1, 1:-1]
+                show_vel(screen, simu.xmin, simu.ymin, simu.xmax, simu.ymax, simu.xpt, simu.ypt, Ud, Vd, ZOOMFACTOR, xSpace, ySpace)
                 for door in simu.doors:
                     drawDirection(screen, door, simu.exit2door[idexit, door.id], ZOOMFACTOR, xSpace, ySpace)
             elif idexit == len(simu.exits):
                 # Show nearest-exit field
-                Ud=simu.UallExit[1:-1, 1:-1]
-                Vd=simu.VallExit[1:-1, 1:-1]
-                show_vel(screen, simu.xmin, simu.ymin, simu.xmax, simu.ymax, Ud, Vd, ZOOMFACTOR, xSpace, ySpace)
+                Ud=simu.UallExit#[1:-1, 1:-1]
+                Vd=simu.VallExit#[1:-1, 1:-1]
+                show_vel(screen, simu.xmin, simu.ymin, simu.xmax, simu.ymax, simu.xpt, simu.ypt, Ud, Vd, ZOOMFACTOR, xSpace, ySpace)
                 for door in simu.doors:
                     drawDirection(screen, door, door.arrow, ZOOMFACTOR, xSpace, ySpace)
             
@@ -1583,14 +1659,14 @@ def show_simu(simu):
                 #rightS = [int(rightShoulder[0]*ZOOMFACTOR), int(rightShoulder[1]*ZOOMFACTOR)]
                 
                 if person.comm[idai, idaj] == 1 and simu.SHOWINTELINE: 
-                    pygame.draw.line(screen, blue, scPos, scPosOther, 2)
+                    pygame.draw.line(screen, lightpink, scPos, scPosOther, 2)
                     #pygame.draw.circle(screen, blue, scPosDir, 2, 2)
                     #pygame.draw.line(screen, blue, scPosDir, rightS, 2)
                     #pygame.draw.line(screen, blue, scPosDir, leftS, 2)
                     pygame.draw.line(screen, green, scPos, scPosDir, 4)
 
                 if person.talk[idai, idaj] == 1 and simu.SHOWINTELINE: 
-                    pygame.draw.line(screen, red, scPos, scPosOther, 3)
+                    pygame.draw.line(screen, magenta, scPos, scPosOther, 3)
                     pygame.draw.line(screen, green, scPos, scPosDir, 4)
             
             #print(scPos)
@@ -1690,4 +1766,304 @@ if __name__=="__main__":
         
         pygame.display.flip()
         clock.tick(20)
+
+
+
+def show_crowdfluid(filename, debug=True):
+
+    # Read in data from filename
+    flowdata=np.load(filename)
+    Ud0 = flowdata["arr_0"]
+    Vd0 = flowdata["arr_1"]
+    R = flowdata["arr_2"]
+    U = flowdata["arr_3"]
+    V = flowdata["arr_4"]
+    BLDinfo = flowdata["arr_5"]
+    [x_min, y_min, x_max, y_max, x_points, y_points] = flowdata["arr_6"]
+
+    D_x = (x_max - x_min)/float(x_points-1)
+    D_y = (y_max - y_min)/float(y_points-1)
+
+    if debug:
+        print('\n Basic mesh info: \n')
+        print('x_points:', x_points, '\n')
+        print('y_points:', y_points, '\n')
+        print('x_min:', x_min, '\n')
+        print('x_max:', x_max, '\n')
+        print('y_min:', y_min, '\n')
+        print('y_max:', y_max, '\n')
+        print('dx', D_x, '\n')
+        print('dy', D_y, '\n')
+        print("(dimX,dimY,dimT)", np.shape(R), '\n')
+        if sys.version_info[0] == 2: 
+            raw_input('Please check input data here!')
+            #UserInput = raw_input('Check Input Data Here!')
+        if sys.version_info[0] == 3:
+            UserInput =input('Please check input data here!')
+
+    (dimX,dimY,dimT)=np.shape(R)
+    print(np.shape(BLDinfo))
+    print(np.shape(Ud0))
+    print(np.shape(R))
+
+    if dimX!=x_points+2 or dimY!=y_points+2:
+        print("Error in dimension of input data!")
+        if sys.version_info[0] == 2: 
+            raw_input('Please check input data here!')
+            #UserInput = raw_input('Check Input Data Here!')
+        if sys.version_info[0] == 3:
+            UserInput =input('Please check input data here!')
+
+    #x_points=dimX
+    #y_points=dimY
+    #xDim=np.linspace(0, x_points*D_x, x_points+2) #Should be the same as x
+    #yDim=np.linspace(0, y_points*D_y, y_points+2) #Should be the same as y
+
+    xDim=np.linspace(x_min-D_x, x_max+D_x, x_points+2) #Should be the same as x
+    yDim=np.linspace(y_min-D_y, y_max+D_y, y_points+2) #Should be the same as y
+
+    print("Dim info:\n")
+    print(xDim)
+    print(yDim)
+    if sys.version_info[0] == 2: 
+        raw_input('Please check input data here!')
+        #UserInput = raw_input('Check Input Data Here!')
+    if sys.version_info[0] == 3:
+        UserInput =input('Please check input data here!')
+    #fig = plt.figure()
+    #ax = fig.gca(projection = '3d')
+    #X,Y = np.meshgrid(xDim,yDim)
+
+    SCREENSIZE = [1000, 900]
+    RESOLUTION = 180
+    BACKGROUNDCOLOR = [255,255,255]
+    LINECOLOR = [255,0,0]
+    ZOOMFACTOR = 90.0
+    VECFACTOR = 0.2
+    PAUSE=False
+    REWIND=False
+    FORWARD=False
+    xSpace=90.0
+    ySpace=90.0
+    SHOWGHOSTBLD=True
+    SHOWUVDesired=True
+    #SHOWSINK=True
+
+    T_END=dimT
+    T_INDEX=0 #0...dimT-1
+
+    pygame.init()
+    screen = pygame.display.set_mode(SCREENSIZE)
+    pygame.display.set_caption('Modified Social Force Model')
+    clock = pygame.time.Clock()
+    running = True
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                (mouseX, mouseY) = pygame.mouse.get_pos()
+                # event.type == pygame.MOUSEBUTTONUP:
+                
+                ### Menu No 1: Show Ghost and BLD Cell ###
+                if mouseX<60 and mouseX>0 and mouseY<20 and mouseY>3:
+                    SHOWGHOSTBLD = not SHOWGHOSTBLD
+                
+                if mouseX<125 and mouseX>70 and mouseY<20 and mouseY>3:
+                    SHOWUVDesired = not SHOWUVDesired
+
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_PAGEUP:
+                    ZOOMFACTOR = ZOOMFACTOR +1
+                elif event.key == pygame.K_PAGEDOWN:
+                    ZOOMFACTOR = max(6.0, ZOOMFACTOR -1)
+                elif event.key == pygame.K_SPACE:
+                    PAUSE = not PAUSE
+                elif event.key == pygame.K_HOME:
+                    REWIND = True
+                    PAUSE = True
+                elif event.key == pygame.K_END:
+                    FORWARD = True
+                    PAUSE = True
+                elif event.key == pygame.K_UP:
+                    ySpace=ySpace-10
+                elif event.key == pygame.K_DOWN:
+                    ySpace=ySpace+10
+                elif event.key == pygame.K_LEFT:
+                    xSpace=xSpace-10
+                elif event.key == pygame.K_RIGHT:
+                    xSpace=xSpace+10
+                elif event.key == pygame.K_KP1:
+                    SHOWGHOSTBLD = not SHOWGHOSTBLD
+                elif event.key == pygame.K_KP2:
+                    SHOWUVDesired = not SHOWUVDesired
+
+
+        screen.fill(BACKGROUNDCOLOR)
+        xyShift = np.array([xSpace, ySpace])
+        
+        #--------Menu Bar at Top Left-----------
+        #pygame.draw.rect(screen, tan, [720, 3, 60, 20], LINEWIDTH)
+        myfont=pygame.font.SysFont("arial",14)
+        text_surface=myfont.render('SHOWBLD', True, white, tan)
+        screen.blit(text_surface, [0,3]) #+xyShift)
+
+        myfont=pygame.font.SysFont("arial",14)
+        text_surface=myfont.render('ShowVdUd', True, white, tan)
+        screen.blit(text_surface, [80,3]) #+xyShift)
+        
+        myfont=pygame.font.SysFont("arial",14)
+        time_surface=myfont.render("xmin:" + str(x_min), True, (0,0,0), (255,255,255))
+        screen.blit(time_surface, [620,3]) #[750,350]*ZOOMFACTOR)
+        time_surface=myfont.render("xmax:" + str(x_max), True, (0,0,0), (255,255,255))
+        screen.blit(time_surface, [620,23]) #[750,350]*ZOOMFACTOR)
+
+        time_surface=myfont.render("ymin:" + str(y_min), True, (0,0,0), (255,255,255))
+        screen.blit(time_surface, [700,3]) #[750,350]*ZOOMFACTOR)
+        time_surface=myfont.render("ymax:" + str(y_max), True, (0,0,0), (255,255,255))
+        screen.blit(time_surface, [700,23]) #[750,350]*ZOOMFACTOR)
+
+        time_surface=myfont.render("num of x points:" + str(x_points), True, (0,0,0), (255,255,255))
+        screen.blit(time_surface, [800,3]) #[750,350]*ZOOMFACTOR)
+        time_surface=myfont.render("num of y points:" + str(y_points), True, (0,0,0), (255,255,255))
+        screen.blit(time_surface, [800,23]) #[750,350]*ZOOMFACTOR)
+
+        # Show Mouse Position
+        (mouseX3, mouseY3) = pygame.mouse.get_pos()
+        mouse_pos3 = np.array([mouseX3, mouseY3])
+        #pygame.mouse.set_visible(False)
+        #pygame.mouse.get_pressed() -> button1, button2, button3
+        
+        # Show Mouse Absolute and Relative Positions on the Screen
+        myfont=pygame.font.SysFont("arial",16)
+        text_surface=myfont.render(str((mouse_pos3-xyShift)*(1/ZOOMFACTOR)), True, black, white)
+        screen.blit(text_surface, mouse_pos3+[0.0, 18.0])
+        text_surface=myfont.render(str(mouse_pos3), True, lightblue, white)
+        screen.blit(text_surface, mouse_pos3+[0.0, 36.0])
+        
+        # Show data in the mesh 
+        iii=int(ceil(((mouse_pos3[0]-xSpace)*(1/ZOOMFACTOR)-x_min)/D_x))
+        jjj=int(ceil(((mouse_pos3[1]-ySpace)*(1/ZOOMFACTOR)-y_min)/D_y))
+        
+        if iii>=0 and iii <dimX and jjj>=0 and jjj<dimY:
+            myfont=pygame.font.SysFont("arial",20)
+            text_surface=myfont.render("R:"+str(R[iii, jjj, T_INDEX]), True, black, white)
+            screen.blit(text_surface, mouse_pos3+[0.0, 56.0])
+            text_surface=myfont.render("U:"+str(U[iii, jjj, T_INDEX]), True, black, white)
+            screen.blit(text_surface, mouse_pos3+[0.0, 79.0])
+            text_surface=myfont.render("V:"+str(V[iii, jjj, T_INDEX]), True, black, white)
+            screen.blit(text_surface, mouse_pos3+[0.0, 103.0])
+            text_surface=myfont.render("Ud:"+str(Ud0[iii, jjj]), True, black, white)
+            screen.blit(text_surface, mouse_pos3+[0.0, 123.0])
+            text_surface=myfont.render("Vd:"+str(Vd0[iii, jjj]), True, black, white)
+            screen.blit(text_surface, mouse_pos3+[0.0, 143.0])
+            text_surface=myfont.render("BLD:"+str(BLDinfo[iii, jjj]), True, black, white)
+            screen.blit(text_surface, mouse_pos3+[0.0, 169.0])
+        else: 
+            myfont=pygame.font.SysFont("arial",20)
+            text_surface=myfont.render("Out of data boundary", True, black, white)
+            screen.blit(text_surface, mouse_pos3+[0.0, 56.0])
+        
+        # The Zoom and xSpace ySpace Info
+        myfont=pygame.font.SysFont("arial",14)
+        text_surface=myfont.render('ZOOM:'+str(ZOOMFACTOR), True, black, white)
+        screen.blit(text_surface, [500,3]) #+xyShift)
+        text_surface=myfont.render('xSpace:'+str(xSpace), True, black, white)
+        screen.blit(text_surface, [600,3]) #+xyShift)        
+        text_surface=myfont.render('ySpace:'+str(ySpace), True, black, white)
+        screen.blit(text_surface, [700,3]) #+xyShift) 
+        
+        time_surface=myfont.render("Help: Press <o> or <p> to show flow field", True, (0,0,0), (255,255,255))
+        screen.blit(time_surface, [500,23]) #[750,350]*ZOOMFACTOR)
+
+        if SHOWGHOSTBLD:
+            # draw grid and ghost cell
+            for i in range(dimX):
+                for j in range(dimY):
+                    if i==0 or i==dimX-1 or j==0 or j==dimY-1:
+                        ghostcellpos=np.array([xDim[i],yDim[j]])
+                        pygame.draw.line(screen, tan, ghostcellpos*ZOOMFACTOR-[0,0.6]+xyShift, ghostcellpos*ZOOMFACTOR+[0,0.6]+xyShift, 15)
+                        #ghostcellpos=np.array([xDim[i],yDim[j]])
+                        pygame.draw.line(screen, tan, ghostcellpos*ZOOMFACTOR-[0.6,0]+xyShift, ghostcellpos*ZOOMFACTOR+[0.6,0]+xyShift, 15)
+
+            # draw build info mesh
+            for i in range(dimX):
+                for j in range(dimY):
+                    if BLDinfo[i,j]==0:
+                        ghostcellpos=np.array([xDim[i],yDim[j]])
+                        pygame.draw.line(screen, Cyan, ghostcellpos*ZOOMFACTOR-[0,0.6]+xyShift, ghostcellpos*ZOOMFACTOR+[0,0.6]+xyShift, 15)
+                        #ghostcellpos=np.array([xDim[i],yDim[j]])
+                        pygame.draw.line(screen, Cyan, ghostcellpos*ZOOMFACTOR-[0.6,0]+xyShift, ghostcellpos*ZOOMFACTOR+[0.6,0]+xyShift, 15)
+                    else:
+                        fieldcell=np.array([0,0])
+                        fieldcell[0]=int(xDim[i]*ZOOMFACTOR+xSpace)
+                        fieldcell[1]=int(yDim[j]*ZOOMFACTOR+ySpace)
+                        pygame.draw.circle(screen, red, fieldcell, 2, 2)
+        
+        if REWIND:
+            T_INDEX=T_INDEX-1
+        if FORWARD:
+            T_INDEX=T_INDEX+1
+        
+        if PAUSE:
+            REWIND = False
+            FORWARD = False
+        else:
+            T_INDEX=T_INDEX+1
+
+        #T_INDEX=T_INDEX+1
+        t=T_INDEX
+        if T_INDEX == dimT-1: #T_END-1:
+            running = False
+        for i in range(dimX):
+            for j in range(dimY):
+                #if i==0 or j==0:
+                #    continue
+                #else:
+
+                vec=np.array([U[i,j,t],V[i,j,t]])
+                density=R[i,j,t]
+                if debug:
+                    print(t, i, j, vec, density)
+                ds_ratio=int(density*1e+2)#%10
+                startPos = np.array([xDim[i],yDim[j]])
+                endPos = np.array([xDim[i],yDim[j]]) + VECFACTOR*vec  # normalize(vec) #
+                pygame.draw.line(screen, [255,60,0], startPos*ZOOMFACTOR+xyShift, endPos*ZOOMFACTOR+xyShift, 2)
+                #pygame.draw.line(screen, [255,60,0], startPos*ZOOMFACTOR+xyShift, endPos*ZOOMFACTOR+xyShift, int(3*density))
+                #pygame.draw.circle(screen, [255,200,0], startPos*ZOOMFACTOR, 3, 6)
+                if ds_ratio >=0:
+                    pygame.draw.line(screen, black, startPos*ZOOMFACTOR-[0,0.6]+xyShift, startPos*ZOOMFACTOR+[0,0.6]+xyShift, ds_ratio)
+                else:
+                    pygame.draw.line(screen, tan, startPos*ZOOMFACTOR-[0,0.6]+xyShift, startPos*ZOOMFACTOR+[0,0.6]+xyShift, -ds_ratio)
+                
+                # In future desired velocity could be time-varying
+                if SHOWUVDesired:
+                    # Draw desired velocity vector
+                    vecDesired=np.array([Ud0[i,j],Vd0[i,j]])            
+                    startPos = np.array([xDim[i],yDim[j]])
+                    endPos = np.array([xDim[i],yDim[j]]) + VECFACTOR*vecDesired #normalize(vecDesired)
+                    pygame.draw.line(screen, purple, startPos*ZOOMFACTOR+xyShift, endPos*ZOOMFACTOR+xyShift, 2)
+
+            #scPos = agent.pos*10 #worldCoord2ScreenCoord(agent.pos, SCREENSIZE, RESOLUTION)
+            #scPos = [0, 0]
+            #scPos[0] = int(agent.pos[0]*ZOOMFACTOR) #worldCoord2ScreenCoord(agent.pos, SCREENSIZE, RESOLUTION)
+            #scPos[1] = int(agent.pos[1]*ZOOMFACTOR)
+            
+            #endPosV = [0, 0]
+            #endPosV[0] = int(agent.pos[0]*ZOOMFACTOR + agent.actualV[0]*ZOOMFACTOR)
+            #endPosV[1] = int(agent.pos[1]*ZOOMFACTOR + agent.actualV[1]*ZOOMFACTOR)
+            
+            #endPosDV = [0, 0]
+            #endPosDV[0] = int(agent.pos[0]*ZOOMFACTOR + agent.desiredV[0]*ZOOMFACTOR)
+            #endPosDV[1] = int(agent.pos[1]*ZOOMFACTOR + agent.desiredV[1]*ZOOMFACTOR)
+            
+            #AGENTSIZE = int(agent.radius)
+            #pygame.draw.circle(screen, AGENTCOLOR, scPos, AGENTSIZE, AGENTSICKNESS)
+            #pygame.draw.line(screen, AGENTCOLOR, scPos, endPosV, 2)
+            #pygame.draw.line(screen, [255,60,0], scPos, endPosDV, 2)
+            
+            #print(scPos)
+            
+        pygame.display.flip()
+        clock.tick(200)
 
