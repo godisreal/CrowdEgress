@@ -54,8 +54,12 @@ if len(argv)==2:
     show_geom(myTest)
     myTest.preprocessGeom()
     myTest.preprocessAgent()
-
+    myTest.buildMesh()
+    myTest.flowMesh()
+    myTest.computeDoorDirection()
+    
     if myTest.continueToSimu:
+        show_flow(myTest)
         show_simu(myTest)
 
 # python [filename.csv] [filename.fds]
@@ -94,7 +98,12 @@ if len(argv)==3:
     myTest.preprocessGeom()
     myTest.preprocessAgent()
 
+    myTest.buildMesh()
+    myTest.flowMesh()
+    myTest.computeDoorDirection()
+    
     if myTest.continueToSimu:
+        show_flow(myTest)
         show_simu(myTest)
 
 if len(argv)>3:

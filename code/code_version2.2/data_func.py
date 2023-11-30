@@ -34,12 +34,13 @@ import csv
 #from ctypes import *
 import struct
 import time
-#import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 
 
-def readDoorProb(FileName, doorIndex, showdata=True):
+def readDoorProb(FileName, doorIndex=2, showdata=True):
     findMESH=False
     doorProb=[]
+    timeIndex= []
     for line in open(FileName):
         if re.match('&DoorProb', line):
             findMESH=True
@@ -84,8 +85,12 @@ def readDoorProb(FileName, doorIndex, showdata=True):
                 matrix[i,j] = float(doorProb[i][j])
     print('matrix', matrix)
     if showdata:
-        plt.plot(matrix)
+        for j in range(NColomn):
+            plt.plot(matrix[:,j], linewidth=3.0, label=str(j))
+            plt.text(0,matrix[0,j], str(j), fontsize=16)
+        plt.title("exit index:"+str(doorIndex))
         plt.grid()
+        plt.legend(loc='best')
         plt.show()
     return matrix
 
@@ -188,7 +193,7 @@ def readCSV(fileName, mode='float'):
     if mode=='string':
         print (dataNP[1:, 1:])
         return dataNP[1:, 1:]
-	
+    
     if mode=='float':
         
         #print dataNP[1:, 1:]
@@ -234,6 +239,79 @@ def readFloatArray(tableFeatures, NRow, NColomn, debug=True):
     return matrix
 
 
+def readGroupArray(tableFeatures, NRow, NColomn, debug=True):
+
+    # NRow and NColomn are the size of data to be extracted from tableFeatures
+    matrixA = np.zeros((NRow, NColomn))
+    matrixB = np.zeros((NRow, NColomn))
+    matrixD = np.zeros((NRow, NColomn))
+    
+    for i in range(NRow):
+        for j in range(NColomn):
+            
+            if tableFeatures[i+1][j+1] and tableFeatures[i+1][j+1] != '0':
+                try:
+                    #temp=re.split(r'[\s\/]+', tableFeatures[i+1][j+1])
+                    temp=re.split(r'\s*[;\|\s]\s*', tableFeatures[i+1][j+1])
+                    matrixA[i,j] = float(temp[0])
+                    matrixB[i,j] = float(temp[1])
+                    matrixD[i,j] = float(temp[2])
+                except:
+                    print("Error in reading group data!")
+                    input("Please check!")
+                    matrixA[i,j] = 0.0
+                    matrixB[i,j] = 1.0
+                    matrixD[i,j] = 1.0
+            else:
+                matrixA[i,j] = 0.0
+                matrixB[i,j] = 1.0
+                matrixD[i,j] = 1.0
+                
+    if debug:
+        print(tableFeatures, '\n')
+        print('Data in Table:', '\n', matrixA, matrixB, matrixD)
+    return matrixA, matrixB, matrixD
+    
+
+'''
+def readGroupArray(tableFeatures, iniX=1, iniY=1, debug=True):
+
+    #tableFeatures, LowerIndex, UpperIndex = getData("newDataForm.csv", '&Ped2Exit')
+    [dataX, dataY] = np.shape(tableFeatures)
+    NRow = dataX - iniX
+    NColomn = dataY - iniY
+
+    # NRow and NColomn are the size of data to be extracted from tableFeatures
+    matrixA = np.zeros((NRow, NColomn))
+    matrixB = np.zeros((NRow, NColomn))
+    matrixD = np.zeros((NRow, NColomn))
+    
+    for i in range(NRow):
+        for j in range(NColomn):
+            try:
+                if tableFeatures[i+iniX][j+iniY] and tableFeatures[i+iniX][j+iniY] != '0':
+                    #temp=re.split(r'[\s\/]+', tableFeatures[i+1][j+1])
+                    temp=re.split(r'\s*[;\|\s]\s*', tableFeatures[i+iniX][j+iniY])
+                    matrixA[i,j] = float(temp[0])
+                    matrixB[i,j] = float(temp[1])
+                    matrixD[i,j] = float(temp[2])
+                else:
+                    matrixA[i,j] = 0.0
+                    matrixB[i,j] = 1.0
+                    matrixD[i,j] = 1.0
+            except:
+                print("Error in reading group data!")
+                input("Please check!")
+                matrixA[i,j] = 0.0
+                matrixB[i,j] = 1.0
+                matrixD[i,j] = 1.0
+                
+    if debug:
+        print(tableFeatures, '\n')
+        print('Data in Table:', '\n', matrixA, matrixB, matrixD)
+    return matrixA, matrixB, matrixD
+'''
+    
 # The file to record the some output data of the simulation
 # f = open("outData.txt", "w+")
 
@@ -256,6 +334,7 @@ def readAgents(FileName, debug=True, marginTitle=1, ini=1):
         print ("Features of Agents\n", agentFeatures, "\n")
 
     agents = []
+    index = 0 
     for agentFeature in agentFeatures[marginTitle:]:
         agent = person()
         agent.pos = np.array([float(agentFeature[ini+0]), float(agentFeature[ini+1])])
@@ -266,12 +345,25 @@ def readAgents(FileName, debug=True, marginTitle=1, ini=1):
         agent.pMode = agentFeature[ini+7]
         agent.aType = agentFeature[ini+8]
         agent.interactionRange = float(agentFeature[ini+9])
-        agent.ID = int(agentFeature[ini+10])
-        agent.moving_tau = float(agentFeature[ini+11])
-        agent.tpre_tau = float(agentFeature[ini+12])
-        agent.talk_tau = float(agentFeature[ini+13])
-        agent.talk_prob = float(agentFeature[ini+14])
-        agent.inComp = int(agentFeature[ini+15])
+        agent.name = str(agentFeature[ini+10])
+        agent.inComp = int(agentFeature[ini+11]) 
+        agent.ID = index
+        index = index+1
+        try:       
+            agent.moving_tau = float(agentFeature[ini+12])
+            agent.tpre_tau = float(agentFeature[ini+13])
+            agent.talk_tau = float(agentFeature[ini+14])
+            agent.talk_prob = float(agentFeature[ini+15])
+            agent.p1 = float(agentFeature[ini+16])
+            agent.p2 = float(agentFeature[ini+17])
+        except:     
+            agent.moving_tau = agent.tau
+            agent.tpre_tau = agent.tau
+            agent.talk_tau = agent.tau
+            agent.talk_prob = 0.0
+            agent.p1 = 1.0
+            agent.p2 = 0.0
+        
         agents.append(agent)
         
     return agents
@@ -306,6 +398,7 @@ def readWalls(FileName, debug=True, marginTitle=1, ini=1):
         print ("Features of Walls\n", obstFeatures, "\n")
     
     walls = []
+    index = 0
     for obstFeature in obstFeatures[marginTitle:]:
         wall = obst()
         wall.params[0]= float(obstFeature[ini+0])
@@ -313,11 +406,17 @@ def readWalls(FileName, debug=True, marginTitle=1, ini=1):
         wall.params[2]= float(obstFeature[ini+2])
         wall.params[3]= float(obstFeature[ini+3])
         wall.arrow = int(obstFeature[ini+4])
-        wall.id = int(obstFeature[ini+5])
+        wall.name = str(obstFeature[ini+5])
         wall.inComp = int(obstFeature[ini+6])
         wall.mode = obstFeature[ini+7]
-        #wall.pointer1 = np.array([float(obstFeature[8]), float(obstFeature[9])])
-        #wall.pointer2 = np.array([float(obstFeature[10]), float(obstFeature[11])])
+        wall.oid = index
+        index = index+1
+        try:
+            wall.pointer1 = np.array([float(obstFeature[8]), float(obstFeature[9])])
+            wall.pointer2 = np.array([float(obstFeature[10]), float(obstFeature[11])])
+        except:
+            wall.pointer1 = None
+            wall.pointer2 = None
         walls.append(wall)
         
     return walls
@@ -344,7 +443,7 @@ def addWall(walls, startPt, endPt, mode='line'):
     wall.arrow = 0 #normalize(endPt - startPt)
     
     wall.mode = mode
-    wall.id = int(num)
+    wall.oid = int(num)
     wall.inComp = int(1)
 
     # Add wall into the list of walls
@@ -360,12 +459,13 @@ def readDoors(FileName, debug=True, marginTitle=1, ini=1):
     if Num_Doors <= 0:
         doorFeatures, lowerIndex, upperIndex = getData(FileName, '&door')
         Num_Doors=len(doorFeatures)-marginTitle
-
+        
     if debug:
         print ('Number of Doors:', Num_Doors, '\n')
         print ('Features of Doors\n', doorFeatures, "\n")
     
     doors = []
+    index = 0
     for doorFeature in doorFeatures[marginTitle:]:
         door = passage()
         door.params[0]= float(doorFeature[ini+0])
@@ -373,10 +473,12 @@ def readDoors(FileName, debug=True, marginTitle=1, ini=1):
         door.params[2]= float(doorFeature[ini+2])
         door.params[3]= float(doorFeature[ini+3])
         door.arrow = int(doorFeature[ini+4])
-        door.id = int(doorFeature[ini+5])
+        door.name = str(doorFeature[ini+5])
         door.inComp = int(doorFeature[ini+6])
         door.exitSign = int(doorFeature[ini+7])
         door.pos = (np.array([door.params[0], door.params[1]]) + np.array([door.params[2], door.params[3]]))*0.5
+        door.oid = index
+        index = index+1
         doors.append(door)
         
     return doors
@@ -399,7 +501,7 @@ def addDoor(doors, startPt, endPt, mode='rect'):
     
     #door.mode = mode   # Currently door has no attribute of "mode"
 
-    door.id = int(num)
+    door.oid = int(num)
     door.inComp = int(1)
     door.exitSign = int(0) # Default: there is no exit sign 
     door.pos = (np.array([door.params[0], door.params[1]]) + np.array([door.params[2], door.params[3]]))*0.5
@@ -423,12 +525,13 @@ def readExits(FileName, debug=True, marginTitle=1, ini=1):
     if Num_Exits <= 0:
         exitFeatures, lowerIndex, upperIndex = getData(FileName, '&exit')
         Num_Exits=len(exitFeatures)-marginTitle
-
+        
     if debug: 
         print ('Number of Exits:', Num_Exits, '\n')
         print ("Features of Exits\n", exitFeatures, "\n")
     
     exits = []
+    index = 0
     for exitFeature in exitFeatures[marginTitle:]:
         exit = passage()
         exit.params[0]= float(exitFeature[ini+0])
@@ -436,10 +539,12 @@ def readExits(FileName, debug=True, marginTitle=1, ini=1):
         exit.params[2]= float(exitFeature[ini+2])
         exit.params[3]= float(exitFeature[ini+3])
         exit.arrow = int(exitFeature[ini+4])
-        exit.id = int(exitFeature[ini+5])
+        exit.name = str(exitFeature[ini+5])
         exit.inComp = int(exitFeature[ini+6])
         exit.exitSign = int(exitFeature[ini+7])
         exit.pos = (np.array([exit.params[0], exit.params[1]]) + np.array([exit.params[2], exit.params[3]]))*0.5
+        exit.oid = index
+        index = index+1
         exits.append(exit)
         
     return exits
@@ -462,7 +567,7 @@ def addExit(exits, startPt, endPt, mode='rect'):
     
     #exit.mode = mode   # Currently passage class has no attribute of "mode"
 
-    exit.id = int(num)
+    exit.oid = int(num)
     exit.inComp = int(1)
     exit.exitSign = int(1) # Default there is an exit sign
     exit.pos = (np.array([exit.params[0], exit.params[1]]) + np.array([exit.params[2], exit.params[3]]))*0.5
@@ -610,7 +715,7 @@ def readOBST(FileName, Keyword='&OBST', Zmin=0.0, Zmax=3.0, outputFile=None, deb
     if outputFile!=None:
         with open(outputFile, mode='w+') as obst_test_file:
             csv_writer = csv.writer(obst_test_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-            csv_writer.writerow(['--', '0/startX', '1/startY', '2/endX', '3/endY', '4/arrow', '5/id', '6/inComp', '7/mode'])
+            csv_writer.writerow(['--', '0/startX', '1/startY', '2/endX', '3/endY', '4/arrow', '5/name', '6/inComp', '7/mode'])
             index_temp=0
             for obstFeature in obstFeatures:
                 if obstFeature[4]<Zmin and obstFeature[5]<Zmin:
@@ -633,11 +738,11 @@ def readOBST(FileName, Keyword='&OBST', Zmin=0.0, Zmax=3.0, outputFile=None, deb
         wall.params[2]= float(obstFeature[2])
         wall.params[3]= float(obstFeature[3])
         wall.arrow = 0
-        wall.id = index
         wall.inComp = 1
         wall.mode = 'rect'
-        walls.append(wall)
+        wall.oid = index
         index = index+1
+        walls.append(wall)
     return walls
 
 
@@ -693,7 +798,7 @@ def readPATH(FileName, Keyword='&HOLE', Zmin=0.0, Zmax=3.0, outputFile=None, deb
     if outputFile!=None:
         with open(outputFile, mode='w+') as door_test_file:
             csv_writer = csv.writer(door_test_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-            csv_writer.writerow(['--', '0/startX', '1/startY', '2/endX', '3/endY', '4/arrow', '5/id', '6/inComp', '7/exitSign'])
+            csv_writer.writerow(['--', '0/startX', '1/startY', '2/endX', '3/endY', '4/arrow', '5/name', '6/inComp', '7/exitSign'])
             index_temp=0
             for holeFeature in holeFeatures:
                 if holeFeature[4]<Zmin and holeFeature[5]<Zmin:
@@ -716,12 +821,12 @@ def readPATH(FileName, Keyword='&HOLE', Zmin=0.0, Zmax=3.0, outputFile=None, deb
         door.params[2]= float(holeFeature[2])
         door.params[3]= float(holeFeature[3])
         door.arrow = 0
-        door.id = index
+        door.oid = index
+        index = index+1
         door.inComp = 1
         door.exitSign = 0
         door.pos = (np.array([door.params[0], door.params[1]]) + np.array([door.params[2], door.params[3]]))*0.5
         doors.append(door)
-        index = index+1
     return doors
 
 
@@ -794,7 +899,7 @@ def readEXIT(FileName, Keyword='&EXIT', Zmin=0.0, Zmax=3.0, outputFile=None, deb
         exit.params[2]= float(exitFeature[2])
         exit.params[3]= float(exitFeature[3])
         exit.arrow = 0   #  This need to be improved
-        exit.id = index
+        exit.oid = index
         exit.inComp = 1
         exit.exitSign = 0
         exit.pos = (np.array([exit.params[0], exit.params[1]]) + np.array([exit.params[2], exit.params[3]]))*0.5
@@ -821,7 +926,7 @@ def readEXIT(FileName, Keyword='&EXIT', Zmin=0.0, Zmax=3.0, outputFile=None, deb
     if outputFile:
         with open(outputFile, mode='w+') as exit_test_file:
             csv_writer = csv.writer(exit_test_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-            csv_writer.writerow(['--', '0/startX', '1/startY', '2/endX', '3/endY', '4/arrow', '5/id', '6/inComp', '7/exitSign'])
+            csv_writer.writerow(['--', '0/startX', '1/startY', '2/endX', '3/endY', '4/arrow', '5/name', '6/inComp', '7/exitSign'])
             index_temp=0
             for exitFeature in exitFeatures:
                 if exitFeature[4]<Zmin and exitFeature[5]<Zmin:
@@ -842,10 +947,10 @@ def updateDoorData(doors, outputFile, inputFile=None):
             csv_writer.writerow([inputFile])
         csv_writer.writerow(['DOOR/PATH data in TestGeom: '])
         csv_writer.writerow(['time:', time.strftime('%Y-%m-%d_%H_%M_%S')])
-        csv_writer.writerow(['&Door', '0/startX', '1/startY', '2/endX', '3/endY', '4/arrow', '5/id', '6/inComp', '7/exitSign'])
+        csv_writer.writerow(['&Door', '0/startX', '1/startY', '2/endX', '3/endY', '4/arrow', '5/name', '6/inComp', '7/exitSign'])
         index_temp=0
         for door in doors:
-            csv_writer.writerow(['--', str(door.params[0]), str(door.params[1]), str(door.params[2]), str(door.params[3]), str(door.arrow), str(door.id), str(door.inComp), str(door.exitSign)])
+            csv_writer.writerow(['--', str(door.params[0]), str(door.params[1]), str(door.params[2]), str(door.params[3]), str(door.arrow), str(door.name), str(door.inComp), str(door.exitSign)])
             index_temp=index_temp+1
 
 def updateExitData(doors, outputFile, inputFile=None):
@@ -856,10 +961,10 @@ def updateExitData(doors, outputFile, inputFile=None):
             csv_writer.writerow([inputFile])
         csv_writer.writerow(['EXIT data in TestGeom: '])
         csv_writer.writerow(['time:', time.strftime('%Y-%m-%d_%H_%M_%S')])
-        csv_writer.writerow(['&Exit', '0/startX', '1/startY', '2/endX', '3/endY', '4/arrow', '5/id', '6/inComp', '7/exitSign'])
+        csv_writer.writerow(['&Exit', '0/startX', '1/startY', '2/endX', '3/endY', '4/arrow', '5/name', '6/inComp', '7/exitSign'])
         index_temp=0
         for door in doors:
-            csv_writer.writerow(['--', str(door.params[0]), str(door.params[1]), str(door.params[2]), str(door.params[3]), str(door.arrow), str(door.id), str(door.inComp), str(door.exitSign)])
+            csv_writer.writerow(['--', str(door.params[0]), str(door.params[1]), str(door.params[2]), str(door.params[3]), str(door.arrow), str(door.name), str(door.inComp), str(door.exitSign)])
             index_temp=index_temp+1
             
 
@@ -871,10 +976,10 @@ def updateWallData(walls, outputFile, inputFile=None):
             csv_writer.writerow([inputFile])
         csv_writer.writerow(['WALL/OBST data in TestGeom: '])
         csv_writer.writerow(['time:', time.strftime('%Y-%m-%d_%H_%M_%S')])
-        csv_writer.writerow(['&Wall', '0/startX', '1/startY', '2/endX', '3/endY', '4/arrow', '5/id', '6/inComp', '7/mode'])
+        csv_writer.writerow(['&Wall', '0/startX', '1/startY', '2/endX', '3/endY', '4/arrow', '5/name', '6/inComp', '7/mode'])
         index_temp=0
         for wall in walls:
-            csv_writer.writerow(['--', str(wall.params[0]), str(wall.params[1]), str(wall.params[2]), str(wall.params[3]), str(wall.arrow), str(wall.id), str(wall.inComp), str(wall.mode)])
+            csv_writer.writerow(['--', str(wall.params[0]), str(wall.params[1]), str(wall.params[2]), str(wall.params[3]), str(wall.arrow), str(wall.name), str(wall.inComp), str(wall.mode)])
             index_temp=index_temp+1
             
 
@@ -1414,7 +1519,7 @@ if __name__ == '__main__':
     #print(exit2door)
     updateExit2Doors(exit2door, 'test_exit2door.csv')
     
-    readDoorProb(r'/mnt/sda6/gitwork2022/CrowdEgress/examples/3Doors/ped2023Jan_2023-05-16_02_11_26.txt')
+    readDoorProb(r'/mnt/sda6/gitwork2022/CrowdEgress/examples/3Doors/ped2023Jan_2023-05-16_02_11_26.txt',0)
     
     
 """ Test struct to read and write binary data

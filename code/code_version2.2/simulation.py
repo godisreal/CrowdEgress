@@ -309,7 +309,7 @@ class simulation(object):
             temp = readKeyOnce(FN_FDS, '&DUMP', 'DT_PART')
             tempTEND = readKeyOnce(FN_FDS, '&TIME', 'T_END')
             tempDT = readKeyOnce(FN_FDS, '&TIME', 'DT')
-            if temp is not None and tempTEND is not None:
+            if temp is not None and tempTEND is not None and tempDT is not None:
                 self.DT = float(tempDT)
                 self.DT_DumpData = float(temp)
                 self.t_end = float(tempTEND)
@@ -720,7 +720,7 @@ class simulation(object):
                 if Usum<Vsum and Usum<-Vsum:
                     door.arrow=-1
 
-                print('door.ID:', iddoor, 'door.arrow:', door.arrow, '\t')
+                print('door.name:', door.name, 'door.arrow:', door.arrow, '\t')
                 
                 if len(door.attachedWalls)>0:
                     r1, r2, r3, r4 = door.dirWithAttachedWalls(mode='average')
@@ -735,7 +735,7 @@ class simulation(object):
                             door.arrow=2
                         else:
                             door.arrow=-2
-                print('door.ID:', iddoor, 'door.arrow:', door.arrow, '\t')
+                print('door.name:', door.name, 'door.arrow:', door.arrow, '\t')
 
 
         if self.solver == 2:
@@ -803,7 +803,7 @@ class simulation(object):
                             door.arrow=2
                         else:
                             door.arrow=-2
-                print('door.ID:', iddoor, 'door.arrow:', door.arrow, '\t')
+                print('door.name:', door.name, 'door.arrow:', door.arrow, '\t')
                 
             for idexit, exit in enumerate(self.exits):
                 Utemp = self.UeachExit[idexit]
@@ -914,23 +914,23 @@ class simulation(object):
    
         for wall in self.walls:
             wall.findAttachedDoors(self.doors+self.exits)
-            print("wall #No:", wall.id, 'isSingle:', wall.isSingleWall)
+            print("wall Name:", wall.name, 'isSingle:', wall.isSingleWall)
             if self.DEBUG:
-                f.write("wall #No:" + str(wall.id) + 'isSingle:' + str(wall.isSingleWall)+'\n')
+                f.write("wall Name:" + str(wall.name) + 'isSingle:' + str(wall.isSingleWall)+'\n')
             for door in wall.attachedDoors:
-                print("attached door #No. :", door.id)
+                print("attached door name. :", door.name)
                 if self.DEBUG:
-                    f.write("attached door #No. :" + str(door.id)+'\n')
+                    f.write("attached door name. :" + str(door.name)+'\n')
 
         for door in self.doors:
             door.findAttachedWalls(self.walls)
-            print("door #No:", door.id, 'isSingle:', door.isSingleDoor)
+            print("door name:", door.name, 'isSingle:', door.isSingleDoor)
             if self.DEBUG:
-                f.write("door #No:" + str(door.id) + 'isSingle:' + str(door.isSingleDoor)+'\n')
+                f.write("door name:" + str(door.name) + 'isSingle:' + str(door.isSingleDoor)+'\n')
             for wall in door.attachedWalls:
-                print("attached wall #No. :", wall.id)
+                print("attached wall name. :", wall.name)
                 if self.DEBUG:
-                    f.write("attached wall #No. :" + str(wall.id)+'\n')
+                    f.write("attached wall name. :" + str(wall.name)+'\n')
                 if wall.mode == 'rect':
                     if door.params[0]>=wall.params[0] and door.params[1]>=wall.params[1]:
                         flag5 = True
@@ -947,13 +947,13 @@ class simulation(object):
 
         for exit in self.exits:
             exit.findAttachedWalls(self.walls)
-            print("exit #No:", exit.id, 'isSingle:', exit.isSingleDoor)
+            print("exit name:", exit.name, 'isSingle:', exit.isSingleDoor)
             if self.DEBUG:
-                f.write("exit #No:" + str(exit.id) + 'isSingle:' + str(exit.isSingleDoor)+'\n')
+                f.write("exit name:" + str(exit.name) + 'isSingle:' + str(exit.isSingleDoor)+'\n')
             for wall in exit.attachedWalls:
-                print("attached wall #No. :", wall.id)
+                print("attached wall name. :", wall.name)
                 if self.DEBUG:
-                    f.write("attached wall #No. :" + str(wall.id)+'\n')
+                    f.write("attached wall name. :" + str(wall.name)+'\n')
                 if wall.mode == 'rect':
                     if exit.params[0]>=wall.params[0] and exit.params[1]>=wall.params[1]:
                         flag5 = True
@@ -1040,17 +1040,22 @@ class simulation(object):
         ###=== If Group Behavior is simulated ===
         if self.GROUPBEHAVIOR: 
             # Initialize Desired Interpersonal Distance
-            tableFeatures, LowerIndex, UpperIndex = getData(self.FN_EVAC, '&groupD')
-            person.DFactor_Init = readFloatArray(tableFeatures, len(self.agents), len(self.agents))
-            #DFactor_Init = readCSV("D_Data2018.csv", 'float')
-
-            tableFeatures, LowerIndex, UpperIndex = getData(self.FN_EVAC, '&groupA')
-            person.AFactor_Init = readFloatArray(tableFeatures, len(self.agents), len(self.agents))
+            tableFeatures, LowerIndex, UpperIndex = getData(self.FN_EVAC, '&groupABD')
+            person.AFactor_Init, person.BFactor_Init, person.DFactor_Init = readGroupArray(tableFeatures, len(self.agents), len(self.agents))
+    
+            #tableFeatures, LowerIndex, UpperIndex = getData(self.FN_EVAC, '&groupA')
+            #person.AFactor_Init = readFloatArray(tableFeatures, len(self.agents), len(self.agents))
             #AFactor_Init = readCSV("A_Data2018.csv", 'float')
 
-            tableFeatures, LowerIndex, UpperIndex = getData(self.FN_EVAC, '&groupB')
-            person.BFactor_Init = readFloatArray(tableFeatures, len(self.agents), len(self.agents))
+            #tableFeatures, LowerIndex, UpperIndex = getData(self.FN_EVAC, '&groupB')
+            #person.BFactor_Init = readFloatArray(tableFeatures, len(self.agents), len(self.agents))
             #BFactor_Init = readCSV("B_Data2018.csv", 'float')
+
+            # Initialize Desired Interpersonal Distance
+            #tableFeatures, LowerIndex, UpperIndex = getData(self.FN_EVAC, '&groupD')
+            #person.DFactor_Init = readFloatArray(tableFeatures, len(self.agents), len(self.agents))
+            #DFactor_Init = readCSV("D_Data2018.csv", 'float')
+            
 
             if self.DEBUG and sys.version_info[0] == 2: 
                 #print >> f, "Wall Matrix\n", walls, "\n"

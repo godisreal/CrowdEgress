@@ -186,7 +186,7 @@ def drawDoors(screen, doors, ZOOMFACTOR=10.0, SHOWDATA=False, xSpace=0.0, ySpace
             #screen.blit(text_surface, endPos*ZOOMFACTOR+xyShift)
 
             myfont=pygame.font.SysFont("arial",13)
-            text_surface=myfont.render('ID'+str(door.id)+'/'+str(door.arrow), True, blue, (255,255,255))
+            text_surface=myfont.render('D/name:'+str(door.name)+'/'+str(door.arrow), True, green, black)
             screen.blit(text_surface, door.pos*ZOOMFACTOR+xyShift)
 
 
@@ -225,7 +225,7 @@ def drawSingleDoor(screen, door, ZOOMFACTOR=10.0, SHOWDATA=False, xSpace=0.0, yS
         #screen.blit(text_surface, endPos*ZOOMFACTOR+xyShift)
 
         myfont=pygame.font.SysFont("arial",13)
-        text_surface=myfont.render('ID'+str(door.id)+'/'+str(door.arrow), True, blue, (255,255,255))
+        text_surface=myfont.render('D/name:'+str(door.name)+'/'+str(door.arrow), True, green, black)
         screen.blit(text_surface, door.pos*ZOOMFACTOR+xyShift)
 
 
@@ -266,7 +266,7 @@ def drawExits(screen, exits, ZOOMFACTOR=10.0, SHOWDATA=False, xSpace=0.0, ySpace
             #screen.blit(text_surface, endPos*ZOOMFACTOR + xyShift)
 
             myfont=pygame.font.SysFont("arial",13)
-            text_surface=myfont.render('ID'+str(exit.id)+'/'+str(exit.arrow), True, blue, (255,255,255))
+            text_surface=myfont.render('E/name:'+str(exit.name)+'/'+str(exit.arrow), True, red, white)
             screen.blit(text_surface, exit.pos*ZOOMFACTOR + xyShift)
 
 
@@ -302,7 +302,7 @@ def drawSingleExit(screen, exit, ZOOMFACTOR=10.0, SHOWDATA=False, xSpace=0.0, yS
         #screen.blit(text_surface, endPos*ZOOMFACTOR + xyShift)
 
         myfont=pygame.font.SysFont("arial",13)
-        text_surface=myfont.render('ID'+str(exit.id)+'/'+str(exit.arrow), True, blue, (255,255,255))
+        text_surface=myfont.render('E/name:'+str(exit.name)+'/'+str(exit.arrow), True, red, white)
         screen.blit(text_surface, exit.pos*ZOOMFACTOR + xyShift)
 
 
@@ -712,16 +712,16 @@ def show_geom(simu):
                             result1, result2, result3, result4 = door.intersecWithLine(w1, w2, '4arc')
                             #print('result1, result2, result3, result4:', result1, result2, result3, result4)
                             if result1 != None:
-                                #exit2door[draw_exit.id, door.id]=1
+                                #exit2door[draw_exit.oid, door.oid]=1
                                 door.arrow=1
                             elif result2 != None:
-                                #exit2door[draw_exit.id, door.id]= -2
+                                #exit2door[draw_exit.oid, door.oid]= -2
                                 door.arrow=-2
                             elif result3 != None:
-                                #exit2door[draw_exit.id, door.id]= -1
+                                #exit2door[draw_exit.oid, door.oid]= -1
                                 door.arrow=-1
                             elif result4 != None:
-                                #exit2door[draw_exit.id, door.id]= 2
+                                #exit2door[draw_exit.oid, door.oid]= 2
                                 door.arrow=2
                 else:
                     draw_arrows = []
@@ -736,25 +736,25 @@ def show_geom(simu):
                             result1, result2, result3, result4 = door.intersecWithLine(w1, w2, '4arc')
                             #print('result1, result2, result3, result4:', result1, result2, result3, result4)
                             if result1 != None:
-                                simu.exit2door[draw_exit.id, door.id]=1
+                                simu.exit2door[draw_exit.oid, door.oid]=1
                                 #door.arrow=1
                             elif result2 != None:
-                                simu.exit2door[draw_exit.id, door.id]= -2
+                                simu.exit2door[draw_exit.oid, door.oid]= -2
                                 #door.arrow=-2
                             elif result3 != None:
-                                simu.exit2door[draw_exit.id, door.id]= -1
+                                simu.exit2door[draw_exit.oid, door.oid]= -1
                                 #door.arrow=-1
                             elif result4 != None:
-                                simu.exit2door[draw_exit.id, door.id]= 2
+                                simu.exit2door[draw_exit.oid, door.oid]= 2
                                 #door.arrow=2
                     '''
                         
             elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_KP1:
+                if event.key == pygame.K_1:
                     simu.SHOWWALLDATA = not simu.SHOWWALLDATA
-                elif event.key == pygame.K_KP2:
+                elif event.key == pygame.K_2:
                     simu.SHOWDOORDATA = not simu.SHOWDOORDATA
-                elif event.key == pygame.K_KP3:
+                elif event.key == pygame.K_3:
                     simu.SHOWEXITDATA = not simu.SHOWEXITDATA
                 elif event.key == pygame.K_SPACE:
                     #updateWallData(simu.walls, 'wallDataRev.csv')
@@ -823,9 +823,9 @@ def show_geom(simu):
                 
             pygame.draw.rect(screen, orange, [x, y, w, h], LINEWIDTH+2)
             
-            print("draw_exit.id", draw_exit.id)  #"door.id", door.id
+            print("draw_exit.name", str(draw_exit.name))  #"door.name", door.name
             #for door in doors: #simu.doors:
-            #    drawDirection(screen, door, simu.exit2door[draw_exit.id, door.id], ZOOMFACTOR, xSpace, ySpace)
+            #    drawDirection(screen, door, simu.exit2door[draw_exit.oid, door.oid], ZOOMFACTOR, xSpace, ySpace)
             
             #if len(draw_lines)>1:
             #    for i in range(len(draw_lines)-1):
@@ -1047,16 +1047,16 @@ def show_flow(simu):
                             result1, result2, result3, result4 = door.intersecWithLine(w1, w2, '4arc')
                             #print('result1, result2, result3, result4:', result1, result2, result3, result4)
                             if result1 != None:
-                                #exit2door[draw_exit.id, door.id]=1
+                                #exit2door[draw_exit.oid, door.oid]=1
                                 door.arrow=1
                             elif result2 != None:
-                                #exit2door[draw_exit.id, door.id]= -2
+                                #exit2door[draw_exit.oid, door.oid]= -2
                                 door.arrow=-2
                             elif result3 != None:
-                                #exit2door[draw_exit.id, door.id]= -1
+                                #exit2door[draw_exit.oid, door.oid]= -1
                                 door.arrow=-1
                             elif result4 != None:
-                                #exit2door[draw_exit.id, door.id]= 2
+                                #exit2door[draw_exit.oid, door.oid]= 2
                                 door.arrow=2
                 else:
                     draw_arrows = []
@@ -1070,16 +1070,16 @@ def show_flow(simu):
                             result1, result2, result3, result4 = door.intersecWithLine(w1, w2, '4arc')
                             #print('result1, result2, result3, result4:', result1, result2, result3, result4)
                             if result1 != None:
-                                simu.exit2door[draw_exit.id, door.id]=1
+                                simu.exit2door[draw_exit.oid, door.oid]=1
                                 #door.arrow=1
                             elif result2 != None:
-                                simu.exit2door[draw_exit.id, door.id]= -2
+                                simu.exit2door[draw_exit.oid, door.oid]= -2
                                 #door.arrow=-2
                             elif result3 != None:
-                                simu.exit2door[draw_exit.id, door.id]= -1
+                                simu.exit2door[draw_exit.oid, door.oid]= -1
                                 #door.arrow=-1
                             elif result4 != None:
-                                simu.exit2door[draw_exit.id, door.id]= 2
+                                simu.exit2door[draw_exit.oid, door.oid]= 2
                                 #door.arrow=2
 
                     
@@ -1098,11 +1098,11 @@ def show_flow(simu):
                 #    simu.DRAWDOORFORCE = not simu.DRAWDOORFORCE
                 #elif event.key == pygame.K_r:
                 #    simu.DRAWSELFREPULSION = not simu.DRAWSELFREPULSION
-                elif event.key == pygame.K_KP1:
+                elif event.key == pygame.K_1:
                     simu.SHOWWALLDATA = not simu.SHOWWALLDATA
-                elif event.key == pygame.K_KP2:
+                elif event.key == pygame.K_2:
                     simu.SHOWDOORDATA = not simu.SHOWDOORDATA
-                elif event.key == pygame.K_KP3:
+                elif event.key == pygame.K_3:
                     simu.SHOWEXITDATA = not simu.SHOWEXITDATA
                 #elif event.key == pygame.K_s:
                 #    simu.SHOWSTRESS = not simu.SHOWSTRESS
@@ -1139,9 +1139,9 @@ def show_flow(simu):
                 
             pygame.draw.rect(screen, orange, [x, y, w, h], LINEWIDTH+2)
             
-            print("draw_exit.id", draw_exit.id)
+            print("draw_exit.name", str(draw_exit.name))
             #for door in doors: #simu.doors:
-            #    drawDirection(screen, door, simu.exit2door[draw_exit.id, door.id], ZOOMFACTOR, xSpace, ySpace)
+            #    drawDirection(screen, door, simu.exit2door[draw_exit.oid, door.oid], ZOOMFACTOR, xSpace, ySpace)
             
             #if len(draw_lines)>1:
             #    for i in range(len(draw_lines)-1):
@@ -1203,7 +1203,7 @@ def show_flow(simu):
                 Vd = Vtemp#[1:-1, 1:-1]
                 show_vel(screen, simu.xmin, simu.ymin, simu.xmax, simu.ymax, simu.xpt, simu.ypt, Ud, Vd, ZOOMFACTOR, xSpace, ySpace)
                 for door in simu.doors:
-                    drawDirection(screen, door, simu.exit2door[idexit, door.id], ZOOMFACTOR, xSpace, ySpace)
+                    drawDirection(screen, door, simu.exit2door[idexit, door.oid], ZOOMFACTOR, xSpace, ySpace)
                 
                 # High light the target exit in pygame display: Trial well, but not that useful
                 #targeExit=simu.exits[idexit]
@@ -1455,11 +1455,11 @@ def show_simu(simu):
                     simu.DRAWDOORFORCE = not simu.DRAWDOORFORCE
                 elif event.key == pygame.K_r:
                     simu.DRAWSELFREPULSION = not simu.DRAWSELFREPULSION
-                elif event.key == pygame.K_KP1:
+                elif event.key == pygame.K_1:
                     simu.SHOWWALLDATA = not simu.SHOWWALLDATA
-                elif event.key == pygame.K_KP2:
+                elif event.key == pygame.K_2:
                     simu.SHOWDOORDATA = not simu.SHOWDOORDATA
-                elif event.key == pygame.K_KP3:
+                elif event.key == pygame.K_3:
                     simu.SHOWEXITDATA = not simu.SHOWEXITDATA
                 elif event.key == pygame.K_s:
                     simu.SHOWSTRESS = not simu.SHOWSTRESS
@@ -1510,6 +1510,9 @@ def show_simu(simu):
             time_surface=myfont.render("Simulation Time:" + str(simu.t_sim), True, (0,0,0), (255,255,255))
             screen.blit(time_surface, [100,23]) #[750,350]*ZOOMFACTOR)
 
+
+        show_mesh(screen, simu.xmin, simu.ymin, simu.xmax, simu.ymax, simu.xpt, simu.ypt, simu.bldmesh, ZOOMFACTOR, xSpace, ySpace)
+        
         # Show flow field in the background
         if simu.solver==1 and exitIndex%2==0: # and exitIndex==-1:
             Ud=simu.UallExit#[1:-1, 1:-1]
@@ -1535,7 +1538,7 @@ def show_simu(simu):
                 Vd = Vtemp#[1:-1, 1:-1]
                 show_vel(screen, simu.xmin, simu.ymin, simu.xmax, simu.ymax, simu.xpt, simu.ypt, Ud, Vd, ZOOMFACTOR, xSpace, ySpace)
                 for door in simu.doors:
-                    drawDirection(screen, door, simu.exit2door[idexit, door.id], ZOOMFACTOR, xSpace, ySpace)
+                    drawDirection(screen, door, simu.exit2door[idexit, door.oid], ZOOMFACTOR, xSpace, ySpace)
             elif idexit == len(simu.exits):
                 # Show nearest-exit field
                 Ud=simu.UallExit#[1:-1, 1:-1]
@@ -1723,6 +1726,7 @@ if __name__=="__main__":
     # initialize OBST
     obstFeatures = readCSV("./test_case/obstData2018.csv", "string")
     walls = []
+    index = 0
     for obstFeature in obstFeatures:
         wall = obst()
         wall.params[0]= float(obstFeature[0])
@@ -1730,11 +1734,13 @@ if __name__=="__main__":
         wall.params[2]= float(obstFeature[2])
         wall.params[3]= float(obstFeature[3])
         wall.mode = obstFeature[4]
-        wall.id = int(obstFeature[5])
+        wall.name = str(obstFeature[5])
         wall.inComp = int(obstFeature[6])
         wall.arrow = int(obstFeature[7])
         #wall.pointer1 = np.array([float(obstFeature[8]), float(obstFeature[9])])
         #wall.pointer2 = np.array([float(obstFeature[10]), float(obstFeature[11])])
+        wall.oid = index
+        index = index+1
         walls.append(wall)
 
 
@@ -1893,9 +1899,9 @@ def show_crowdfluid(filename, debug=True):
                     xSpace=xSpace-10
                 elif event.key == pygame.K_RIGHT:
                     xSpace=xSpace+10
-                elif event.key == pygame.K_KP1:
+                elif event.key == pygame.K_1:
                     SHOWGHOSTBLD = not SHOWGHOSTBLD
-                elif event.key == pygame.K_KP2:
+                elif event.key == pygame.K_2:
                     SHOWUVDesired = not SHOWUVDesired
 
 

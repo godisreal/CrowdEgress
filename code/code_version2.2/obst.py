@@ -12,7 +12,7 @@ class obst(object):
     """
     screen: (Not used)
         Obstacles exists on a screen element 
-    id:
+    oid:
         obstacle id 
     mode: 
         obstacle type (Line, Rect, Circle)
@@ -26,8 +26,9 @@ class obst(object):
     def __init__(self, oid=0, mode='line', params=[0,0,0,0]):
         
         self.params = np.array([0.0, 0.0, 0.0, 0.0])
-        self.id = 0
+        self.oid = 0
         self.mode = 'line'
+        self.name = 'None'
         
         #self.startPx = np.array([params[0], params[1]])
         #self.endPx = np.array([params[2], params[3]])
@@ -279,7 +280,7 @@ class passage(object):
     """
     screen: (Not used)
         Passages exist on a screen element 
-    id:
+    oid:
         door id 
     mode: 
         door type (Rect, Circle)
@@ -289,12 +290,13 @@ class passage(object):
         Circle -> [x,y,r,None]
     """
     
-    def __init__(self, oid=0, mode='rect', params=[0,0,0,0]):
+    def __init__(self, oid=0, params=[0,0,0,0]):
         
         self.params = np.array([0.0, 0.0, 0.0, 0.0])
         self.oid = 0
         #self.mode = 'rect' # All the door are in form of rect
         self.exitSign = 0
+        self.name = 'None'
 
         #self.startPx = np.array([params[0], params[1]])
         #self.endPx = np.array([params[2], params[3]])

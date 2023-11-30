@@ -37,6 +37,7 @@ class person(object):
         # random initialize a agent
         #self.memory = np.array([0.0, 0.0], [0.0, 0.0], [0.0, 0.0])
         #self.sumAdapt = np.array([0.0, 0.0])
+        self.name = 'no_name'
         self.ID = 0 #Name or index of agents
         self.inComp = 1
         self.aType = 'MoveToDest'  #{'MoveToDest' 'Follow' 'Talk' 'Search'}
@@ -629,7 +630,7 @@ class person(object):
             crossx, diw, wallDirection = self.wallOnRoute(closeWall, 0.0, 2.0) # This line can be merged with above
             for door in closeWall.attachedDoors:
                 if door is not None and crossx is not None:
-                    print("crossx and diw:", crossx, diw, "doorid:", door.id)
+                    print("crossx and diw:", crossx, diw, "doorName:", door.name)
                     if door.inside(crossx):
                         self.wallrepF = self.wallrepF - self.wallSocForce(closeWall) #- self.wallPhyForce(closeWall) #+ self.doorForce(door)
                         self.doorF = self.doorForce(door)
@@ -643,7 +644,7 @@ class person(object):
             #crossx, diw, wallDirection = self.wallOnRoute(closeWall, 0.0, 2.0) # This line can be merged with above
             for door in closeWall.attachedDoors:
                 if door is not None: #and crossx is not None:
-                    #print("crossx and diw:", crossx, diw, "doorid:", door.id)
+                    #print("crossx and diw:", crossx, diw, "doorName:", door.name)
                     if door.inside(closeWallPoint): #(crossx):
                         self.wallrepF = self.wallrepF - self.wallSocForce(closeWall) #- self.wallPhyForce(closeWall) #+ self.doorForce(door)
                         self.doorF = self.doorForce(door)
@@ -666,7 +667,7 @@ class person(object):
             else:  
                 dest_temp = np.linalg.norm(exit.pos - self.pos)
                 dir1 = exit.direction(exit.arrow)
-                # temp = self.route[exit.id]
+                # temp = self.route[exit.oid]
                 # dir1 = self.findDoorDir(temp)
                 dir2 = exit.pos-self.pos
                 if dest ==None or dest>dest_temp:
@@ -679,10 +680,10 @@ class person(object):
         # self.others is to be taken into account.  
         
         if exitOK != None:
-            self.pathMap = exit2door[exitOK.id]
+            self.pathMap = exit2door[exitOK.oid]
             return exitOK
         else:
-            self.pathMap = exit2door[self.exitInMind.id]
+            self.pathMap = exit2door[self.exitInMind.oid]
             
         for door in self.targetDoors:
             #door.computePos()
@@ -696,7 +697,7 @@ class person(object):
                     if (self.route[len(self.route)-1] is door.pos) and len(self.targetDoors)>1:
                         continue
                 dest_temp = np.linalg.norm(door.pos - self.pos)
-                dir1 = door.direction(self.pathMap[door.id])    #door.direction(door.arrow)   #
+                dir1 = door.direction(self.pathMap[door.oid])    #door.direction(door.arrow)   #
                 dir2 = door.pos-self.pos
                 if dest ==None or dest>dest_temp:
                     if np.dot(dir1, dir2)>=0:

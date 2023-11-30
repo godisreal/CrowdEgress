@@ -155,7 +155,7 @@ class GUI(object):
         self.showHelp(self.buttonSelectCSV, "Select .csv file to set up the agent parameters for the simulation")
         #Button(window, text='choose csv file for door data', command=lambda: selectFile(2)).pack()
 
-        self.buttonSelectFDS =Button(self.frameRun, text='choose fds file for Compartment layout data', command=self.selectFDSFile)
+        self.buttonSelectFDS =Button(self.frameRun, text='choose fds file for FDS data', command=self.selectFDSFile)
         #self.buttonSelectFDS.place(x=2, y=60)
         self.buttonSelectFDS.pack()
         self.showHelp(self.buttonSelectFDS, "Select fds file to set up the compartment geometry for the simulation")
@@ -223,7 +223,7 @@ class GUI(object):
         self.showHelp(self.SHOWFORCE_CB, "Show various forces on agents in the simulation. \n  Motive Force: Red;  Interpersonal Force: Pink; Wall Force: Purple;  Door Force: Green")
         
         self.NearExit_Var = IntVar()
-        self.NearExit_Var.set(1)
+        self.NearExit_Var.set(0)
         self.NearExit_CB=Checkbutton(self.frameParameters, text= 'Use nearest exit strategy', variable=self.NearExit_Var, onvalue=1, offvalue=0)
         self.NearExit_CB.place(x=2, y=66)
         self.showHelp(self.NearExit_CB, "Use nearest exit strategy to guide evacuee agents.")
@@ -572,7 +572,7 @@ class GUI(object):
         
 
     def selectFDSFile(self):
-        self.fname_FDS = tkf.askopenfilename(filetypes=(("fds files", "*.fds"),("All files", "*.*")))
+        self.fname_FDS = tkf.askopenfilename(filetypes=(("fds files", "*.fds"),("All files", "*.*")),initialdir=self.currentdir)
         #temp=re.split(r'/', self.fname_FDS)
         #temp=self.fname_FDS.split('/')
         temp=os.path.basename(self.fname_FDS)
@@ -660,8 +660,10 @@ class GUI(object):
         #self.currentSimu.ZOOMFACTOR = ZOOM
         #self.currentSimu.xSpace=xSpa
         #self.currentSimu.ySpace=ySpa
-        
-        self.currentSimu.select_file(self.fname_EVAC, self.fname_FDS, "non-debug")
+        if self.UseFDS_Var.get():
+            self.currentSimu.select_file(self.fname_EVAC, self.fname_FDS, "non-debug")
+        else:
+            self.currentSimu.select_file(self.fname_EVAC, None, "non-debug")
         sunpro2 = mp.Process(target=show_geom(self.currentSimu)) 
         sunpro2.start()
         #sunpro2.join()
