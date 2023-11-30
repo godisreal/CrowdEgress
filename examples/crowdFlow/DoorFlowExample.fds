@@ -1,0 +1,72 @@
+ FDS+Evac version: FDS 6.7.0, Evac 2.5.2 (GIT FDS6.7.0-31)
+ All material properties etc. are completely fabricated.
+
+ A geometry, which can be used to calculate specific human
+ flows through doors.
+
+&HEAD CHID='DoorFlowExample', TITLE='door flow test, 2.0' /
+ door width 2.00 m, (dw=0.2m)
+
+&MESH IJK=150,150,1, XB=0.0,15.0, 0.0,15.0, 1.45,1.55, EVACUATION=.TRUE., 
+      EVAC_HUMANS=.TRUE., EVAC_Z_OFFSET=1.5, ID= 'FF1stFloor' /
+  
+&TIME T_END= 200 , DT=0.1 /
+
+&MISC EVACUATION_MC_MODE=.FALSE., EVACUATION_DRILL=.TRUE., /
+&RADI RADIATION=.FALSE., /
+
+&DUMP SMOKE3D=.FALSE.,
+      NFRAMES=200,
+      DT_PART=0.1,
+      DT_HRR =0.1,
+      DT_SLCF=1000000.0,
+      DT_BNDF=1000000.0,
+      DT_PL3D=1000000.0,
+      DT_ISOF=1000000.0 /
+
+&SURF ID='EVAC_WALL' ,COLOR='BLACK', EVAC_DEFAULT=.TRUE. /
+
+&OBST XB= 0.0, 15.0,  0.0, 0.1, 0.0,2.0,  /
+&OBST XB= 0.0, 0.1, 0.0,10.0, 0.0,2.0,    /
+&OBST XB= 14.9, 15.0, 0.0,10.0, 0.0,2.0,  /
+&OBST XB= 4.9, 5.0, 10.0,15.0, 0.0,2.0,   /
+&OBST XB= 10.0, 10.1, 10.0,15.0, 0.0,2.0, /
+&OBST XB= 0.0, 15.0, 10.0,10.1, 0.0,2.0,  /
+&HOLE XB= 6.5 , 8.5, 9.6,10.6, 0.0,2.0,  / door
+
+&EXIT ID='TopExit', IOR= +2,
+      FYI= 'Comment line',
+      COUNT_ONLY=.FALSE. ,
+      XYZ= 7.5, 14.5, 1.50,
+      XB= 5.0,10.0, 15.0,15.0, 1.45,1.55 /
+
+###&EXIT ID='TopExitCount', IOR= +2,
+      FYI= 'Comment line',
+      COUNT_ONLY=.TRUE. ,
+      XB= 6.5,8.5, 10.1,10.1, 1.45,1.55 /
+
+&PERS ID='Adult',
+      FYI='Male+Female diameter and velocity',
+      DEFAULT_PROPERTIES='Adult',
+      PRE_EVAC_DIST=0,PRE_MEAN=1.0,
+      DET_EVAC_DIST=0,DET_MEAN=0.0,
+      DENS_INIT=40.0,
+      HUMAN_SMOKE_HEIGHT=1.60,
+      OUTPUT_SPEED=.TRUE.,
+      OUTPUT_DENSITY=.TRUE.,
+      OUTPUT_TOTAL_FORCE=.TRUE.,
+      COLOR_METHOD=0, I_HERDING_TYPE=2, /
+
+&EVAC ID='EvacAdult',
+      NUMBER_INITIAL_PERSONS= 100,
+      XB= 5.0, 10.0, 4.8, 9.8, 1.5,1.5,
+      AVATAR_COLOR= 'BLUE',
+      ANGLE= 90, AGENT_TYPE=2,
+      KNOWN_DOOR_NAMES='TopExit',
+      KNOWN_DOOR_PROBS=1.0,
+      PERS_ID='Adult' /
+
+ Next line could be used to plot the evacuation flow fields:
+ SLCF PBZ=1.5, QUANTITY='VELOCITY', VECTOR=.TRUE., EVACUATION=.TRUE. / 
+
+&TAIL /
