@@ -186,7 +186,7 @@ def drawDoors(screen, doors, ZOOMFACTOR=10.0, SHOWDATA=False, xSpace=0.0, ySpace
             #screen.blit(text_surface, endPos*ZOOMFACTOR+xyShift)
 
             myfont=pygame.font.SysFont("arial",13)
-            text_surface=myfont.render('D/name:'+str(door.name)+'/'+str(door.arrow), True, green, black)
+            text_surface=myfont.render('Door:'+str(door.oid)+'/'+str(door.name), True, green, black)
             screen.blit(text_surface, door.pos*ZOOMFACTOR+xyShift)
 
 
@@ -225,7 +225,7 @@ def drawSingleDoor(screen, door, ZOOMFACTOR=10.0, SHOWDATA=False, xSpace=0.0, yS
         #screen.blit(text_surface, endPos*ZOOMFACTOR+xyShift)
 
         myfont=pygame.font.SysFont("arial",13)
-        text_surface=myfont.render('D/name:'+str(door.name)+'/'+str(door.arrow), True, green, black)
+        text_surface=myfont.render('Door:'+str(door.oid)+'/'+str(door.name), True, green, black)
         screen.blit(text_surface, door.pos*ZOOMFACTOR+xyShift)
 
 
@@ -266,7 +266,7 @@ def drawExits(screen, exits, ZOOMFACTOR=10.0, SHOWDATA=False, xSpace=0.0, ySpace
             #screen.blit(text_surface, endPos*ZOOMFACTOR + xyShift)
 
             myfont=pygame.font.SysFont("arial",13)
-            text_surface=myfont.render('E/name:'+str(exit.name)+'/'+str(exit.arrow), True, red, white)
+            text_surface=myfont.render('Exit:'+str(exit.oid)+'/'+str(exit.name), True, red, white)
             screen.blit(text_surface, exit.pos*ZOOMFACTOR + xyShift)
 
 
@@ -302,7 +302,7 @@ def drawSingleExit(screen, exit, ZOOMFACTOR=10.0, SHOWDATA=False, xSpace=0.0, yS
         #screen.blit(text_surface, endPos*ZOOMFACTOR + xyShift)
 
         myfont=pygame.font.SysFont("arial",13)
-        text_surface=myfont.render('E/name:'+str(exit.name)+'/'+str(exit.arrow), True, red, white)
+        text_surface=myfont.render('Exit:'+str(exit.oid)+'/'+str(exit.name), True, red, white)
         screen.blit(text_surface, exit.pos*ZOOMFACTOR + xyShift)
 
 
@@ -939,7 +939,15 @@ def show_geom(simu):
                                                                 
         pygame.display.flip()
         clock.tick(20)
-        
+
+    f.write('Display a summary of input data after TestGeom as below.\n')
+    f.write('number of walls added: '+str(len(walls)-len(simu.walls))+ '\n')
+    f.write('number of doors added: '+str(len(doors)-len(simu.doors))+ '\n')
+    f.write('number of exits added: '+str(len(exits)-len(simu.exits))+ '\n')
+    f.write('All the objects added are directly included in compuation loop. \n\n')
+    
+    f.close()
+
     simu.ZOOMFACTOR = ZOOMFACTOR
     simu.xSpace = xSpace
     simu.ySpace = ySpace
@@ -948,13 +956,7 @@ def show_geom(simu):
     simu.exits = exits
     simu.agents = agents
     #simu.exit2door = exit2door
-
-    f.write('Display a summary of input data after TestGeom as below.\n')
-    f.write('number of walls: '+str(len(simu.walls))+ '\n')
-    f.write('number of doors: '+str(len(simu.doors))+ '\n')
-    f.write('number of exits: '+str(len(simu.exits))+ '\n\n')
-        
-    f.close()
+    
     pygame.display.quit()
 
 
@@ -1486,7 +1488,7 @@ def show_simu(simu):
             continue
 
         # Computation Step
-        simu.simulation_step2022()
+        simu.simulation_step2022(f)
         #simu.t_sim = simu.t_sim + simu.DT  # Maybe it should be in step()
         pass
 
@@ -2072,4 +2074,224 @@ def show_crowdfluid(filename, debug=True):
             
         pygame.display.flip()
         clock.tick(200)
+
+
+
+def visualizeEvac(fname, evacfile=None, fdsfile=None, Zmin=0.0, Zmax=3.0, debug=True):
+    
+    # Because visualizeEvac is a 2D visualizer, we can only show agents in a single floors each time and if there are multiple floors in fds+evac simulation, users should specify which floor they want to visualize.  Otherwise there will be overlap of agents in different floors.  The default values are given by Zmin=0.0 and Zmax=3.0, which means the gound floor approximately.  
+ 
+     # Therefore It is recommended for users to first open .fds input file to see if there are multiple floors.  User should specify Zmin and Zmax and agents are visualized in z axis between Zmin and Zmax.  
+        
+    #Zmin is the lower bound of z values in a floor (e.g., often z lower bound of an evacuation mesh)
+    #Zmax is the upper bound of z values in a floor (e.g., often z upper bound of an evacuation mesh)
+
+
+    # np.load has some unexpected problem for latest version of numpy in python3.  Thus I will not use this stuff.  
+    # If anyone wants to help to debug the following lines, I will appreciate.  
+    
+    #prtdata = np.load(fname) #load .npz file
+    #Time = prtdata["arr_0"]
+    #XYZ = prtdata["arr_1"]
+    #TAG = prtdata["arr_2"]
+    #INFO = prtdata["arr_3"]
+    #print("TAG:", TAG)
+     
+    # Extract data from binary data file
+    Time, XYZ, TAG, INFO, n_part, version, n_quant = readPRTfile(fname,  wrtxt=False)
+        
+    T_END = len(Time)
+    if debug:
+        print ("Length of time axis in prt5 data file", T_END)
+        print ("T_Initial=", Time[0])
+        print ("T_Final=", Time[T_END-1])
+    T_INDEX=0
+
+    if evacfile is not None:
+        walls = readWalls(evacfile)  #readWalls(FN_Walls) #readWalls("obstData2018.csv")
+        doors = readDoors(evacfile)
+        exits = readExits(evacfile)
+
+    if fdsfile is not None:
+        #meshes, evacZmin, evacZmax = readMESH(fdsfile, 'evac')
+        #N_meshes = len(meshes)
+        #evacZoffset=0.5*(evacZmin+evacZmax)
+        
+        walls=readOBST(fdsfile, '&OBST', Zmin, Zmax)
+        doors=readPATH(fdsfile, '&HOLE', Zmin, Zmax)+readPATH(fdsfile, '&DOOR', Zmin, Zmax)
+        exits=readPATH(fdsfile, '&EXIT', Zmin, Zmax)
+        #doors=doors+readPATH(fdsfile, '&DOOR', Zmin, Zmax)
+        #entries=readPATH(fdsfile, '&ENTRY', Zmin, Zmax)
+        
+    
+    ZOOMFACTOR=10.0
+    xSpace=20.0
+    ySpace=20.0
+    
+    MODETRAJ=False
+    SHOWTIME=True
+
+    SHOWVELOCITY=True
+    SHOWINDEX=True
+    SHOWFORCE=True
+    
+    SHOWWALLDATA=True
+    SHOWDOORDATA=True
+    SHOWEXITDATA=True
+    
+    PAUSE=True
+    REWIND=False
+    FORWARD=False
+    
+    pygame.init()
+    screen = pygame.display.set_mode([800, 350])
+    pygame.display.set_caption('Visualize data file for evac simulation')
+    clock = pygame.time.Clock()
+    #screen.fill(white)
+
+    #myfont=pygame.font.SysFont("arial",16)
+    #text_surface=myfont.render("No2",True, (0,0,0), (255,255,255))
+    #screen.blit(text_surface, (16,20))
+
+    running = True
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+                pygame.display.quit()
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                (mouseX, mouseY) = pygame.mouse.get_pos()
+                #button = pygame.mouse.get_pressed()            
+            # elif event.type == pygame.MOUSEBUTTONUP:
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_PAGEUP:
+                    ZOOMFACTOR = ZOOMFACTOR +1
+                elif event.key == pygame.K_PAGEDOWN:
+                    ZOOMFACTOR = max(6.0, ZOOMFACTOR -1)
+                    
+                elif event.key == pygame.K_t:
+                    MODETRAJ = not MODETRAJ
+                elif event.key == pygame.K_SPACE:
+                    PAUSE = not PAUSE
+                elif event.key == pygame.K_HOME:
+                    REWIND = True
+                    PAUSE = True
+                    #xSpace=xSpace-10
+                elif event.key == pygame.K_END:
+                    FORWARD = True
+                    PAUSE = True
+                    #xSpace=xSpace+10
+                    
+                elif event.key == pygame.K_v:
+                    SHOWVELOCITY = not SHOWVELOCITY
+                elif event.key == pygame.K_i:
+                    SHOWINDEX = not SHOWINDEX
+                elif event.key == pygame.K_f:
+                    SHOWFORCE = not SHOWFORCE
+                #elif event.key == pygame.K_r:
+                #    DRAWSELFREPULSION = not DRAWSELFREPULSION
+                
+                elif event.key == pygame.K_1:
+                    SHOWWALLDATA = not SHOWWALLDATA
+                elif event.key == pygame.K_2:
+                    SHOWDOORDATA = not SHOWDOORDATA
+                elif event.key == pygame.K_3:
+                    SHOWEXITDATA = not SHOWEXITDATA
+                #elif event.key == pygame.K_s:
+                #    SHOWSTRESS = not SHOWSTRESS
+                
+                elif event.key == pygame.K_UP:
+                    ySpace=ySpace-10
+                elif event.key == pygame.K_DOWN:
+                    ySpace=ySpace+10
+                elif event.key == pygame.K_LEFT:
+                    xSpace=xSpace-10
+                elif event.key == pygame.K_RIGHT:
+                    xSpace=xSpace+10
+
+        if MODETRAJ == False:
+            screen.fill([0,0,0])
+
+        #Time  = readFRec(fin,'f')  # Time index
+        if T_INDEX == None or T_INDEX==T_END-1:
+            print("Simulation End!")
+            #running=False
+            #pygame.display.quit()
+            PAUSE=True
+        else:
+            if PAUSE==False:
+                T_INDEX = T_INDEX+1
+            else:
+                if REWIND and T_INDEX>0:
+                    T_INDEX = T_INDEX-1
+                if FORWARD and T_INDEX<T_END-1:
+                    T_INDEX = T_INDEX+1
+        #nplim = readFRec(fin,'I')  # Number of particles in the PART class
+        
+        Time_t = Time[T_INDEX]
+        XYZ_t = XYZ[T_INDEX]
+        TAG_t = TAG[T_INDEX]
+        INFO_t = INFO[T_INDEX]
+
+        #############################
+        ######### Drawing Process ######
+        xyShift = np.array([xSpace, ySpace])
+
+        ####################
+        # Showing Time
+        ####################
+        if SHOWTIME:
+            myfont=pygame.font.SysFont("arial",14)
+            time_surface=myfont.render("Simulation Time:" + str(Time_t), True, (0,0,0), (255,255,255))
+            screen.blit(time_surface, [620,300]) #[750,350]*ZOOMFACTOR)
+
+        if fdsfile!=None:
+            drawWalls(screen, walls, ZOOMFACTOR, SHOWWALLDATA, xSpace, ySpace)
+            #drawPATH(screen, holes, green, ZOOMFACTOR, SHOWDOORDATA, xSpace, ySpace)
+            drawExits(screen, exits, ZOOMFACTOR, SHOWEXITDATA, xSpace, ySpace)
+            drawDoors(screen, doors, ZOOMFACTOR, SHOWEXITDATA, xSpace, ySpace)
+            #drawPATH(screen, entries, purple, ZOOMFACTOR, SHOWEXITDATA, xSpace, ySpace)
+
+        if debug:
+            print ("Show TAG_t: ", TAG_t)
+        
+        ################################
+        # Next step is drawing agents by using evac data
+        ################################  
+        for idai in range(np.size(TAG_t)):
+
+            if XYZ_t[2][idai]<Zmin or XYZ_t[2][idai]>Zmax:
+                continue
+            #scPos = np.array([0, 0])
+            scPos = [0, 0]
+            scPos[0] = int(XYZ_t[0][idai]*ZOOMFACTOR+xSpace)
+            scPos[1] = int(XYZ_t[1][idai]*ZOOMFACTOR+ySpace)
+            
+            if SHOWVELOCITY:
+
+                actualV = [0, 0]
+                actualV[0]=(XYZ_t[0][idai]+INFO_t[0][idai])*ZOOMFACTOR+xSpace
+                actualV[1]=(XYZ_t[1][idai]+INFO_t[1][idai])*ZOOMFACTOR+ySpace
+                pygame.draw.line(screen, green, scPos, actualV, 2)
+                
+                desiredV = [0, 0]
+                desiredV[0]=(XYZ_t[0][idai]+INFO_t[2][idai])*ZOOMFACTOR+xSpace
+                desiredV[1]=(XYZ_t[1][idai]+INFO_t[3][idai])*ZOOMFACTOR+ySpace
+                pygame.draw.line(screen, red, scPos, desiredV, 2)            
+            
+
+            if SHOWFORCE:
+                pass
+            
+            color_para = [255, 0, 0]
+            #color_para[0] = int(255*min(1, agent.ratioV))
+            pygame.draw.circle(screen, color_para, scPos, int(2.0), 2)
+            #pygame.draw.circle(screen, color_para, scPos, int(0.2*ZOOMFACTOR), 2)           
+            #int(agent.radius*ZOOMFACTOR), LINEWIDTH)
+
+        REWIND=False
+        FORWARD=False
+        pygame.display.flip()
+        clock.tick(20)
+
 

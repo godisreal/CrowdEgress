@@ -51,6 +51,7 @@ class GUI(object):
         self.fname_FDS = FN_FDS
         self.fname_EVAC = FN_EVAC
         self.fname_OutTXT = None
+        self.fname_OutBIN = None
         self.fname_OutNPZ = "vel_flow0.npz"
         self.currentdir = None
         self.currentSimu = None
@@ -380,7 +381,11 @@ class GUI(object):
         nameEntered_dtExit = Entry(self.frameSoc, width=12, textvariable=self.dtExit_gui)
         nameEntered_dtExit.insert(0, '1.0')
         nameEntered_dtExit.place(x=262, y=226)
-        
+
+        self.buttonVideo = Button(self.frameSoc, text='visualize agent-based simulation', command=self.startVideo)
+        self.buttonVideo.place(x=12, y=126)
+        self.showHelp(self.buttonStart, "Display the simulation result offline in pygame.  \n Please select the simulation output data file. ")
+
                 
         ##############################################
         # ============================================
@@ -677,6 +682,7 @@ class GUI(object):
             self.currentSimu.buildMesh()
             self.currentSimu.flowMesh()
             self.currentSimu.computeDoorDirection()
+            self.currentSimu.dataSummary()
             sunpro1 = mp.Process(target=show_simu(self.currentSimu))
             #sunpro1 = mp.Process(target=self.currentSimu.flowMesh())
             sunpro1.start()
@@ -715,6 +721,7 @@ class GUI(object):
         self.currentSimu.buildMesh()
         self.currentSimu.flowMesh()
         self.currentSimu.computeDoorDirection()
+        self.currentSimu.dataSummary()
         sunpro1 = mp.Process(target=show_simu(self.currentSimu))        
         sunpro1.start()
         #sunpro1.join()
@@ -736,6 +743,7 @@ class GUI(object):
         self.currentSimu.buildMesh()
         self.currentSimu.flowMesh()
         self.currentSimu.computeDoorDirection()
+        self.currentSimu.dataSummary()
         sunpro1 = mp.Process(target=compute_simu(self.currentSimu))        
         sunpro1.start()
         #sunpro1.join()
@@ -743,6 +751,22 @@ class GUI(object):
         #show_geom(myTest)
         #myTest.show_simulation()
         self.currentSimu.quit()
+
+    # Only compute the numerical result without displaying in pygame
+    def startVideo(self):
+
+        self.fname_OutBIN = tkf.askopenfilename(filetypes=(("bin files", "*.bin"),("All files", "*.*")), initialdir=self.currentdir)
+        temp=re.split(r'/', self.fname_OutBIN)
+        #temp=self.fname_OutTXT.split('/') 
+        #self.lb_outbin.config(text = "The output bin file selected: "+str(temp[-1])+"\n")
+        #self.textInformation.insert(END, 'fname_FDS:   '+self.fname_FDS)
+        print('fname_outTxtFile:', self.fname_OutBIN)
+        self.setStatusStr("Simulation not yet started!")
+        self.textInformation.insert(END, '\n'+'Output bin File Selected:   '+self.fname_OutBIN+'\n')
+        visualizeEvac(self.fname_OutBIN, self.fname_EVAC, self.fname_FDS)
+            #sunpro1 = mp.Process(target=visualizeEvac(self.fname_EVAC, self.fname_FDS))
+            #sunpro1.start()
+            #sunpro1.join()
 
 def isfloatnum(aString):
     try:

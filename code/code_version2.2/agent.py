@@ -37,7 +37,7 @@ class person(object):
         # random initialize a agent
         #self.memory = np.array([0.0, 0.0], [0.0, 0.0], [0.0, 0.0])
         #self.sumAdapt = np.array([0.0, 0.0])
-        self.name = 'no_name'
+        self.name = 'None'
         self.ID = 0 #Name or index of agents
         self.inComp = 1
         self.aType = 'MoveToDest'  #{'MoveToDest' 'Follow' 'Talk' 'Search'}

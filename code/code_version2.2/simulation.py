@@ -100,8 +100,8 @@ class simulation(object):
         self.TESTFORCE = True
         self.TPREMODE = 3        ### Instructinn: 1 -- DesiredV = 0  2 -- Motive Force =0: 
         self.GROUPBEHAVIOR = False     # Enable the group social force
-        self.SELFREPULSION = False	# Enable self repulsion
-        self.DEBUG = False #True
+        self.SELFREPULSION = True	# Enable self repulsion
+        self.DEBUG = True
         #self.DEBUGFORCE = False
         #self.DEBUGTAR = False
         #self.GUI = True
@@ -121,6 +121,11 @@ class simulation(object):
         self.num_walls=0
         self.num_doors=0
         self.num_exits=0
+
+        self.inComp_agents=0
+        self.inComp_walls=0
+        self.inComp_doors=0
+        self.inComp_exits=0
         
         self.inputDataCorrect = True
         self.FN_FDS=None
@@ -143,7 +148,7 @@ class simulation(object):
         #self.t_now =0.0
         #self.t_pause = 0.0
 
-        self.solver=1
+        self.solver=2
         
         self.bldmesh = None
 
@@ -323,7 +328,7 @@ class simulation(object):
             self.num_exits = len(self.exits)                
         
         self.exit2door = np.zeros((self.num_exits, self.num_doors)) # This is almost useless because users can add doors or exits in testGeom.  So the size of self.exit2door will be changed in testGeom.  
-        
+        return None
         '''
         if self.inputDataCorrect:
             print("Input data format is correct!")
@@ -331,13 +336,48 @@ class simulation(object):
             print("Input data format is wrong! Please check and modify!")
         '''
         
+    def dataSummary(self):
+
+        FN_Temp = self.outDataName + ".txt"
+        f = open(FN_Temp, "a+")
+        
+        tempNum=0
+        for agent in self.agents:
+            if agent.inComp:
+                tempNum=tempNum+1
+        self.inComp_agents=tempNum
+
+        tempNum=0
+        for wall in self.walls:
+            if wall.inComp:
+                tempNum=tempNum+1
+        self.inComp_walls=tempNum
+
+        tempNum=0
+        for door in self.doors:
+            if door.inComp:
+                tempNum=tempNum+1
+        self.inComp_doors=tempNum
+
+        tempNum=0
+        for exit in self.exits:
+            if exit.inComp:
+                tempNum=tempNum+1
+        self.inComp_exits=tempNum
         
         ### Display a summary of input data
         print('Display a summary of input data as below.\n')
-        print('number of agents: '+str(self.num_agents)+ '\n')
-        print('number of walls: '+str(self.num_walls)+ '\n')
-        print('number of doors: '+str(self.num_doors)+ '\n')
-        print('number of exits: '+str(self.num_exits)+ '\n')
+        print('number of agents in input file: '+str(self.num_agents)+ '\n')
+        print('number of wall in input files: '+str(self.num_walls)+ '\n')
+        print('number of doors in input file: '+str(self.num_doors)+ '\n')
+        print('number of exits in input file: '+str(self.num_exits)+ '\n')
+        print('\n')
+
+        print('Display a summary of data in computation as below.\n')
+        print('number of agents in computation: '+str(self.inComp_agents)+ '\n')
+        print('number of walls in computation: '+str(self.inComp_walls)+ '\n')
+        print('number of doors in computation: '+str(self.inComp_doors)+ '\n')
+        print('number of exits in computation: '+str(self.inComp_exits)+ '\n')
         print('\n')
 
         print('time-related paramters:') #\n')        
@@ -355,15 +395,19 @@ class simulation(object):
         print('Self Repulsion: '+str(self.SELFREPULSION)) #+ '\n')
 
         print('\n')
-        
-        FN_Temp = self.outDataName + ".txt"
-        f = open(FN_Temp, "a+")
 
         f.write('Display a summary of input data as below.\n')
-        f.write('number of agents: '+str(self.num_agents)+ '\n')
-        f.write('number of walls: '+str(self.num_walls)+ '\n')
-        f.write('number of doors: '+str(self.num_doors)+ '\n')
-        f.write('number of exits: '+str(self.num_exits)+ '\n')
+        f.write('number of agents in input file: '+str(self.num_agents)+ '\n')
+        f.write('number of walls in input file: '+str(self.num_walls)+ '\n')
+        f.write('number of doors in input file: '+str(self.num_doors)+ '\n')
+        f.write('number of exits in input file: '+str(self.num_exits)+ '\n')
+        f.write('\n')
+
+        f.write('Display a summary of data in computation as below.\n')
+        f.write('number of agents in computation: '+str(self.inComp_agents)+ '\n')
+        f.write('number of walls in computation: '+str(self.inComp_walls)+ '\n')
+        f.write('number of doors in computation: '+str(self.inComp_doors)+ '\n')
+        f.write('number of exits in computation: '+str(self.inComp_exits)+ '\n')
         f.write('\n')
 
         f.write('time-related paramters: \n')        
@@ -371,7 +415,12 @@ class simulation(object):
         f.write('DT_DumpData: '+str(self.DT_DumpData)+ '\n')
         f.write('t_end: '+str(self.t_end)+ '\n')
         f.write('DT_OtherList'+str(self.DT_OtherList)+ '\n')
-        f.write('DT_ChangeDoor'+str(self.DT_ChangeDoor))
+        f.write('DT_ChangeDoor'+str(self.DT_ChangeDoor)+ '\n\n')
+
+        f.write('simulation paramters:\n')        
+        f.write('TPRE Mode: '+str(self.TPREMODE)+'\n')
+        f.write('Group: '+str(self.GROUPBEHAVIOR)+'\n')
+        f.write('Self Repulsion: '+str(self.SELFREPULSION)+'\n')
 
         f.close()
 
@@ -443,9 +492,9 @@ class simulation(object):
             self.ymax=np.max(yyy)
         
         if self.xpt is None:
-            self.xpt=int(self.xmax-self.xmin)*3+20
+            self.xpt=int(self.xmax-self.xmin)*2+20
         if self.ypt is None:
-            self.ypt=int(self.ymax-self.ymin)*3+20
+            self.ypt=int(self.ymax-self.ymin)*2+20
 
         if self.DEBUG:
             print("Range in x axis:", self.xmin, self.xmax, "Num of points in x axis:", self.xpt)
@@ -1042,7 +1091,12 @@ class simulation(object):
             # Initialize Desired Interpersonal Distance
             tableFeatures, LowerIndex, UpperIndex = getData(self.FN_EVAC, '&groupABD')
             person.AFactor_Init, person.BFactor_Init, person.DFactor_Init = readGroupArray(tableFeatures, len(self.agents), len(self.agents))
-    
+
+            #tableFeatures, LowerIndex, UpperIndex = getData(self.FN_EVAC, '&groupABD')
+            #person.AFactor_Init = readArrayIndex(tableFeatures, len(self.agents), len(self.agents), index=0, iniX=1, iniY=1)
+            #person.BFactor_Init = readArrayIndex(tableFeatures, len(self.agents), len(self.agents), index=1, iniX=1, iniY=1)
+            #person.DFactor_Init = readArrayIndex(tableFeatures, len(self.agents), len(self.agents), index=2, iniX=1, iniY=1)
+            
             #tableFeatures, LowerIndex, UpperIndex = getData(self.FN_EVAC, '&groupA')
             #person.AFactor_Init = readFloatArray(tableFeatures, len(self.agents), len(self.agents))
             #AFactor_Init = readCSV("A_Data2018.csv", 'float')
@@ -1189,11 +1243,11 @@ class simulation(object):
         f.close()
 
 
-    def simulation_step2022(self):
+    def simulation_step2022(self, f):
         # Compute the agents in single step
-
+            
         if self.t_sim > self.tt_OtherList:
-            print('Time for update OtherList:', self.t_sim)
+            print('\nTime for update OtherList:', self.t_sim)
             self.tt_OtherList = self.tt_OtherList + self.DT_OtherList
             for idai,ai in enumerate(self.agents):
                 if ai.inComp == 0:
@@ -1206,18 +1260,18 @@ class simulation(object):
             print("person.comm:\n", person.comm)
             print("person.talk:\n", person.talk)
 
-            FN_Temp = self.outDataName + ".txt"
-            f = open(FN_Temp, "a+")
+            #FN_Temp = self.outDataName + ".txt"
+            #f = open(FN_Temp, "a+")
             f.write('\n\n&SimuTime\n')
-            f.write('Simulation Time:' + str(self.t_sim)+'\n')
-            f.write('&AttentionList\n')
+            f.write('\n\n&AttentionList\n')
+            f.write('SimulationTime=' + str(self.t_sim)+'\n')
             f.write("person.see_flag:\n"+str(person.see_flag)+'\n')
             f.write("person.comm:\n"+str(person.comm)+'\n')
             f.write("person.talk:\n"+str(person.talk)+'\n')
             f.write('\nEndAttentionList!')
             f.write('\n')
             f.write('\n')
-            f.close()
+            #f.close()
                     
                 
         #if (self.t_sim < ai.tpre):
@@ -1236,11 +1290,10 @@ class simulation(object):
             print("person.exit_known:\n", person.exit_known)
 
 
-            FN_Temp = self.outDataName + ".txt"
-            f = open(FN_Temp, "a+")
-            f.write('\n\n&SimuTime\n')
-            f.write('Simulation Time:' + str(self.t_sim)+'\n')
-            f.write('&DoorProb\n')
+            #FN_Temp = self.outDataName + ".txt"
+            #f = open(FN_Temp, "a+")
+            f.write('\n\n&DoorProb\n')
+            f.write('SimulationTime=' + str(self.t_sim)+'\n')
             f.write('person.exit_prob:\n'+str(person.exit_prob)+'\n')
             for i in range(len(person.exit_prob)):
                 f.write('prob=')
@@ -1249,7 +1302,7 @@ class simulation(object):
             f.write('\nWellDone!')
             f.write('\n')
             f.write('\n')
-            f.close()
+            #f.close()
             
             for idai, ai in enumerate(self.agents):
 
@@ -1336,7 +1389,9 @@ class simulation(object):
             f.write('\n')
             f.close()
             '''
-                    
+
+        #f.write('\n\n&Simulation Time:\n')
+        f.write('\n\n&SimulationTime:' + str(self.t_sim)+'\n')
         for idai,ai in enumerate(self.agents):
             
             # Whether ai is in computation
@@ -1536,12 +1591,24 @@ class simulation(object):
 
             if self.TESTFORCE:
                 print ('@motiveForce:', np.linalg.norm(motiveForce), motiveForce)
-                print ('@peopleInter:', np.linalg.norm(peopleInter), peopleInter)
-                print ('@wallInter:', np.linalg.norm(wallInter), wallInter)
-                print ('@doorInter:', np.linalg.norm(doorInter), doorInter)
+                print ('@peopleForce:', np.linalg.norm(peopleInter), peopleInter)
+                print ('@wallForce:', np.linalg.norm(wallInter), wallInter)
+                print ('@doorForce:', np.linalg.norm(doorInter), doorInter)
                 print ('@diss:', np.linalg.norm(ai.diss*ai.actualV), ai.diss*ai.actualV)
                 print ('@selfRepulsion:', np.linalg.norm(selfRepulsion), selfRepulsion, '\n')
             
+                f.write('\nAgent:\t'+str(ai.ID) + ':'+str(ai.name) + '\n')
+                f.write('Simulation Time:' + str(self.t_sim) + '\n')
+                f.write('Position:\t'+str(ai.pos)+'\n')
+                f.write('Velocity:\t'+str(np.linalg.norm(ai.actualV))+ ':'+str(ai.actualV)+'\n')
+                f.write('DesiredVelocity:\t'+str( np.linalg.norm(ai.desiredV))+ ':'+str(ai.desiredV)+'\n')
+                f.write("@motiveForce:\t"+str( np.linalg.norm(motiveForce))+ ':'+str(motiveForce)+'\n')
+                f.write('@peopleForce:\t'+str(np.linalg.norm(peopleInter))+ ':'+str(peopleInter)+'\n')
+                f.write('@wallForce:\t'+str(np.linalg.norm(wallInter))+ ':'+str(wallInter)+'\n')
+                f.write('@doorForce:\t'+str(np.linalg.norm(doorInter))+ ':'+str(doorInter)+'\n')
+                f.write('@diss:\t'+str(np.linalg.norm(ai.diss*ai.actualV))+ ':'+str(ai.diss*ai.actualV)+'\n')
+                f.write('@selfRepulsion:\t'+str(np.linalg.norm(selfRepulsion))+ ':'+str(selfRepulsion)+'\n')
+                
             ###########################################
             # Solution to Overspeed: Agents will not move too fast
             ai.actualSpeed = np.linalg.norm(ai.actualV)
@@ -1557,7 +1624,37 @@ class simulation(object):
         
             ai.desiredV_old = ai.desiredV
             ai.actualV_old = ai.actualV
-        
+
+       
+            ###########################################
+            ## Output time when agents reach the safety
+            if self.solver==0 or self.num_exits==0:
+                if (np.linalg.norm(ai.pos-ai.dest)<=0.2) and (ai.Goal == 0):
+                    print ('Reaching the goal:')
+                    ai.inComp = 0
+                    ai.Goal = 1
+                    ai.timeOut = self.t_sim
+                    print ('Time to Reach the Goal:', ai.timeOut)
+                    f.write('&FinalInfo')
+                    f.write('agent ID'+str(ai.ID)+'\n'+'Time to Reach the Goal:'+str(ai.timeOut))
+            
+
+            ###########################################
+            ## Remove agent when agent reaches the exit
+            else:
+                for exit in self.exits:
+                    if exit.inComp == 0:
+                        continue
+                    if exit.inside(ai.pos):
+                        ai.inComp = 0
+                        ai.Goal = 1
+                        ai.timeOut = self.t_sim
+                        print ('Time to reach an exit:', ai.timeOut)
+                        f.write('\n\n&FinalInfo\n')
+                        f.write('agent ID'+str(ai.ID)+'\t reach the exit ID'+str(exit.oid)+'\n')
+                        f.write('agent ID'+str(ai.ID)+'\t reaches the exit at time   '+str(ai.timeOut)+'\n')
+
+            '''
             ###########################################
             ## Output time when agents reach the safety
             if self.TIMECOUNT and (np.linalg.norm(ai.pos-ai.dest)<=0.2) and (ai.Goal == 0):
@@ -1580,7 +1677,10 @@ class simulation(object):
                     ai.timeOut = self.t_sim
                     print ('Time to reach an exit:', ai.timeOut)
                     #f.write('agent ID'+str(ai.ID)+'\n'+'Time to Reach the Goal:'+str(ai.timeOut))
+            '''
 
+        f.write('\n&EndofStep:'+str(self.t_sim)+'\n')
+        #f.write('SimulationTime=' + str(self.t_sim)+'\n')
         # Update simulation time
         self.t_sim = self.t_sim + self.DT
 
@@ -1599,14 +1699,14 @@ if __name__=="__main__":
     #myTest.read_data()
     show_geom(myTest)
     
-    myTest.preprocessGeom()
-    myTest.preprocessAgent()
-    myTest.buildMesh()
-    myTest.flowMesh()
-    myTest.computeDoorDirection()
-    
     if myTest.continueToSimu:
-        show_flow(myTest)
+        myTest.preprocessGeom()
+        myTest.preprocessAgent()
+        myTest.buildMesh()
+        myTest.flowMesh()
+        myTest.computeDoorDirection()
+        myTest.dataSummary()
+        #show_flow(myTest)
         show_simu(myTest)
     #myTest.quit()
 

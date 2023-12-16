@@ -37,7 +37,91 @@ import time
 import matplotlib.pyplot as plt
 
 
-def readDoorProb(FileName, doorIndex=2, showdata=True):
+def readStepTxt(FileName, showdata=True):
+    findStep=False
+
+    T= []
+    XYZ=[]
+    TAG=[]
+    FEATRUE=[]
+    
+    for line in open(FileName):
+        if re.match('&SimulationTime:', line):
+            findStep=True
+            dataTemp=line.split(':')
+            Time = float(dataTemp[1].strip())
+            T.append(Time)
+            
+            x=[]
+            y=[]
+            z=[]
+            tag=[]
+            
+            Q_actualVx=[]
+            Q_actualVy=[]
+            Q_desiredVx=[]
+            Q_desiredVy=[]
+            Q_motiveFx=[]
+            Q_motiveFy=[]
+            
+        if  findStep:
+            if re.search('Agent:', line):
+                dataTemp=line.split(':')
+                tag.append(float(dataTemp[1].strip()))
+
+            if re.search('Position:', line):
+                dataTemp=line.split(':')
+                xy=dataTemp[1]
+                temp =  re.split(r'[\s\,]+', xy)
+                x.append(float(temp[1].lstrip('[').strip()))
+                y.append(float(temp[2].strip().rstrip(']')))
+                z.append(1.6)
+
+            if re.search('Velocity:', line):
+                dataTemp=line.split(':')
+                vel=dataTemp[2]
+                temp =  re.split(r'[\s\,]+', vel)
+                Q_actualVx.append(float(temp[1].lstrip('[').strip()))
+                Q_actualVy.append(float(temp[2].strip().rstrip(']')))
+                
+            if re.search('&EndofStep', line):
+                findStep = False
+
+                NPLIM=np.size(tag)
+                xyz=x+y+z #+ap1+ap2+ap3+ap4
+                Q = Q_actualVx+Q_actualVy +Q_desiredVx+Q_desiredVy + Q_motiveFx+Q_motiveFy #+Q_groupFx+Q_groupFy
+
+                # process timestep data
+                XYZ.append(xyz)
+                TAG.append(tag)
+                FEATRUE.append(Q)
+                
+            '''
+            xyz  = np.array(readFRec(fin,'f'))
+            tag  = np.array(readFRec(fin,'I'))
+            q    = np.array(readFRec(fin,'f'))
+
+            #print >> outfile, "g", q, "\n"
+            if mode=='evac':
+                xyz.shape = (7,nplim) # evac data: please check dump_evac() in evac.f90
+            else: 
+                xyz.shape = (3,nplim) # particle data: please check dump_part() in dump.f90
+            
+            q.shape   = (n_quant, nplim)
+            
+            if wrtxt:
+                outfile.write("Time:" + str(Time) + "\n")
+                outfile.write("xyz:" + str(xyz) + "\n") 
+                outfile.write("tag:" + str(tag) + "\n")           
+                outfile.write( "q:" + str(q) + "\n")
+            '''
+    
+    #np.savez( outfn + ".npz", T, XYZ, TAG)
+    #return (np.array(T), np.hstack(Q), q_labels, q_units)
+    return T, XYZ, TAG, FEATRUE  #, n_part, version, n_quant
+
+
+def readDoorProb(FileName, doorIndex, showdata=True):
     findMESH=False
     doorProb=[]
     timeIndex= []
@@ -58,7 +142,9 @@ def readDoorProb(FileName, doorIndex=2, showdata=True):
                 prob = float(temp2[doorIndex+1].lstrip('[').strip('=').rstrip(']'))
                 row.append(prob)
                 #print(row)
-
+            if re.search('SimulationTime=', line):
+                dataTemp=line.split('=')
+                timeIndex.append(float(dataTemp[1].lstrip().rstrip()))
                     #xpoints = temp2[0]
                     #ypoints = temp2[1]
             '''
@@ -84,10 +170,13 @@ def readDoorProb(FileName, doorIndex=2, showdata=True):
             for j in range(NColomn):
                 matrix[i,j] = float(doorProb[i][j])
     print('matrix', matrix)
+    print('sizeOfMatrix:', np.shape(matrix))
+    print('sizeOfTimeIndex:', np.shape(timeIndex))
+    #print(timeIndex)
     if showdata:
         for j in range(NColomn):
-            plt.plot(matrix[:,j], linewidth=3.0, label=str(j))
-            plt.text(0,matrix[0,j], str(j), fontsize=16)
+            plt.plot(timeIndex, matrix[:,j], linewidth=3.0, label=str(j))
+            plt.text(0,matrix[0,j], str(j), fontsize=18)
         plt.title("exit index:"+str(doorIndex))
         plt.grid()
         plt.legend(loc='best')
@@ -273,18 +362,18 @@ def readGroupArray(tableFeatures, NRow, NColomn, debug=True):
     return matrixA, matrixB, matrixD
     
 
-'''
-def readGroupArray(tableFeatures, iniX=1, iniY=1, debug=True):
+def readArrayIndex(tableFeatures, NRow, NColomn, index=0, iniX=1, iniY=1, debug=True):
 
     #tableFeatures, LowerIndex, UpperIndex = getData("newDataForm.csv", '&Ped2Exit')
-    [dataX, dataY] = np.shape(tableFeatures)
-    NRow = dataX - iniX
-    NColomn = dataY - iniY
+
+    #(dataX, dataY) = np.shape(tableFeatures)
+    #NRow = dataX - iniX
+    #NColomn = dataY - iniY
 
     # NRow and NColomn are the size of data to be extracted from tableFeatures
-    matrixA = np.zeros((NRow, NColomn))
-    matrixB = np.zeros((NRow, NColomn))
-    matrixD = np.zeros((NRow, NColomn))
+    matrixC = np.zeros((NRow, NColomn))
+    #matrixB = np.zeros((NRow, NColomn))
+    #matrixD = np.zeros((NRow, NColomn))
     
     for i in range(NRow):
         for j in range(NColomn):
@@ -292,25 +381,25 @@ def readGroupArray(tableFeatures, iniX=1, iniY=1, debug=True):
                 if tableFeatures[i+iniX][j+iniY] and tableFeatures[i+iniX][j+iniY] != '0':
                     #temp=re.split(r'[\s\/]+', tableFeatures[i+1][j+1])
                     temp=re.split(r'\s*[;\|\s]\s*', tableFeatures[i+iniX][j+iniY])
-                    matrixA[i,j] = float(temp[0])
-                    matrixB[i,j] = float(temp[1])
-                    matrixD[i,j] = float(temp[2])
+                    matrixC[i,j] = float(temp[index])
+                    #matrixB[i,j] = float(temp[1])
+                    #matrixD[i,j] = float(temp[2])
                 else:
-                    matrixA[i,j] = 0.0
-                    matrixB[i,j] = 1.0
-                    matrixD[i,j] = 1.0
+                    matrixC[i,j] = 0.0
+                    #matrixB[i,j] = 1.0
+                    #matrixD[i,j] = 1.0
             except:
-                print("Error in reading group data!")
+                print("Error in reading data!")
                 input("Please check!")
-                matrixA[i,j] = 0.0
-                matrixB[i,j] = 1.0
-                matrixD[i,j] = 1.0
+                matrixC[i,j] = 0.0
+                #matrixB[i,j] = 1.0
+                #matrixD[i,j] = 1.0
                 
     if debug:
         print(tableFeatures, '\n')
-        print('Data in Table:', '\n', matrixA, matrixB, matrixD)
-    return matrixA, matrixB, matrixD
-'''
+        print('Data in Table:', '\n', 'Index Number:', index, '\n', matrixC, '\n\n') #, matrixB, matrixD)
+    return matrixC #, matrixB, matrixD
+
     
 # The file to record the some output data of the simulation
 # f = open("outData.txt", "w+")
@@ -1075,14 +1164,87 @@ def readFRec(infile,fmt):
         result = struct.unpack(fmt2,infile.read(len1))[0]
     len2   = struct.unpack('@I', infile.read(4))[0]
     if fmt == 's':
-        result=result[0].rstrip()
+        result=result[0] #.rstrip()
     return result
+
+
+#################################
+# The function readPRTfile
+def readPRTfile(fname, wrtxt = True, max_time=np.Inf, mode='evac'):
+
+    fin = open(fname,'rb')
+    temp = fname.split('.prt5')
+    outfn = temp[0]
+    outfile = open(outfn + ".txt", "w")
+    
+    one_integer=readFRec(fin,'I')  #! Integer 1 to check Endian-ness
+    version=readFRec(fin,'I')       # FDS version number
+    n_part=readFRec(fin,'I')        # Number of PARTicle classes
+    #print(n_part)
+    q_labels = []
+    q_units  = []
+    for npc in range(0,n_part):
+        n_quant,zero_int=readFRec(fin,'I')  # EVAC_N_QUANTITIES, ZERO_INTEGER
+        for nq in range(0,n_quant):
+            smv_label=readFRec(fin,'s')
+            #print(smv_label)
+            units    =readFRec(fin,'s')
+            q_units.append(units)  
+            q_labels.append(smv_label)
+    if wrtxt:
+        outfile.write("one_integer:" + str(one_integer) + "\n")    
+        outfile.write("n_part:" + str(n_part) + "\n") 
+        outfile.write("n_quant:" + str(n_quant) + "\n")
+        
+    Q=[]
+    T  = []
+    #diam =[] ??? Not used in this program
+    XYZ = []
+    TAG = []
+    while True:
+
+        Time  = readFRec(fin,'f')  # Time index
+        if Time == None or Time>max_time:
+            break
+        nplim = readFRec(fin,'I')  # Number of particles in the PART class
+        if nplim>0:
+            xyz  = np.array(readFRec(fin,'f'))
+            tag  = np.array(readFRec(fin,'I'))
+            q    = np.array(readFRec(fin,'f'))
+
+            #print >> outfile, "g", q, "\n"
+            if mode=='evac':
+                xyz.shape = (7,nplim) # evac data: please check dump_evac() in evac.f90
+            else: 
+                xyz.shape = (3,nplim) # particle data: please check dump_part() in dump.f90
+            
+            q.shape   = (n_quant, nplim)
+            
+            if wrtxt:
+                outfile.write("Time:" + str(Time) + "\n")
+                outfile.write("xyz:" + str(xyz) + "\n") 
+                outfile.write("tag:" + str(tag) + "\n")           
+                outfile.write( "q:" + str(q) + "\n")
+
+            # process timestep data
+            T.append(Time)
+            XYZ.append(xyz)
+            TAG.append(tag)
+            Q.append(q)
+        else:
+            tmp = fin.read(24)
+    
+    fin.close()
+    outfile.close()
+    #np.savez( outfn + ".npz", T, XYZ, TAG, Q)
+    #return (np.array(T),np.hstack(Q),q_labels,q_units)
+    return T, XYZ, TAG, Q, n_part, version, n_quant
 
 
 def intiPrt(fileName, debug=True):
     
     n_part=1  # Number of PARTicle classes
-    [n_quant,zero_int]=[6,0]  # Number of particle features
+    [n_quant,zero_int]=[8,0]  # Number of particle features
     
     #filename=open('test.bin', 'wb+')
     writeFRec(fileName, 'I', [1])      #! Integer 1 to check Endian-ness
@@ -1092,20 +1254,20 @@ def intiPrt(fileName, debug=True):
         writeFRec(fileName, 'I', [n_quant, zero_int])
         for nq in range(n_quant):
             if nq == 0:
-                writeFRec(fileName,'s', "desired Vx") # smv_label
+                writeFRec(fileName,'s', "actual Vx") # smv_label
                 writeFRec(fileName,'s', "m/s")        # units
                 #q_units.append(units)  
                 #q_labels.append(smv_label)
             if nq ==1:
-                writeFRec(fileName,'s', "desired Vy") # smv_label
+                writeFRec(fileName,'s', "actual Vy") # smv_label
                 writeFRec(fileName,'s', "m/s")        # units
                 #q_units.append(units)  
                 #q_labels.append(smv_label)
             if nq ==2:
-                writeFRec(fileName,'s', "actual Vx") # smv_label
+                writeFRec(fileName,'s', "desired Vx") # smv_label
                 writeFRec(fileName,'s', "m/s")        # units
             if nq ==3:
-                writeFRec(fileName,'s', "actual Vy") # smv_label
+                writeFRec(fileName,'s', "desired Vy") # smv_label
                 writeFRec(fileName,'s', "m/s") 
             if nq ==4:
                 writeFRec(fileName,'s', "motive Fx") # smv_label
@@ -1113,12 +1275,12 @@ def intiPrt(fileName, debug=True):
             if nq ==5:
                 writeFRec(fileName,'s', "motive Fy") # smv_label
                 writeFRec(fileName,'s', "N")        # units
-#            if nq ==6:
-#                writeFRec(fileName,'s', "group Fx") # smv_label
-#                writeFRec(fileName,'s', "N")        # units
-#            if nq ==7:
-#                writeFRec(fileName,'s', "group Fy") # smv_label
-#                writeFRec(fileName,'s', "N")        # units            
+            if nq ==6:
+                writeFRec(fileName,'s', "group Fx") # smv_label
+                writeFRec(fileName,'s', "N")        # units
+            if nq ==7:
+                writeFRec(fileName,'s', "group Fy") # smv_label
+                writeFRec(fileName,'s', "N")        # units            
                 
 
 #################################################
@@ -1139,14 +1301,19 @@ def dump_evac(agents, fileName, T, debug=True):
     
     tag=[]
     # n_quant = ?  Please revise in intiPrt()
-    Q_desiredVx=[]
-    Q_desiredVy=[]
     Q_actualVx=[]
     Q_actualVy=[]
+    
+    Q_desiredVx=[]
+    Q_desiredVy=[]
+
     Q_motiveFx=[]
     Q_motiveFy=[]
     Q_groupFx=[]
     Q_groupFy=[]
+
+    Q_selfrepFx=[]
+    Q_selfrepFy=[]
     
     for agent in agents:
         if agent.inComp == 0:
@@ -1165,24 +1332,26 @@ def dump_evac(agents, fileName, T, debug=True):
         
         tag.append(agent.ID)
 
-        Q_desiredVx.append(agent.desiredV[0])
-        Q_desiredVy.append(agent.desiredV[1])
         Q_actualVx.append(agent.actualV[0])
         Q_actualVy.append(agent.actualV[1])
+
+        Q_desiredVx.append(agent.desiredV[0])
+        Q_desiredVy.append(agent.desiredV[1])
+
         Q_motiveFx.append(agent.motiveF[0])
         Q_motiveFy.append(agent.motiveF[1])
         Q_groupFx.append(agent.groupF[0])
         Q_groupFy.append(agent.groupF[1])
         
-        #self.groupF        
-        #self.selfrepF
+        #Q_selfrepFx.append(agent.selfrepF[0])
+        #Q_selfrepFy.append(agent.selfrepF[1])
         
     NPLIM=np.size(tag)
     # ??? what happens if tag is an empty list
     # if tag is empty, do not write agent data to the binary file
     xyz=x+y+z+ap1+ap2+ap3+ap4
     # tag=tag  tag is already OK
-    Q=Q_desiredVx+Q_desiredVy+Q_actualVx+Q_actualVy +Q_motiveFx+Q_motiveFy #+Q_groupFx+Q_groupFy
+    Q=Q_actualVx+Q_actualVy +Q_desiredVx+Q_desiredVy+Q_motiveFx+Q_motiveFy+Q_groupFx+Q_groupFy#+Q_selfrepFx+Q_selfrepFy
 
     writeFRec(fileName, 'f', [T])
     writeFRec(fileName, 'I', [NPLIM])
@@ -1227,7 +1396,7 @@ def compute_simu(simu):
     while running and simu.t_sim < simu.t_end:
         
         # Computation Step
-        simu.simulation_step2022()
+        simu.simulation_step2022(f)
         #simu.t_sim = simu.t_sim + simu.DT  # Maybe it should be in step()
         pass
         
