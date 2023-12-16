@@ -1,0 +1,109 @@
+ FDS+Evac version: FDS 6.7.0, Evac 2.5.2 (GIT FDS6.7.0-31)
+ All material properties etc. are completely fabricated.
+
+ This test case is a verification case for the door selection
+ algorithm.
+ 
+&HEAD CHID='DoorAlgo2_A',TITLE='test A for door algorithm' /
+
+ The main evacuation mesh, dx=dy=0.5m
+&MESH IJK=20, 20, 1, XB=0.0,10.0, 0.0,10.0, 1.45,1.55, EVAC_Z_OFFSET=1.5,
+      EVACUATION=.TRUE.,  EVAC_HUMANS=.TRUE., ID = 'FF1stFloor'  /
+
+&TIME T_END=100.0, DT=0.1 /
+ 
+&MISC EVACUTION_MC_MODE=.FALSE., EVACUATION_DRILL=.TRUE. /
+&RADI RADIATION=.FALSE./
+
+&DUMP SMOKE3D=.FALSE.,
+      NFRAMES=200,
+      DT_PART=0.5,
+      DT_HRR= 0.5,
+      DT_SLCF=1000000.0,
+      DT_BNDF=1000000.0,
+      DT_PL3D=1000000.0,
+      DT_ISOF=1000000.0 /
+
+ Default material for evacuation meshes is INERT and its color
+ can not be changed esily in Smokeview. Thus, an evacuation 
+ material is defined below, which has only color:
+&SURF ID= 'EVAC_WALL', RGB= 200,0,200, EVAC_DEFAULT=.TRUE. / or COLOR
+
+ ============= FIRE FDS GEOMETRY STARTS ================
+
+&OBST XB= 0.0,10.0,  0.0, 0.5, 0.0,3.0 /
+&OBST XB= 0.0,10.0,  9.5,10.0, 0.0,3.0 /
+&OBST XB= 0.0, 0.5,  0.0,10.0, 0.0,3.0 /
+&OBST XB= 9.5,10.0,  0.0,10.0, 0.0,3.0 /
+&HOLE XB=4.49,5.51, -0.1, 0.6,-0.1,2.0 / Bottom door hole
+&HOLE XB=4.49,5.51,  9.4,10.1,-0.1,2.0 / Top door hole
+
+ ============= FIRE FDS GEOMETRY ENDS ==================
+
+ ============= EVAC GEOMETRY STARTS ====================
+
+&EXIT ID='BottomExit', IOR= -2,
+      FYI = 'Comment line',
+      COLOR='BLUE', TIME_OPEN=70.0,
+      XYZ = 5.0, 1.0, 1.50,
+      XB = 4.5,5.5, 0.0, 0.0, 1.45,1.55 /
+&EXIT ID='TopExit', IOR= +2,
+      FYI = 'Comment line',
+      COLOR='BLACK', TIME_OPEN=70.0,
+      XYZ = 5.0, 9.0, 1.50,
+      XB = 4.5,5.5, 10.0,10.0, 1.45,1.55 /
+&EXIT ID='SideExit', IOR= +1,
+      FYI = 'Comment line',
+      COLOR='WHITE', TIME_OPEN=70.0,
+      XYZ = 9.6, 5.0, 1.50,
+      XB = 9.3,10.3, 4.3,5.9, 1.45,1.55 /
+
+ ============= EVAC GEOMETRY ENDS ======================
+
+ ========== EVAC HUMAN PROPERTIES STARTS ===============
+
+ COLOR_METHOD: How Smokeview draws humans:
+   -1: (default) Default colors in Smokeview
+    0: The color given at the EVAC/ENTR-line
+    3: The color given at the PERS-line
+    4: The color of the target door
+    5: door algorithm
+        color Vki Fki Ski (visible, known, no smoke) 
+           0   1   1   1         black
+           1   0   1   1         yellow
+           2   1   0   1         blue
+           3   1   1   0         red
+           4   0   1   0         green
+           5   1   0   0         magenta
+           6 dead and/or no door cyan
+
+ I_HERDING_TYPE 0: default herding
+                1: keep the first choice
+                2: do not move if no door found 
+                3: do not move if no door found + keep the first choice
+
+&PERS ID='Adult', FYI='Male+Female Diameter and velocity',
+      DEFAULT_PROPERTIES='Adult',
+      PRE_EVAC_DIST=1, PRE_LOW=0.50,PRE_HIGH=1.5,
+      DET_EVAC_DIST=0, DET_MEAN=0.0,
+      NOT_RANDOM= .TRUE., COLOR_METHOD= 4,
+      OUTPUT_SPEED=.TRUE., OUTPUT_MOTIVE_ANGLE=.TRUE., EVAC_FDS6=.TRUE.,
+      I_HERDING_TYPE=0, /
+
+ Initial positions of the humans
+&EVAC ID = 'EVAC1st', AGENT_TYPE=2,
+      NUMBER_INITIAL_PERSONS= 10,
+      XB = 1.0,9.0,  1.0,9.0, 1.5,1.5
+      COLOR='RED', 
+      PERS_ID = 'Adult' / 
+
+ ========== EVAC HUMAN PROPERTIES ENDS =================
+
+ =============== OUTPUT FILES STARTS ===================
+
+ Next line could be used to plot the evacuation flow fields:
+&SLCF PBZ= 1.5, QUANTITY='VELOCITY', VECTOR=.TRUE., EVACUATION=.TRUE. / 
+
+ =============== OUTPUT FILES ENDS ===================
+
+&TAIL /
