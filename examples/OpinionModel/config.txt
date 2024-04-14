@@ -1,0 +1,4 @@
+ZOOM=30.0
+xSpace=30.0
+ySpace=60.0
+

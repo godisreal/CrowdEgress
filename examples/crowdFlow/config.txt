@@ -1,0 +1,19 @@
+# The parameters to configure simulation window (pygame screen).
+# User may also use pageup/pagedown to zoom in/out the screen, and use the direction keys to move entities in the screen.  
+
+ZOOM=30.0
+xSpace=30.0
+ySpace=60.0
+
+# Solver: 0 No egress flow field; 1 Nearest exit flow field; 2 Exit selection flow field
+solver=0
+
+# Parameters to configure the simulation object.  
+# Groupbehavior: 0 No social group effect; 1 Compute social group effect
+# dumpBinary: 0 No output data; 1 Dump and save simulation data in binary file
+
+groupbehavior = 0
+pre-evac = 2
+dumpBinary = 1
+
+

@@ -1,0 +1,7 @@
+# The parameters to configure simulation window (pygame screen).
+# User may also use pageup/pagedown to zoom in/out the screen, and use the direction keys to move entities in the screen.  
+
+ZOOM=60.0
+xSpace=30.0
+ySpace=60.0
+
