@@ -13,16 +13,16 @@
 # code is available at: https://github.com/firemodels/fds
 #
 
-import os, logging
+import os #, logging
 from sys import argv, exit
 from simulation import *
 
 # Try logging stuff!
 # May not be used in practial compuation! 
-logging.basicConfig(filename='log_examp.log',level=logging.DEBUG)
-logging.debug('This message should go to the log file')
-logging.info('So should this')
-logging.warning('And this, too')
+#logging.basicConfig(filename='log_examp.log',level=logging.DEBUG)
+#logging.debug('This message should go to the log file')
+#logging.info('So should this')
+#logging.warning('And this, too')
 
 print("================================")
 print ("Length of input parameters:", len(argv))
@@ -45,22 +45,40 @@ if len(argv)==2:
                 print (line)
         else:
             print ("The file readme.txt is not in this folder.")
-            print ("Please search readme.txt in other folders, and read it first, or copy it to the current folder!")
+            print ("Please search readme.txt in other folders, and read it first!")
         exit(-1)
-
+        
+        
     myTest = simulation()
     myTest.select_file(file1, None, 'no-debug')
     #myTest.read_data()
     show_geom(myTest)
-    myTest.preprocessGeom()
-    myTest.preprocessAgent()
-    myTest.buildMesh()
-    myTest.flowMesh()
-    myTest.computeDoorDirection()
     
+    #myTest.preprocessGeom()
+    #myTest.preprocessAgent()
+    #myTest.buildMesh()
+    #myTest.flowMesh()
+    #myTest.computeDoorDirection()
+    
+    #if myTest.continueToSimu:
+    #    show_flow(myTest)
+    #    show_simu(myTest)
+        
     if myTest.continueToSimu:
-        show_flow(myTest)
+        myTest.readconfig()
+        myTest.preprocessGeom()
+        myTest.preprocessAgent()
+        if myTest.solver == 1 or myTest.solver == 2:
+            myTest.buildMesh()
+            myTest.flowMesh()
+            myTest.computeDoorDirection()
+            show_flow(myTest)
+            
+        myTest.dataSummary()
         show_simu(myTest)
+    else:
+        os.remove(myTest.outDataName + ".txt")
+        
 
 # python [filename.csv] [filename.fds]
 if len(argv)==3:
@@ -81,7 +99,7 @@ if len(argv)==3:
                 print (line)
         else:
             print ("The file readme.txt is not in this folder.")
-            print ("Please search readme.txt in other folders and copy it to the current folder!")
+            print ("Please search readme.txt in other folders, and read it first!")
         exit(-1)
 
     if file2:
@@ -95,19 +113,35 @@ if len(argv)==3:
     myTest.select_file(file1, file2, 'no-debug')
     #myTest.read_data()
     show_geom(myTest)
-    myTest.preprocessGeom()
-    myTest.preprocessAgent()
-
-    myTest.buildMesh()
-    myTest.flowMesh()
-    myTest.computeDoorDirection()
     
+    
+    #myTest.preprocessGeom()
+    #myTest.preprocessAgent()
+
+    #myTest.buildMesh()
+    #myTest.flowMesh()
+    #myTest.computeDoorDirection()
+    
+    #if myTest.continueToSimu:
+    #    show_flow(myTest)
+    #    show_simu(myTest)
+
     if myTest.continueToSimu:
-        show_flow(myTest)
+        myTest.readconfig()
+        myTest.preprocessGeom()
+        myTest.preprocessAgent()
+        if myTest.solver == 1 or myTest.solver == 2:
+            myTest.buildMesh()
+            myTest.flowMesh()
+            myTest.computeDoorDirection()
+            show_flow(myTest)
+        myTest.dataSummary()
         show_simu(myTest)
+    else:
+        os.remove(myTest.outDataName + ".txt")
 
 if len(argv)>3:
-    print("Too many input parameters!")
+    print("Too many input parameters! Please read readme.txt first! Thanks for using this program!")
     exit(-1)
 
     

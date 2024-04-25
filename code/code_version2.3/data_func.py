@@ -538,7 +538,7 @@ def readAgents(FileName, debug=True, marginTitle=1, ini=1):
             agent.tpre = float(agentFeature[ini+5])
         except:
             agent.tau = 0.6
-            agent.tpre = 9.0
+            agent.tpre = 10.0
         
         # Opinion Dynamic Parameters
         try:
@@ -666,6 +666,7 @@ def addWall(walls, startPt, endPt, mode='line'):
         wall.params[2]= float(endPt[0])
         wall.params[3]= float(endPt[1])
 
+    wall.name = '-G-'
     # The wall arrow is to be tested in simulation.  
     # The default value is no direction assigned, i.e., zero.  
     wall.arrow = 0 #normalize(endPt - startPt)
@@ -742,8 +743,8 @@ def addDoor(doors, startPt, endPt, mode='rect'):
     # The arrow is to be tested in simulation.  
     # The default value is no direction assigned, i.e., zero.  
     door.arrow = 0 #normalize(endPt - startPt)
-    
-    #door.mode = mode   # Currently door has no attribute of "mode"
+    door.mode = mode   # Currently door has no attribute of "mode"
+    door.name = '-G-'
 
     door.oid = int(num)
     door.inComp = int(1)
@@ -820,12 +821,12 @@ def addExit(exits, startPt, endPt, mode='rect'):
     # The arrow is to be tested in simulation.  
     # The default value is no direction assigned, i.e., zero.  
     exit.arrow = 0 #normalize(endPt - startPt)
-    
-    #exit.mode = mode   # Currently passage class has no attribute of "mode"
+    exit.mode = mode   # Currently passage class has no attribute of "mode"
+    exit.name = '-G-'
 
     exit.oid = int(num)
     exit.inComp = int(1)
-    exit.exitSign = int(1) # Default there is an exit sign
+    exit.exitSign = int(0) # Default there is an exit sign
     exit.pos = (np.array([exit.params[0], exit.params[1]]) + np.array([exit.params[2], exit.params[3]]))*0.5
     
     # Add exit into the list of exits
@@ -968,19 +969,6 @@ def readOBST(FileName, Keyword='&OBST', Zmin=0.0, Zmax=3.0, outputFile=None, deb
             #print >>fo, 'OBST Features\n'
             #print >>fo, obstFeatures
     
-    if outputFile is not None:
-        with open(outputFile, mode='w+') as obst_test_file:
-            csv_writer = csv.writer(obst_test_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-            csv_writer.writerow(['--', '0/startX', '1/startY', '2/endX', '3/endY', '4/arrow', '5/name', '6/inComp', '7/mode'])
-            index_temp=0
-            for obstFeature in obstFeatures:
-                if obstFeature[4]<Zmin and obstFeature[5]<Zmin:
-                    continue
-                if obstFeature[4]>Zmax and obstFeature[5]>Zmax:
-                    continue
-                csv_writer.writerow(['--', str(obstFeature[0]), str(obstFeature[1]), str(obstFeature[2]), str(obstFeature[3]), '0', str(index_temp), '1', 'rect'])
-                index_temp=index_temp+1
-    
     walls = []
     index = 0
     for obstFeature in obstFeatures:
@@ -999,6 +987,23 @@ def readOBST(FileName, Keyword='&OBST', Zmin=0.0, Zmax=3.0, outputFile=None, deb
         wall.oid = index
         index = index+1
         walls.append(wall)
+
+    if outputFile is not None:
+        updateWallData(walls, outputFile)
+        
+        '''
+        with open(outputFile, mode='w+') as obst_test_file:
+            csv_writer = csv.writer(obst_test_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+            csv_writer.writerow(['--', '1/startX', '2/startY', '3/endX', '4/endY', '5/arrow', '6/shape', '7/inComp', '8/exitSign'])
+            index_temp=0
+            for obstFeature in obstFeatures:
+                if obstFeature[4]<Zmin and obstFeature[5]<Zmin:
+                    continue
+                if obstFeature[4]>Zmax and obstFeature[5]>Zmax:
+                    continue
+                csv_writer.writerow(['--', str(obstFeature[0]), str(obstFeature[1]), str(obstFeature[2]), str(obstFeature[3]), '0', 'rect', '1', '0'])
+                index_temp=index_temp+1        
+        '''
     return walls
 
 
@@ -1051,19 +1056,6 @@ def readPATH(FileName, Keyword='&HOLE', Zmin=0.0, Zmax=3.0, outputFile=None, deb
                 #print >>fo, 'HOLE Features\n'
                 #print >>fo, holeFeatures
 
-    if outputFile is not None:
-        with open(outputFile, mode='w+') as door_test_file:
-            csv_writer = csv.writer(door_test_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-            csv_writer.writerow(['--', '0/startX', '1/startY', '2/endX', '3/endY', '4/arrow', '5/name', '6/inComp', '7/exitSign'])
-            index_temp=0
-            for holeFeature in holeFeatures:
-                if holeFeature[4]<Zmin and holeFeature[5]<Zmin:
-                    continue
-                if holeFeature[4]>Zmax and holeFeature[5]>Zmax:
-                    continue
-                csv_writer.writerow(['--', str(holeFeature[0]), str(holeFeature[1]), str(holeFeature[2]), str(holeFeature[3]), '0', str(index_temp), '1', '0'])
-                index_temp=index_temp+1
-
     doors = []
     index = 0
     for holeFeature in holeFeatures:
@@ -1083,6 +1075,24 @@ def readPATH(FileName, Keyword='&HOLE', Zmin=0.0, Zmax=3.0, outputFile=None, deb
         door.exitSign = 0
         door.pos = (np.array([door.params[0], door.params[1]]) + np.array([door.params[2], door.params[3]]))*0.5
         doors.append(door)
+        
+    if outputFile: 
+        updateDoorData(doors, outputFile)
+        
+        '''
+        with open(outputFile, mode='w+') as door_test_file:
+            csv_writer = csv.writer(door_test_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+            csv_writer.writerow(['--', '1/startX', '2/startY', '3/endX', '4/endY', '5/arrow', '6/shape', '7/inComp', '8/exitSign'])
+            index_temp=0
+            for holeFeature in holeFeatures:
+                if holeFeature[4]<Zmin and holeFeature[5]<Zmin:
+                    continue
+                if holeFeature[4]>Zmax and holeFeature[5]>Zmax:
+                    continue
+                csv_writer.writerow(['--', str(holeFeature[0]), str(holeFeature[1]), str(holeFeature[2]), str(holeFeature[3]), '0', 'rect', '1', '0'])
+                index_temp=index_temp+1
+        '''
+
     return doors
 
 
@@ -1178,70 +1188,116 @@ def readEXIT(FileName, Keyword='&EXIT', Zmin=0.0, Zmax=3.0, outputFile=None, deb
         exits.append(exit)
         index = index+1
 
-
     if outputFile:
+        updateExitData(exits, outputFile)
+        
+        '''
         with open(outputFile, mode='w+') as exit_test_file:
             csv_writer = csv.writer(exit_test_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-            csv_writer.writerow(['--', '0/startX', '1/startY', '2/endX', '3/endY', '4/arrow', '5/name', '6/inComp', '7/exitSign'])
+            csv_writer.writerow(['--', '1/startX', '2/startY', '3/endX', '4/endY', '5/arrow', '6/shape', '7/inComp', '8/exitSign'])
             index_temp=0
             for exitFeature in exitFeatures:
                 if exitFeature[4]<Zmin and exitFeature[5]<Zmin:
                     continue
                 if exitFeature[4]>Zmax and exitFeature[5]>Zmax:
                     continue                
-                csv_writer.writerow(['--', str(exitFeature[0]), str(exitFeature[1]), str(exitFeature[2]), str(exitFeature[3]), '0', str(index_temp), '1', '0'])
+                csv_writer.writerow(['--', str(exitFeature[0]), str(exitFeature[1]), str(exitFeature[2]), str(exitFeature[3]), '0', 'rect', '1', '0'])
                 index_temp=index_temp+1
+        '''
                 
     return exits
 
 
 def updateDoorData(doors, outputFile, inputFile=None):
-    with open(outputFile, mode='a+', newline='') as door_test_file:
-        csv_writer = csv.writer(door_test_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-        csv_writer.writerow([''])
-        if inputFile is not None:
-            csv_writer.writerow([inputFile])
-        csv_writer.writerow(['DOOR/PATH data in TestGeom: '])
-        csv_writer.writerow(['time:', time.strftime('%Y-%m-%d_%H_%M_%S')])
-        csv_writer.writerow(['&Door', '1/startX', '2/startY', '3/endX', '4/endY', '5/arrow', '6/shape', '7/inComp'])
-        index_temp=0
-        for door in doors:
-            csv_writer.writerow(['--', str(door.params[0]), str(door.params[1]), str(door.params[2]), str(door.params[3]), str(door.arrow), str(door.mode), str(door.inComp)])
-            index_temp=index_temp+1
+    try:
+        with open(outputFile, mode='a+', newline='') as door_test_file:
+            csv_writer = csv.writer(door_test_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+            csv_writer.writerow([''])
+            if inputFile is not None:
+                csv_writer.writerow([inputFile])
+            csv_writer.writerow(['DOOR/PATH data in TestGeom: '])
+            csv_writer.writerow(['time:', time.strftime('%Y-%m-%d_%H_%M_%S')])
+            csv_writer.writerow(['&Door', '1/startX', '2/startY', '3/endX', '4/endY', '5/arrow', '6/shape', '7/inComp'])
+            index_temp=0
+            for door in doors:
+                csv_writer.writerow(['--', str(door.params[0]), str(door.params[1]), str(door.params[2]), str(door.params[3]), str(door.arrow), str(door.mode), str(door.inComp)])
+                index_temp=index_temp+1
+    except:
+        with open(outputFile, mode='wb+') as door_test_file:
+            csv_writer = csv.writer(door_test_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+            csv_writer.writerow([''])
+            if inputFile is not None:
+                csv_writer.writerow([inputFile])
+            csv_writer.writerow(['DOOR/PATH data in TestGeom: '])
+            csv_writer.writerow(['time:', time.strftime('%Y-%m-%d_%H_%M_%S')])
+            csv_writer.writerow(['&Door', '1/startX', '2/startY', '3/endX', '4/endY', '5/arrow', '6/shape', '7/inComp'])
+            index_temp=0
+            for door in doors:
+                csv_writer.writerow(['--', str(door.params[0]), str(door.params[1]), str(door.params[2]), str(door.params[3]), str(door.arrow), str(door.mode), str(door.inComp)])
+                index_temp=index_temp+1
+                
 
 def updateExitData(doors, outputFile, inputFile=None):
-    with open(outputFile, mode='a+', newline='') as exit_test_file:
-        csv_writer = csv.writer(exit_test_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-        csv_writer.writerow([''])
-        if inputFile is not None:
-            csv_writer.writerow([inputFile])
-        csv_writer.writerow(['EXIT data in TestGeom: '])
-        csv_writer.writerow(['time:', time.strftime('%Y-%m-%d_%H_%M_%S')])
-        csv_writer.writerow(['&Exit', '1/startX', '2/startY', '3/endX', '4/endY', '5/arrow', '6/shape', '7/inComp'])
-        index_temp=0
-        for door in doors:
-            csv_writer.writerow(['--', str(door.params[0]), str(door.params[1]), str(door.params[2]), str(door.params[3]), str(door.arrow), str(door.mode), str(door.inComp)])
-            index_temp=index_temp+1
+    try:
+        with open(outputFile, mode='a+', newline='') as exit_test_file:
+            csv_writer = csv.writer(exit_test_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+            csv_writer.writerow([''])
+            if inputFile is not None:
+                csv_writer.writerow([inputFile])
+            csv_writer.writerow(['EXIT data in TestGeom: '])
+            csv_writer.writerow(['time:', time.strftime('%Y-%m-%d_%H_%M_%S')])
+            csv_writer.writerow(['&Exit', '1/startX', '2/startY', '3/endX', '4/endY', '5/arrow', '6/shape', '7/inComp'])
+            index_temp=0
+            for door in doors:
+                csv_writer.writerow(['--', str(door.params[0]), str(door.params[1]), str(door.params[2]), str(door.params[3]), str(door.arrow), str(door.mode), str(door.inComp)])
+                index_temp=index_temp+1
+    except:
+        with open(outputFile, mode='wb+') as exit_test_file:
+            csv_writer = csv.writer(exit_test_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+            csv_writer.writerow([''])
+            if inputFile is not None:
+                csv_writer.writerow([inputFile])
+            csv_writer.writerow(['EXIT data in TestGeom: '])
+            csv_writer.writerow(['time:', time.strftime('%Y-%m-%d_%H_%M_%S')])
+            csv_writer.writerow(['&Exit', '1/startX', '2/startY', '3/endX', '4/endY', '5/arrow', '6/shape', '7/inComp'])
+            index_temp=0
+            for door in doors:
+                csv_writer.writerow(['--', str(door.params[0]), str(door.params[1]), str(door.params[2]), str(door.params[3]), str(door.arrow), str(door.mode), str(door.inComp)])
+                index_temp=index_temp+1
             
 
 def updateWallData(walls, outputFile, inputFile=None):
-    with open(outputFile, mode='a+', newline='') as wall_test_file:
-        csv_writer = csv.writer(wall_test_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-        csv_writer.writerow([''])
-        if inputFile is not None:
-            csv_writer.writerow([inputFile])
-        csv_writer.writerow(['WALL/OBST data in TestGeom: '])
-        csv_writer.writerow(['time:', time.strftime('%Y-%m-%d_%H_%M_%S')])
-        csv_writer.writerow(['&Wall', '0/startX', '1/startY', '2/endX', '3/endY', '4/arrow', '5/shape', '6/inComp'])
-        index_temp=0
-        for wall in walls:
-            csv_writer.writerow(['--', str(wall.params[0]), str(wall.params[1]), str(wall.params[2]), str(wall.params[3]), str(wall.arrow), str(wall.mode), str(wall.inComp)])
-            index_temp=index_temp+1
+    try:
+        with open(outputFile, mode='a+', newline='') as wall_test_file:
+            csv_writer = csv.writer(wall_test_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+            csv_writer.writerow([''])
+            if inputFile is not None:
+                csv_writer.writerow([inputFile])
+            csv_writer.writerow(['WALL/OBST data in TestGeom: '])
+            csv_writer.writerow(['time:', time.strftime('%Y-%m-%d_%H_%M_%S')])
+            csv_writer.writerow(['&Wall', '0/startX', '1/startY', '2/endX', '3/endY', '4/arrow', '5/shape', '6/inComp'])
+            index_temp=0
+            for wall in walls:
+                csv_writer.writerow(['--', str(wall.params[0]), str(wall.params[1]), str(wall.params[2]), str(wall.params[3]), str(wall.arrow), str(wall.mode), str(wall.inComp)])
+                index_temp=index_temp+1
+    except:
+        with open(outputFile, mode='wb+') as wall_test_file:
+            csv_writer = csv.writer(wall_test_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+            csv_writer.writerow([''])
+            if inputFile is not None:
+                csv_writer.writerow([inputFile])
+            csv_writer.writerow(['WALL/OBST data in TestGeom: '])
+            csv_writer.writerow(['time:', time.strftime('%Y-%m-%d_%H_%M_%S')])
+            csv_writer.writerow(['&Wall', '0/startX', '1/startY', '2/endX', '3/endY', '4/arrow', '5/shape', '6/inComp'])
+            index_temp=0
+            for wall in walls:
+                csv_writer.writerow(['--', str(wall.params[0]), str(wall.params[1]), str(wall.params[2]), str(wall.params[3]), str(wall.arrow), str(wall.mode), str(wall.inComp)])
+                index_temp=index_temp+1
             
 
 # Not used after the flow solver is integrated into our program
 # This function was originally developed to dump exit2door data in TestGeom
-def updateExit2Doors(exit2doors, fileName):
+def updateExit2Doors(exit2doors, outputFile, inputFile=None):
     (I, J) = np.shape(exit2doors)
     #print "The size of exit2door:", [I, J]
     #dataNP = np.zeros((I+1, J+1))
@@ -1256,12 +1312,41 @@ def updateExit2Doors(exit2doors, fileName):
         else:
             row.append('ExitID'+str(i-1))
             for j in range(1, J+1):
-                row.append(exit2doors[i-1, j-1])
+                row.append(str(int(exit2doors[i-1, j-1])))
             
         dataNP.append(row)
 
     #dataNP[1:, 1:] = exit2doors
-    np.savetxt(fileName, dataNP, delimiter=',', fmt='%s')   #'2darray.csv'
+    #np.savetxt(fileName, dataNP, delimiter=',', fmt='%s')   #'2darray.csv'
+    try:
+        with open(outputFile, mode='a+', newline='') as exit2door_file:
+            csv_writer = csv.writer(exit2door_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+            csv_writer.writerow([''])
+            if inputFile is not None:
+                csv_writer.writerow([inputFile])
+            csv_writer.writerow(['exit2door data in TestGeom: '])
+            csv_writer.writerow(['time:', time.strftime('%Y-%m-%d_%H_%M_%S')])
+            for i in range(I+1):
+                #print(dataNP[i])
+                csv_writer.writerow(dataNP[i])
+    
+    except:
+        with open(outputFile, mode='wb+') as exit2door_file:
+            csv_writer = csv.writer(exit2door_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+            csv_writer.writerow([''])
+            if inputFile is not None:
+                csv_writer.writerow([inputFile])
+            csv_writer.writerow(['exit2door data in TestGeom: '])
+            csv_writer.writerow(['time:', time.strftime('%Y-%m-%d_%H_%M_%S')])
+            #csv_writer.writerow(['&Wall', '0/startX', '1/startY', '2/endX', '3/endY', '4/arrow', '5/shape', '6/inComp'])
+            #index_temp=0
+            for i in range(I+1):
+                csv_writer.writerow(dataNP[i])
+            #for wall in walls:
+            #    csv_writer.writerow(['--', str(wall.params[0]), str(wall.params[1]), str(wall.params[2]), str(wall.params[3]), str(wall.arrow), str(wall.mode), str(wall.inComp)])
+            #    index_temp=index_temp+1
+    
+    
 
 
 ##############################################################

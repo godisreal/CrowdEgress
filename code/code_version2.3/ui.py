@@ -920,8 +920,8 @@ def startPage(FN_FDS=None, FN_EVAC=None):
         #print(tk.messagebox.askokcancel(title='Hi', message='hahahaha')) # return True, False
         #print(tk.messagebox.askyesnocancel(title="Hi", message="haha")) # return, True, False, None
         #from Tkinter.tkFileDialog import askopenfilename
-        FN[index] = tkf.askopenfilename(filetypes=(("All files", "*.*"),\
-        ("csv files", "*.csv")), initialdir=currentdirname)
+        FN[index] = tkf.askopenfilename(filetypes=(("csv files", "*.csv"),("fds files", "*.fds"),\
+        ("All files", "*.*")), initialdir=currentdirname)
         if index ==0:
             lb0.config(text = "Optional: The fds file selected: "+str(FN[index])+"\n")
         elif index ==1:

@@ -481,7 +481,7 @@ def show_geom(simu, debug=False):
     xSpace = simu.xSpace
     ySpace = simu.ySpace
     walls = simu.walls
-    doors = simu.doors
+    doors = simu.doors #list(simu.doors)
     exits = simu.exits
     agents = simu.agents
     exit2door = simu.exit2door
@@ -574,7 +574,7 @@ def show_geom(simu, debug=False):
                          elif mouseX<120 and mouseX>0 and mouseY<100 and mouseY>83:
                              # dump exit2door data
                              print ("Output exit2door data into bldDataRev.csv in the working example folder! Please check!")
-                             updateExit2Doors(simu.exit2door, os.path.join(simu.fpath, 'bldDataRev.csv'))
+                             updateExit2Doors(exit2door, os.path.join(simu.fpath, 'bldDataRev.csv'))
                              menu_01 =False
                           # elif mouseX<120 and mouseX>0 and mouseY<122 and mouseY>105:
                           # To add something else in future development
@@ -688,13 +688,15 @@ def show_geom(simu, debug=False):
                         move_agent_state = False
                         px1 = (mouse_pos-xyShift)*(1/ZOOMFACTOR)
                         px2 = (mouse_pos2-xyShift)*(1/ZOOMFACTOR)
-                        x1 = px1[0]
-                        y1 = px1[1]
-                        x2 = px2[0]
-                        y2 = px2[1]
+                        x1 = min(px1[0],px2[0])
+                        y1 = min(px1[1],px2[1])
+                        x2 = max(px1[0],px2[0])
+                        y2 = max(px1[1],px2[1])
                         #if x1<x2 and y1<y2:
                         #    pass
+                        #addDoor(doors, [x1,y1], [x2,y2], mode='rect')
                         addDoor(doors, px1, px2, mode='rect')
+                        print('Direction of the door added:', doors[-1].arrow)
 
                     if menu_06 is True:
                         move_agent_state = False
@@ -784,6 +786,7 @@ def show_geom(simu, debug=False):
                     updateWallData(walls, os.path.join(simu.fpath, 'bldDataRev.csv'))
                     updateDoorData(doors, os.path.join(simu.fpath, 'bldDataRev.csv'))
                     updateExitData(exits, os.path.join(simu.fpath, 'bldDataRev.csv'))
+                    print ("Output walls/doors/exits data into bldDataRev.csv in the working example folder! Please check!")
                 elif event.key == pygame.K_PAGEUP:
                     ZOOMFACTOR = ZOOMFACTOR +1
                 elif event.key == pygame.K_PAGEDOWN:
@@ -796,6 +799,18 @@ def show_geom(simu, debug=False):
                     xSpace=xSpace-10
                 elif event.key == pygame.K_RIGHT:
                     xSpace=xSpace+10
+                elif event.key == pygame.K_z:
+                    if menu_03 or menu_04:
+                        if len(walls)>0:
+                            walls.pop()
+                    if menu_05:
+                        if len(doors)>0:
+                            doors.pop()
+                    if menu_06:
+                        if len(exits)>0:
+                            exits.pop()
+                        
+
 
 
         ####################################
@@ -997,12 +1012,30 @@ def show_geom(simu, debug=False):
         else:
             mmm=0
             nnn=0
-        if len(exits)>mmm or len(doors)>nnn:
-            exit2door_new = np.zeros((len(exits), len(doors)))
-            exit2door_new[0:mmm, 0:nnn] = exit2door
-            exit2door=exit2door_new
-            print("exit2door:", np.shape(exit2door))
-            #input("Please check")
+            
+        if len(exits)>0 and len(doors)>0:
+            '''
+            if (len(exits)>=mmm and len(doors)>=nnn):
+                exit2door_new = np.zeros((len(exits), len(doors)))
+                exit2door_new[0:mmm, 0:nnn] = exit2door
+                exit2door=exit2door_new
+                print("exit2door:", np.shape(exit2door))
+                #input("Please check")
+            '''
+            
+            if (len(exits)>mmm or len(doors)>nnn):
+                exit2door_new = np.zeros((len(exits), len(doors)))
+                exit2door_new[0:mmm, 0:nnn] = exit2door
+                exit2door=exit2door_new
+                print("exit2door:", np.shape(exit2door))
+                #input("Please check")
+                
+            if (len(exits)<mmm or len(doors)<nnn):
+                exit2door_new = np.zeros((len(exits), len(doors)))
+                exit2door_new = exit2door[0:len(exits), 0:len(doors)]
+                exit2door=exit2door_new
+                print("exit2door:", np.shape(exit2door))
+                #input("Please check")
 
     # The file to record the output data of simulation
     #if debug:
@@ -1177,24 +1210,28 @@ def show_flow(simu):
                     ZOOMFACTOR = ZOOMFACTOR +1
                 elif event.key == pygame.K_PAGEDOWN:
                     ZOOMFACTOR = max(6.0, ZOOMFACTOR -1)
-                #elif event.key == pygame.K_SPACE:
-                #    simu.PAUSE = not simu.PAUSE
+                elif event.key == pygame.K_SPACE:
+                    #updateWallData(simu.walls, 'wallDataRev.csv')
+                    #updateDoorData(simu.doors, 'doorDataRev.csv')
+                    updateExit2Doors(simu.exit2door, os.path.join(simu.fpath, 'bldDataRev.csv'))
+                    print ("Output exit2door data into bldDataRev.csv in the working example folder! Please check!")
+                    #updateWallData(simu.walls, os.path.join(simu.fpath, 'bldDataRev.csv'))
+                    #updateDoorData(simu.doors, os.path.join(simu.fpath, 'bldDataRev.csv'))
+                    #updateExitData(simu.exits, os.path.join(simu.fpath, 'bldDataRev.csv'))
+
                 #elif event.key == pygame.K_v:
                 #    simu.SHOWVELOCITY = not simu.SHOWVELOCITY
                 #elif event.key == pygame.K_i:
                 #    simu.SHOWINDEX = not simu.SHOWINDEX
                 #elif event.key == pygame.K_d:
                 #    simu.DRAWDOORFORCE = not simu.DRAWDOORFORCE
-                #elif event.key == pygame.K_r:
-                #    simu.DRAWSELFREPULSION = not simu.DRAWSELFREPULSION
+
                 elif event.key == pygame.K_1:
                     simu.SHOWWALLDATA = not simu.SHOWWALLDATA
                 elif event.key == pygame.K_2:
                     simu.SHOWDOORDATA = not simu.SHOWDOORDATA
                 elif event.key == pygame.K_3:
                     simu.SHOWEXITDATA = not simu.SHOWEXITDATA
-                #elif event.key == pygame.K_s:
-                #    simu.SHOWSTRESS = not simu.SHOWSTRESS
                 elif event.key == pygame.K_UP:
                     ySpace=ySpace-10
                 elif event.key == pygame.K_DOWN:
@@ -1366,36 +1403,6 @@ def show_flow(simu):
                 #endPosDV[1] = int(agent.pos[1]*ZOOMFACTOR + agent.desiredV[1]*ZOOMFACTOR+ySpace)
                 endPosDV = (agent.pos+agent.desiredV)*ZOOMFACTOR+xyShift
             
-                #stressShow = 0
-                #stressShow = int(255*agent.ratioV)
-                #pygame.draw.line(screen, blue, leftS, rightS, 3)
-                pygame.draw.line(screen, blue, scPos, endPosV, 2)
-                pygame.draw.line(screen, [255,60,0], scPos, endPosDV, 2)
-
-            if simu.DRAWWALLFORCE:
-                #endPosV = [0, 0]
-                #endPosV[0] = int(agent.pos[0]*ZOOMFACTOR + agent.actualV[0]*ZOOMFACTOR+xSpace)
-                #endPosV[1] = int(agent.pos[1]*ZOOMFACTOR + agent.actualV[1]*ZOOMFACTOR+ySpace)
-                endPosWF = (agent.pos+agent.wallrepF)*ZOOMFACTOR+xyShift
-            
-                #pygame.draw.line(screen, blue, scPos, endPosV, 2)
-                #pygame.draw.line(screen, [230,220,160], scPos, endPosWF, 2)
-                pygame.draw.line(screen, purple, scPos, endPosWF, 2)
-                #khaki = 240,230,140
-
-            if simu.DRAWDOORFORCE:
-                endPosDF = (agent.pos+agent.doorF)*ZOOMFACTOR+xyShift
-                pygame.draw.line(screen, green, scPos, endPosDF, 2)
-
-            if simu.DRAWGROUPFORCE:
-                endPosGF = (agent.pos+agent.socialF)*ZOOMFACTOR+xyShift
-                pygame.draw.line(screen, lightpink, scPos, endPosGF, 2)
-
-            if simu.DRAWSELFREPULSION:
-                endPosRF = (agent.pos+agent.selfrepF)*ZOOMFACTOR+xyShift
-                pygame.draw.line(screen, lightpink, scPos, endPosRF, 2)
-                
-            
             for idaj, agentOther in enumerate(simu.agents):
                 scPosOther = [0, 0]
                 scPosOther[0] = int(agentOther.pos[0]*ZOOMFACTOR+xSpace)
@@ -1412,9 +1419,6 @@ def show_flow(simu):
                 
                 if person.comm[idai, idaj] == 1 and simu.SHOWINTELINE: 
                     pygame.draw.line(screen, blue, scPos, scPosOther, 2)
-                    #pygame.draw.circle(screen, blue, scPosDir, 2, 2)
-                    #pygame.draw.line(screen, blue, scPosDir, rightS, 2)
-                    #pygame.draw.line(screen, blue, scPosDir, leftS, 2)
                     pygame.draw.line(screen, green, scPos, scPosDir, 4)
 
                 if person.talk[idai, idaj] == 1 and simu.SHOWINTELINE: 
@@ -1786,10 +1790,17 @@ def show_simu(simu):
             color_para = [0, 0, 0]
             color_para[0] = int(255*min(1, agent.ratioV))
             if simu.t_sim < agent.tpre:
-                pygame.draw.circle(screen, color_para, scPos, int(0.3*ZOOMFACTOR), LINEWIDTH+3)
-                #int(agent.radius*ZOOMFACTOR), LINEWIDTH+3)
+                try:
+                    pygame.draw.circle(screen, color_para, scPos, int(agent.radius*ZOOMFACTOR), LINEWIDTH+3)
+                except:
+                    #pygame.draw.circle(screen, tan, scPos, int(0.3*ZOOMFACTOR), LINEWIDTH+3)
+                    pygame.draw.circle(screen, color_para, scPos, int(0.3*ZOOMFACTOR), LINEWIDTH+3)
+                    #int(agent.radius*ZOOMFACTOR), LINEWIDTH+3)
             else:
-                pygame.draw.circle(screen, color_para, scPos, int(0.3*ZOOMFACTOR), LINEWIDTH+3)
+                try:
+                    pygame.draw.circle(screen, color_para, scPos, int(agent.radius*ZOOMFACTOR), LINEWIDTH)
+                except:
+                    pygame.draw.circle(screen, color_para, scPos, int(0.3*ZOOMFACTOR), LINEWIDTH)
                 #int(agent.radius*ZOOMFACTOR), LINEWIDTH)
             #int(agent.radius*ZOOMFACTOR), LINEWIDTH)
             
@@ -2740,18 +2751,31 @@ def visualizeEvac(fname, evacfile=None, fdsfile=None, ZOOMFACTOR=10.0, xSpace=20
        
     # Read in data from npz matrix data file
     if os.path.exists(fnameNPZ):
-        agentdata=np.load(fnameNPZ)
-        npzTime = agentdata["arr_0"]
-        npzSee = agentdata["arr_1"]
-        npzComm = agentdata["arr_2"]
-        npzTalk = agentdata["arr_3"]
-        npzP = agentdata["arr_4"]
-        npzD = agentdata["arr_5"]
-        npzC = agentdata["arr_6"]
-        npzB = agentdata["arr_7"]
-        npzA = agentdata["arr_8"]
-        npzRadius = agentdata["arr_9"]
-        npzMass = agentdata["arr_10"]
+        try:
+            agentdata=np.load(fnameNPZ)
+            npzTime = agentdata["arr_0"]
+            npzSee = agentdata["arr_1"]
+            npzComm = agentdata["arr_2"]
+            npzTalk = agentdata["arr_3"]
+            npzP = agentdata["arr_4"]
+            npzD = agentdata["arr_5"]
+            npzC = agentdata["arr_6"]
+            npzB = agentdata["arr_7"]
+            npzA = agentdata["arr_8"]
+            npzRadius = agentdata["arr_9"]
+            npzMass = agentdata["arr_10"]
+        except:
+            agentdata=np.load(fnameNPZ)
+            npzTime = agentdata["arr_0"]
+            npzSee = agentdata["arr_1"]
+            npzComm = agentdata["arr_2"]
+            npzTalk = agentdata["arr_3"]
+            npzP = agentdata["arr_4"]
+            npzD = agentdata["arr_5"]
+            npzC = agentdata["arr_6"]
+            npzB = agentdata["arr_7"]
+            npzA = agentdata["arr_8"]
+            
         T_END_Check = len(npzTime)
         npzflag=True
     else:
@@ -3027,8 +3051,8 @@ def visualizeEvac(fname, evacfile=None, fdsfile=None, ZOOMFACTOR=10.0, xSpace=20
             num_see_others = INFO_t[16][idai]
             num_others = INFO_t[17][idai]
             
-            ratioV = INFO_t[18][idai]
-            stressLevel = INFO_t[19][idai]
+            #ratioV = INFO_t[18][idai]
+            #stressLevel = INFO_t[19][idai]
             
             #temp = int(100*agent.ratioV)
             #AGENTCOLOR = [0,0,temp]

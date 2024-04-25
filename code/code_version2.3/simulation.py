@@ -99,7 +99,7 @@ class simulation(object):
         ################################################################
         self.TIMECOUNT = True
         self.WALLBLOCKHERDING = True
-        self.TESTFORCE = True
+        self.TESTFORCE = False
         self.TPREMODE = 3        ### Instructinn: 1 -- DesiredV = 0  2 -- Motive Force =0: 
         self.GROUPBEHAVIOR = True     # Enable the group social force
         self.SELFREPULSION = True      # Enable self repulsion
@@ -209,18 +209,19 @@ class simulation(object):
                 if re.match('FN_EVAC', line):
                     temp =  line.split('=')
                     FN_EVAC = temp[1].strip()
-                if re.match('ZOOM', line):
-                    temp =  line.split('=')
-                    self.ZOOMFACTOR = float(temp[1].strip())                    
-                if re.match('xSpace', line):
-                    temp =  line.split('=')
-                    self.xSpace = float(temp[1].strip())
-                if re.match('ySpace', line):
-                    temp =  line.split('=')
-                    self.ySpace = float(temp[1].strip())
-                if re.match('solver', line):
-                    temp =  line.split('=')
-                    self.solver = int(temp[1].strip())
+                    
+                #if re.match('ZOOM', line):
+                #    temp =  line.split('=')
+                #    self.ZOOMFACTOR = float(temp[1].strip())                    
+                #if re.match('xSpace', line):
+                #    temp =  line.split('=')
+                #    self.xSpace = float(temp[1].strip())
+                #if re.match('ySpace', line):
+                #    temp =  line.split('=')
+                #    self.ySpace = float(temp[1].strip())
+                #if re.match('solver', line):
+                #    temp =  line.split('=')
+                #    self.solver = int(temp[1].strip())
                     
         # This is used for debug mode
         if self.DEBUG: #and sys.version_info[0] == 2: 
@@ -246,7 +247,7 @@ class simulation(object):
             #raw_input('Please check output data path and filename!')
         #self.fnameBin = FN_EVAC.rstrip('.csv')+self.outDataName+'.bin'
         
-        '''
+        
         FN_Temp = os.path.join(self.fpath, "config.txt")
         if os.path.exists(FN_Temp):
             for line in open(FN_Temp, "r"):
@@ -271,7 +272,7 @@ class simulation(object):
                 if re.match('dumpBinary', line):
                     temp =  line.split('=')
                     self.dumpBin = bool(temp[1].strip())
-                
+        '''
                 # Mesh parameters
                 if re.match('xmin', line):
                     temp =  line.split('=')
@@ -321,10 +322,10 @@ class simulation(object):
         f.write('FN_FDS='+str(self.FN_FDS)+'\n')
         f.write('FN_EVAC='+str(self.FN_EVAC)+'\n')
         f.write('Working path='+os.getcwd()+'\n')
-        f.write('ZOOM='+str(self.ZOOMFACTOR)+'\n')    	
-        f.write('xSpace='+str(self.xSpace)+'\n')
-        f.write('ySpace='+str(self.ySpace)+'\n')
-        f.write('solver='+str(self.solver)+'\n')
+        #f.write('ZOOM='+str(self.ZOOMFACTOR)+'\n')    	
+        #f.write('xSpace='+str(self.xSpace)+'\n')
+        #f.write('ySpace='+str(self.ySpace)+'\n')
+        #f.write('solver='+str(self.solver)+'\n')
         #f.write('group=')
         f.write(time.strftime('%Y-%m-%d_%H_%M_%S')+'\n\n')
         
@@ -1209,12 +1210,17 @@ class simulation(object):
         self.num_doors = len(self.doors)
         self.num_exits = len(self.exits)
         
+        '''
         if self.num_exits>0 and self.num_doors>0:
             self.exit2door = np.zeros((self.num_exits, self.num_doors))
         else:
             self.exit2door = None
-
-        self.exitUsage = np.zeros((self.num_exits, 1)) # To count number of agents selecting each exit
+        '''
+        if self.exit2door is not None:
+            self.exit2door = self.exit2door[0:self.num_exits, 0:self.num_doors]
+        
+        if self.num_exits>0:
+            self.exitUsage = np.zeros((self.num_exits, 1)) # To count number of agents selecting each exit
    
         for wall in self.walls:
             wall.findAttachedDoors(self.doors+self.exits)
@@ -1479,7 +1485,7 @@ class simulation(object):
             if len(tableFeatures)<=0:
                 tableFeatures, LowerIndex, UpperIndex = getData(self.FN_EVAC, '&agent2exit')
             
-            '''
+            
             print(np.shape(tableFeatures))
             (mmm, nnn) = np.shape(tableFeatures)
             if mmm < len(self.agents):
@@ -1491,7 +1497,10 @@ class simulation(object):
                 tableFeatures_new = np.zeros((mmm, len(self.exits)))
                 tableFeatures_new[0:mmm, 0:nnn] = tableFeatures
                 tableFeatures = tableFeatures_new
-            '''
+            
+            if self.DEBUG:
+                pass
+                #input("Read data from tableFeatures to define agent2exit.  Please check!")
                 
             #person.exit_prob, person.exit_known = readAgent2Exit(tableFeatures, len(self.agents), len(self.exits))
             self.agent2exit = readFloatArray(tableFeatures, len(self.agents), len(self.exits))
@@ -1547,7 +1556,8 @@ class simulation(object):
                 person.exit_selected[idai]=exit_index
                 #if self.solver==0:
                 #    ai.pathMap = self.exit2door[exit_index]
-                ai.pathMap = self.exit2door[exit_index]
+                if self.exit2door is not None:
+                    ai.pathMap = self.exit2door[exit_index]
                 print('ai:', idai, '--- exit:', exit_index)
                 if self.DEBUG:
                     f.write('ai:' + str(ai.ID) + '--- exit:' + str(exit_index) +'\n')
@@ -1734,7 +1744,8 @@ class simulation(object):
                 ai.exitInMindIndex = exit_index
                 #if self.solver==0:
                 #    ai.pathMap = self.exit2door[exit_index]
-                ai.pathMap = self.exit2door[exit_index]
+                if self.exit2door is not None:
+                    ai.pathMap = self.exit2door[exit_index]
                 print('ai:', idai, '--- exit:', exit_index)
                 if self.DEBUG:
                     f.write('ai:' + str(ai.ID) + '--- exit:' + str(exit_index) +'\n')
