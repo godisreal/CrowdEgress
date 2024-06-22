@@ -13,16 +13,16 @@
 # code is available at: https://github.com/firemodels/fds
 #
 
-import os #, logging
+import os, logging
 from sys import argv, exit
 from simulation import *
 
 # Try logging stuff!
 # May not be used in practial compuation! 
-#logging.basicConfig(filename='log_examp.log',level=logging.DEBUG)
-#logging.debug('This message should go to the log file')
-#logging.info('So should this')
-#logging.warning('And this, too')
+logging.basicConfig(filename='log_examp.log',level=logging.DEBUG)
+logging.debug('This message should go to the log file')
+logging.info('So should this')
+logging.warning('And this, too')
 
 print("================================")
 print ("Length of input parameters:", len(argv))

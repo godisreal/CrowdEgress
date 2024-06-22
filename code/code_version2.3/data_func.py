@@ -614,10 +614,24 @@ def readWalls(FileName, debug=True, marginTitle=1, ini=0):
     for obstFeature in obstFeatures[marginTitle:]:
         wall = obst()
         wall.name = str(obstFeature[ini])
-        wall.params[0]= float(obstFeature[ini+1])
-        wall.params[1]= float(obstFeature[ini+2])
-        wall.params[2]= float(obstFeature[ini+3])
-        wall.params[3]= float(obstFeature[ini+4])
+        
+        try:
+            wall.mode = str(obstFeature[ini+6])
+        except:
+            wall.mode = 'rect'
+        
+        if wall.mode == 'line':
+            wall.params[0]= float(obstFeature[ini+1])
+            wall.params[1]= float(obstFeature[ini+2])
+            wall.params[2]= float(obstFeature[ini+3])
+            wall.params[3]= float(obstFeature[ini+4])
+        
+        elif wall.mode == 'rect':
+            wall.params[0]= min(float(obstFeature[ini+1]),float(obstFeature[ini+3]))
+            wall.params[1]= min(float(obstFeature[ini+2]),float(obstFeature[ini+4]))
+            wall.params[2]= max(float(obstFeature[ini+1]),float(obstFeature[ini+3]))
+            wall.params[3]= max(float(obstFeature[ini+2]),float(obstFeature[ini+4]))
+        
         wall.oid = index
         index = index+1
         
@@ -637,8 +651,8 @@ def readWalls(FileName, debug=True, marginTitle=1, ini=0):
             wall.inComp = int(1)
 
         try:
-            wall.pointer1 = np.array([float(obstFeature[8]), float(obstFeature[9])])
-            wall.pointer2 = np.array([float(obstFeature[10]), float(obstFeature[11])])
+            wall.pointer1 = np.array([float(obstFeature[ini+8]), float(obstFeature[ini+9])])
+            wall.pointer2 = np.array([float(obstFeature[ini+10]), float(obstFeature[ini+11])])
         except:
             wall.pointer1 = np.nan #np.array([float('NaN'), float('NaN')])
             wall.pointer2 = np.nan #np.array([float('NaN'), float('NaN')])
@@ -661,10 +675,15 @@ def addWall(walls, startPt, endPt, mode='line'):
         wall.params[2]= float(endPt[0])
         wall.params[3]= float(endPt[1])
     if mode == 'rect':
-        wall.params[0]= float(startPt[0])
-        wall.params[1]= float(startPt[1])
-        wall.params[2]= float(endPt[0])
-        wall.params[3]= float(endPt[1])
+        #wall.params[0]= float(startPt[0])
+        #wall.params[1]= float(startPt[1])
+        #wall.params[2]= float(endPt[0])
+        #wall.params[3]= float(endPt[1])
+
+        wall.params[0]= min(float(startPt[0]),float(endPt[0]))
+        wall.params[1]= min(float(startPt[1]),float(endPt[1]))
+        wall.params[2]= max(float(startPt[0]),float(endPt[0]))
+        wall.params[3]= max(float(startPt[1]),float(endPt[1]))
 
     wall.name = '-G-'
     # The wall arrow is to be tested in simulation.  
@@ -698,10 +717,15 @@ def readDoors(FileName, debug=True, marginTitle=1, ini=0):
     for doorFeature in doorFeatures[marginTitle:]:
         door = passage()
         door.name = str(doorFeature[ini])
-        door.params[0]= float(doorFeature[ini+1])
-        door.params[1]= float(doorFeature[ini+2])
-        door.params[2]= float(doorFeature[ini+3])
-        door.params[3]= float(doorFeature[ini+4])
+        #door.params[0]= float(doorFeature[ini+1])
+        #door.params[1]= float(doorFeature[ini+2])
+        #door.params[2]= float(doorFeature[ini+3])
+        #door.params[3]= float(doorFeature[ini+4])
+        
+        door.params[0]= min(float(doorFeature[ini+1]),float(doorFeature[ini+3]))
+        door.params[1]= min(float(doorFeature[ini+2]),float(doorFeature[ini+4]))
+        door.params[2]= max(float(doorFeature[ini+1]),float(doorFeature[ini+3]))
+        door.params[3]= max(float(doorFeature[ini+2]),float(doorFeature[ini+4]))
         door.arrow = int(doorFeature[ini+5])
         try:
             door.mode = str(doorFeature[ini+6])
@@ -735,10 +759,10 @@ def addDoor(doors, startPt, endPt, mode='rect'):
     door = passage()
     
     if mode == 'rect':
-        door.params[0]= float(startPt[0])
-        door.params[1]= float(startPt[1])
-        door.params[2]= float(endPt[0])
-        door.params[3]= float(endPt[1])
+        door.params[0]= min(float(startPt[0]),float(endPt[0]))
+        door.params[1]= min(float(startPt[1]),float(endPt[1]))
+        door.params[2]= max(float(startPt[0]),float(endPt[0]))
+        door.params[3]= max(float(startPt[1]),float(endPt[1]))
 
     # The arrow is to be tested in simulation.  
     # The default value is no direction assigned, i.e., zero.  
@@ -780,10 +804,10 @@ def readExits(FileName, debug=True, marginTitle=1, ini=0):
     for exitFeature in exitFeatures[marginTitle:]:
         exit = passage()
         exit.name = str(exitFeature[ini])
-        exit.params[0]= float(exitFeature[ini+1])
-        exit.params[1]= float(exitFeature[ini+2])
-        exit.params[2]= float(exitFeature[ini+3])
-        exit.params[3]= float(exitFeature[ini+4])
+        exit.params[0]= min(float(exitFeature[ini+1]),float(exitFeature[ini+3]))
+        exit.params[1]= min(float(exitFeature[ini+2]),float(exitFeature[ini+4]))
+        exit.params[2]= max(float(exitFeature[ini+1]),float(exitFeature[ini+3]))
+        exit.params[3]= max(float(exitFeature[ini+2]),float(exitFeature[ini+4]))
         exit.arrow = int(exitFeature[ini+5])
         try:
             exit.mode = str(exitFeature[ini+6])
@@ -813,10 +837,15 @@ def addExit(exits, startPt, endPt, mode='rect'):
     exit = passage()
     
     if mode == 'rect':
-        exit.params[0]= float(startPt[0])
-        exit.params[1]= float(startPt[1])
-        exit.params[2]= float(endPt[0])
-        exit.params[3]= float(endPt[1])
+        #exit.params[0]= float(startPt[0])
+        #exit.params[1]= float(startPt[1])
+        #exit.params[2]= float(endPt[0])
+        #exit.params[3]= float(endPt[1])
+
+        exit.params[0]= min(float(startPt[0]),float(endPt[0]))
+        exit.params[1]= min(float(startPt[1]),float(endPt[1]))
+        exit.params[2]= max(float(startPt[0]),float(endPt[0]))
+        exit.params[3]= max(float(startPt[1]),float(endPt[1]))
 
     # The arrow is to be tested in simulation.  
     # The default value is no direction assigned, i.e., zero.  
@@ -1275,7 +1304,7 @@ def updateWallData(walls, outputFile, inputFile=None):
                 csv_writer.writerow([inputFile])
             csv_writer.writerow(['WALL/OBST data in TestGeom: '])
             csv_writer.writerow(['time:', time.strftime('%Y-%m-%d_%H_%M_%S')])
-            csv_writer.writerow(['&Wall', '0/startX', '1/startY', '2/endX', '3/endY', '4/arrow', '5/shape', '6/inComp'])
+            csv_writer.writerow(['&Wall', '1/startX', '2/startY', '3/endX', '4/endY', '5/arrow', '6/shape', '7/inComp'])
             index_temp=0
             for wall in walls:
                 csv_writer.writerow(['--', str(wall.params[0]), str(wall.params[1]), str(wall.params[2]), str(wall.params[3]), str(wall.arrow), str(wall.mode), str(wall.inComp)])
@@ -1288,7 +1317,7 @@ def updateWallData(walls, outputFile, inputFile=None):
                 csv_writer.writerow([inputFile])
             csv_writer.writerow(['WALL/OBST data in TestGeom: '])
             csv_writer.writerow(['time:', time.strftime('%Y-%m-%d_%H_%M_%S')])
-            csv_writer.writerow(['&Wall', '0/startX', '1/startY', '2/endX', '3/endY', '4/arrow', '5/shape', '6/inComp'])
+            csv_writer.writerow(['&Wall', '1/startX', '2/startY', '3/endX', '4/endY', '5/arrow', '6/shape', '7/inComp'])
             index_temp=0
             for wall in walls:
                 csv_writer.writerow(['--', str(wall.params[0]), str(wall.params[1]), str(wall.params[2]), str(wall.params[3]), str(wall.arrow), str(wall.mode), str(wall.inComp)])
@@ -1723,6 +1752,9 @@ def compute_simu(simu):
         npzA = np.zeros((1, simu.num_agents, simu.num_agents))
         npzB = np.zeros((1, simu.num_agents, simu.num_agents))
 
+        npzVD = np.zeros((1, simu.num_agents, simu.num_doors))
+        npzVE = np.zeros((1, simu.num_agents, simu.num_exits))
+        npzEP = np.zeros((1, simu.num_agents, simu.num_exits))
         
         dump_evac(simu.agents, fbin, simu.t_sim)
         npzTime.append(simu.t_sim)
@@ -1751,6 +1783,14 @@ def compute_simu(simu):
         if len(npzTime)==1:
             npzB[0,:,:]=person.BFactor
         
+        if len(npzTime)==1:
+            npzVD[0,:,:]=person.visible_doors
+
+        if len(npzTime)==1:
+            npzVE[0,:,:]=person.visible_exits
+        
+        if len(npzTime)==1:
+            npzEP[0,:,:]=person.exit_prob
         
     ##########################################
     ### Simulation starts here: Only Compute
@@ -1833,214 +1873,44 @@ def compute_simu(simu):
                 tempB=np.zeros((1, simu.num_agents, simu.num_agents))
                 tempB[0,:,:] =person.BFactor
                 npzB = np.concatenate((npzB, tempB), axis=0)
-            
+
+            if len(npzTime)==1:
+                npzVD[0,:,:]=person.visible_doors
+            else:
+                tempVD=np.zeros((1, simu.num_agents, simu.num_doors))
+                tempVD[0,:,:] =person.visible_doors
+                npzVD = np.concatenate((npzVD, tempVD), axis=0)
+
+            if len(npzTime)==1:
+                npzVE[0,:,:]=person.visible_exits
+            else:
+                tempVE=np.zeros((1, simu.num_agents, simu.num_exits))
+                tempVE[0,:,:] =person.visible_exits
+                npzVE = np.concatenate((npzVE, tempVE), axis=0)
+                
+            if len(npzTime)==1:
+                npzEP[0,:,:]=person.exit_prob
+            else:
+                tempEP=np.zeros((1, simu.num_agents, simu.num_exits))
+                tempEP[0,:,:] =person.exit_prob
+                npzEP = np.concatenate((npzEP, tempEP), axis=0)
+
     f.close()
+    
+    npzRadius = []
+    npzMass = []
+    for agent in simu.agents:
+        npzRadius.append(agent.radius)
+        npzMass.append(agent.mass)
+        
     if simu.dumpBin:
         fbin.close()
-        np.savez(simu.outDataName +'.npz', npzTime, npzSee, npzComm, npzTalk, npzP, npzD, npzC, npzA, npzB)
+        #np.savez(simu.outDataName +'.npz', npzTime, npzSee, npzComm, npzTalk, npzP, npzD, npzC, npzB, npzA)
         
-"""
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                running = False
-                #pygame.display.quit()
-                simu.quit()
-            elif event.type == pygame.MOUSEBUTTONDOWN:
-                (mouseX, mouseY) = pygame.mouse.get_pos()
-                #button = pygame.mouse.get_pressed()            
-            # elif event.type == pygame.MOUSEBUTTONUP:
-            elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_PAGEUP:
-                    ZOOMFACTOR = ZOOMFACTOR +1
-                elif event.key == pygame.K_PAGEDOWN:
-                    ZOOMFACTOR = max(6.0, ZOOMFACTOR -1)
-                elif event.key == pygame.K_t:
-                    simu.MODETRAJ = not simu.MODETRAJ
-                elif event.key == pygame.K_SPACE:
-                    simu.PAUSE = not simu.PAUSE
-                elif event.key == pygame.K_v:
-                    simu.SHOWVELOCITY = not simu.SHOWVELOCITY
-                elif event.key == pygame.K_i:
-                    simu.SHOWINDEX = not simu.SHOWINDEX
-                elif event.key == pygame.K_d:
-                    simu.DRAWDOORFORCE = not simu.DRAWDOORFORCE
-                elif event.key == pygame.K_r:
-                    simu.DRAWSELFREPULSION = not simu.DRAWSELFREPULSION
-                elif event.key == pygame.K_KP1:
-                    simu.SHOWWALLDATA = not simu.SHOWWALLDATA
-                elif event.key == pygame.K_KP2:
-                    simu.SHOWDOORDATA = not simu.SHOWDOORDATA
-                elif event.key == pygame.K_KP3:
-                    simu.SHOWEXITDATA = not simu.SHOWEXITDATA
-                elif event.key == pygame.K_s:
-                    simu.SHOWSTRESS = not simu.SHOWSTRESS
-                elif event.key == pygame.K_UP:
-                    ySpace=ySpace-10
-                elif event.key == pygame.K_DOWN:
-                    ySpace=ySpace+10
-                elif event.key == pygame.K_LEFT:
-                    xSpace=xSpace-10
-                elif event.key == pygame.K_RIGHT:
-                    xSpace=xSpace+10
-
-        if simu.MODETRAJ == False:
-            screen.fill(white)
-
-        tt = pygame.time.get_ticks()/1000-simu.t_pause
-        if simu.PAUSE is True:
-            t_now = pygame.time.get_ticks()/1000
-            simu.t_pause = t_now-tt
-            continue
-
-111111111111111111111111111111111111111111
-        #############################
-        ######### Drawing Process ######
-        xyShift = np.array([xSpace, ySpace])
-
-        ####################
-        # Showing Time
-        ####################
-        if simu.SHOWTIME:
-            tt = pygame.time.get_ticks()/1000-simu.t_pause
-            myfont=pygame.font.SysFont("arial",14)
-            time_surface=myfont.render("Physics Time:" + str(tt), True, (0,0,0), (255,255,255))
-            screen.blit(time_surface, [470,370]) #[750,350]*ZOOMFACTOR)
-            time_surface=myfont.render("Simulation Time:" + str(simu.t_sim), True, (0,0,0), (255,255,255))
-            screen.blit(time_surface, [630,370]) #[750,350]*ZOOMFACTOR)
-
-        drawWalls(screen, simu.walls, ZOOMFACTOR, simu.SHOWWALLDATA, xSpace, ySpace)
-        drawDoors(screen, simu.doors, ZOOMFACTOR, simu.SHOWDOORDATA, xSpace, ySpace)
-        drawExits(screen, simu.exits, ZOOMFACTOR, simu.SHOWEXITDATA, xSpace, ySpace)
-
-        # pygame.draw.circle(screen, AGENTCOLOR, (np.array(SCREENSIZE)/2).tolist(), agent.size, LINEWIDTH)
+        np.savez(simu.outDataName +'.npz', npzTime, npzSee, npzComm, npzTalk, \
+        npzP, npzD, npzC, npzB, npzA, \
+        npzVD, npzVE, npzEP, npzRadius, npzMass)
         
-        ####################
-        # Drawing the agents
-        ####################
-        #for agent in agents:
-        
-        for idai, agent in enumerate(simu.agents):
-            
-            if agent.inComp == 0:
-                continue
-            
-            #scPos = np.array([0, 0])
-            scPos = [0, 0]
-            scPos[0] = int(agent.pos[0]*ZOOMFACTOR+xSpace)
-            scPos[1] = int(agent.pos[1]*ZOOMFACTOR+ySpace)
-            
-            #temp = int(100*agent.ratioV)
-            #AGENTCOLOR = [0,0,temp]
-            color_para = [0, 0, 0]
-            color_para[0] = int(255*min(1, agent.ratioV))
-            pygame.draw.circle(screen, color_para, scPos, int(agent.radius*ZOOMFACTOR), LINEWIDTH)
-            #int(agent.radius*ZOOMFACTOR), LINEWIDTH)
-            
-            if simu.THREECIRCLES:
-                leftS = [0, 0]
-                leftShoulder = agent.shoulders()[0]
-                leftS[0] = int(leftShoulder[0]*ZOOMFACTOR+xSpace)
-                leftS[1] = int(leftShoulder[1]*ZOOMFACTOR+ySpace)
-            
-                rightS = [0, 0]
-                rightShoulder = agent.shoulders()[1]	
-                rightS[0] = int(rightShoulder[0]*ZOOMFACTOR+xSpace)
-                rightS[1] = int(rightShoulder[1]*ZOOMFACTOR+ySpace)
-                
-                #print ('shoulders:', leftS, rightS)
-                pygame.draw.circle(screen, color_para, leftS, agent.size/2, 3)
-                pygame.draw.circle(screen, color_para, rightS, agent.size/2, 3)
-            
-            if simu.SHOWVELOCITY:
-                #endPosV = [0, 0]
-                #endPosV[0] = int(agent.pos[0]*ZOOMFACTOR + agent.actualV[0]*ZOOMFACTOR+xSpace)
-                #endPosV[1] = int(agent.pos[1]*ZOOMFACTOR + agent.actualV[1]*ZOOMFACTOR+ySpace)
-                endPosV = (agent.pos+agent.actualV)*ZOOMFACTOR+xyShift
-            
-                #endPosDV = [0, 0]
-                #endPosDV[0] = int(agent.pos[0]*ZOOMFACTOR + agent.desiredV[0]*ZOOMFACTOR+xSpace)
-                #endPosDV[1] = int(agent.pos[1]*ZOOMFACTOR + agent.desiredV[1]*ZOOMFACTOR+ySpace)
-                endPosDV = (agent.pos+agent.desiredV)*ZOOMFACTOR+xyShift
-            
-                #stressShow = 0
-                #stressShow = int(255*agent.ratioV)
-                #pygame.draw.line(screen, blue, leftS, rightS, 3)
-                pygame.draw.line(screen, blue, scPos, endPosV, 2)
-                pygame.draw.line(screen, [255,60,0], scPos, endPosDV, 2)
-
-            if simu.DRAWWALLFORCE:
-                #endPosV = [0, 0]
-                #endPosV[0] = int(agent.pos[0]*ZOOMFACTOR + agent.actualV[0]*ZOOMFACTOR+xSpace)
-                #endPosV[1] = int(agent.pos[1]*ZOOMFACTOR + agent.actualV[1]*ZOOMFACTOR+ySpace)
-                endPosWF = (agent.pos+agent.wallrepF)*ZOOMFACTOR+xyShift
-            
-                #pygame.draw.line(screen, blue, scPos, endPosV, 2)
-                pygame.draw.line(screen, [230,220,160], scPos, endPosWF, 2)
-                #khaki = 240,230,140
-
-            if simu.DRAWDOORFORCE:
-                endPosDF = (agent.pos+agent.doorF)*ZOOMFACTOR+xyShift
-                pygame.draw.line(screen, green, scPos, endPosDF, 2)
-
-            if simu.DRAWGROUPFORCE:
-                endPosGF = (agent.pos+agent.socialF)*ZOOMFACTOR+xyShift
-                pygame.draw.line(screen, lightpink, scPos, endPosGF, 2)
-
-            if simu.DRAWSELFREPULSION:
-                endPosRF = (agent.pos+agent.selfrepF)*ZOOMFACTOR+xyShift
-                pygame.draw.line(screen, lightpink, scPos, endPosRF, 2)
-                
-            
-            for idaj, agentOther in enumerate(simu.agents):
-                scPosOther = [0, 0]
-                scPosOther[0] = int(agentOther.pos[0]*ZOOMFACTOR+xSpace)
-                scPosOther[1] = int(agentOther.pos[1]*ZOOMFACTOR+ySpace)
-                
-                agentPer = agent.pos+0.8*normalize(agentOther.pos - agent.pos)
-                scPosDir = [0, 0]
-                scPosDir[0] = int(agentPer[0]*ZOOMFACTOR+xSpace)
-                scPosDir[1] = int(agentPer[1]*ZOOMFACTOR+ySpace)
-                
-                #leftShoulder, rightShoulder = agent.shoulders()
-                #leftS = [int(leftShoulder[0]*ZOOMFACTOR), int(leftShoulder[1]*ZOOMFACTOR)]
-                #rightS = [int(rightShoulder[0]*ZOOMFACTOR), int(rightShoulder[1]*ZOOMFACTOR)]
-                
-                if person.comm[idai, idaj] == 1 and simu.SHOWINTELINE: 
-                    pygame.draw.line(screen, blue, scPos, scPosOther, 2)
-                    #pygame.draw.circle(screen, blue, scPosDir, 2, 2)
-                    #pygame.draw.line(screen, blue, scPosDir, rightS, 2)
-                    #pygame.draw.line(screen, blue, scPosDir, leftS, 2)
-                    pygame.draw.line(screen, green, scPos, scPosDir, 4)
-
-                if person.talk[idai, idaj] == 1 and simu.SHOWINTELINE: 
-                    pygame.draw.line(screen, red, scPos, scPosOther, 3)
-                    pygame.draw.line(screen, green, scPos, scPosDir, 4)
-            
-            #print(scPos)
-            
-            if simu.SHOWINDEX:
-                #tt = pygame.time.get_ticks()/1000-t_pause
-                myfont=pygame.font.SysFont("arial",14)
-                if simu.t_sim < agent.tpre:
-                    text_surface=myfont.render(str(idai), True, (255,0,0), (255,255,255))
-                else: 
-                    text_surface=myfont.render(str(idai), True, (0,0,0), (255,255,255))
-                screen.blit(text_surface, agent.pos*ZOOMFACTOR+xyShift)
-
-            if simu.SHOWSTRESS:
-                myfont=pygame.font.SysFont("arial",14)
-                text_surface=myfont.render(str(agent.ratioV), True, (0,0,0), (255,255,255))
-                screen.blit(text_surface, agent.pos*ZOOMFACTOR+xyShift+[0,6])
-
-        pygame.display.flip()
-        clock.tick(20)
-
-    simu.ZOOMFACTOR = ZOOMFACTOR
-    simu.xSpace = xSpace
-    simu.ySpace = ySpace
-    pygame.display.quit()
-"""
-
 
 
 if __name__ == '__main__':

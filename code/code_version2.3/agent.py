@@ -35,6 +35,9 @@ class person(object):
     exit_known = None
     exit_selected = None
     
+    visible_doors = None
+    visible_exits = None
+    
     def __init__(self, x=1, y=1):
         
         # random initialize a agent
@@ -94,7 +97,7 @@ class person(object):
         self.pMode = 'random' #{'random' 'fixed' 'increase' 'decrease'}
         
         self.desiredSpeed = 2.0 #random.uniform(0.3,2.3) #1.8
-        self.desiredV = self.desiredSpeed*self.direction
+        self.desiredV = self.desiredSpeed*self.direction #np.array([0.0,0.0])
         self.desiredSpeedMode = 'random' #{'random' 'fixed' 'increase' 'decrease'}
         #self.drivenAcc =(self.desiredV - self.actualV)/self.tau
         
@@ -117,9 +120,9 @@ class person(object):
 
         self.objF = np.array([0.0,0.0])
         self.subF = np.array([0.0,0.0])
-
-        self.bodyFactorA = 6000
-        self.slideFricFactorA = 240000
+        
+        self.accl = np.array([0.0,0.0])
+        self.sumF = np.array([0.0,0.0])
 
         # /Group Social Force
         self.A_CF = 1 #30/20000 #2
@@ -132,6 +135,9 @@ class person(object):
         # Wall Force / Door Force
         self.A_WF = 200 #60 #2
         self.B_WF = 0.2 #0.2 #0.8 #3.2 #2.2 #random.uniform(0.8,1.6) #0.08
+
+        self.bodyFactorA = 3000
+        self.slideFricFactorA = 240000
         
         self.bodyFactorW = 90000 #12.0
         self.slideFricFactorW = 240000
@@ -587,27 +593,75 @@ class person(object):
         doorOK = None
         exitOK = None
         
-        if exit2door is None: 
+        dest2 = None
+        doorOK2 = None
+        exitOK2 = None
+        
+        if exit2door is None: # No exits in the simulation object
 
             for door in self.visibleDoors:
                 #door.computePos()
                 if door.inside(self.pos):
                     return door
+                    #if len(self.visibleDoors)<=1:
+                    #    return door
+                    #else:
+                    #    continue
+                        
+                    #if len(self.route)>0 and self.route[-1] == door.pos:
+                    #    if len(self.visibleDoors)<=1:
+                    #        return door
+                    #    else:
+                    #        continue
+                    #else:
+                    #    return door
                 #if self.pos[0]>=door.params[0] and self.pos[0]<=door.params[2]:
                 #    if  self.pos[1]>=door.params[1] and self.pos[1]<=door.params[3]:
                 #    return door
                 else:
-                    if len(self.route)>0:
-                        if (self.route[len(self.route)-1] is door.pos) and len(self.visibleDoors)>1:
-                            continue
                     dest_temp = np.linalg.norm(door.pos - self.pos)
                     dir1 = door.direction(door.arrow)    #door.direction(door.arrow)   #
                     dir2 = door.pos-self.pos
-                    if dest ==None or dest>dest_temp:
-                        if np.dot(dir1, dir2)>=0:
+                    
+                    print("dir1:", dir1)
+                    print("dir2:", dir2)
+                    
+                    # Go outside a door, but find no other doors, and then go back to the previous door???
+                    #if len(self.route)>0 and self.route[-1] == door.pos:
+                    #
+                        #if len(self.visibleDoors)<=1:
+                        #    return door
+                            #len(self.visibleDoors)==0  No visible doors
+                            # No other door choice.  Go back to this door???????
+
+                    #dest_temp = np.linalg.norm(door.pos - self.pos)
+                    #dir1 = door.direction(self.pathMap[door.oid])    #door.direction(door.arrow)   #
+                    #dir2 = door.pos-self.pos
+                    #if dest ==None or dest>dest_temp:
+                    #    if np.dot(dir1, dir2)>=0:
+                    #        dest=dest_temp
+                    #        doorOK = door
+                        
+                    if np.dot(dir1, dir2)>=0:
+                        if dest is None:
                             dest=dest_temp
                             doorOK = door
+                        elif dest_temp<dest:
+                            dest=dest_temp
+                            doorOK = door
+                    else:
+                        if dest2 is None:
+                            dest2 =dest_temp
+                            doorOK2 = door
+                        elif dest_temp<dest2:
+                            dest2 = dest_temp
+                            doorOK2 = door
+
             return doorOK
+            #if doorOK is not None:
+            #    return doorOK
+            #else:
+            #    return doorOK2
 
         else:
             for exit in self.visibleExits:
@@ -617,10 +671,10 @@ class person(object):
                 else:  
                     dest_temp = np.linalg.norm(exit.pos - self.pos)
                     dir1 = exit.direction(exit.arrow)
+                    dir2 = exit.pos-self.pos
                     # temp = self.route[exit.oid]
                     # dir1 = self.findDoorDir(temp)
-                    dir2 = exit.pos-self.pos
-                    if dest ==None or dest>dest_temp:
+                    if dest is None or dest>dest_temp:
                         if np.dot(dir1, dir2)>=0:
                             dest=dest_temp
                             exitOK = exit
@@ -644,9 +698,9 @@ class person(object):
                 #    if  self.pos[1]>=door.params[1] and self.pos[1]<=door.params[3]:
                 #    return door
                 else:
-                    if len(self.route)>0:
-                        if (self.route[len(self.route)-1] is door.pos) and len(self.visibleDoors)>1:
-                            continue
+                    #if len(self.route)>0:
+                    #    if (self.route[len(self.route)-1] is door.pos) and len(self.visibleDoors)>1:
+                    #        continue
                     dest_temp = np.linalg.norm(door.pos - self.pos)
                     dir1 = door.direction(self.pathMap[door.oid])    #door.direction(door.arrow)   #
                     dir2 = door.pos-self.pos
@@ -808,7 +862,24 @@ class person(object):
             if isVisibleDoor:
                 resultDoors.append(door)
         return resultDoors
+        
+    def updateVisibleDoors(self, walls, doors):
+        self.visibleDoors=self.findVisibleTarget(walls, doors)
 
+        for door in doors:
+            person.visible_doors[self.ID, door.oid]=0
+        
+        for door in self.visibleDoors:
+            person.visible_doors[self.ID, door.oid]=1
+
+    def updateVisibleExits(self, walls, exits):
+        self.visibleExits=self.findVisibleTarget(walls, exits)
+
+        for exit in exits:
+            person.visible_exits[self.ID, exit.oid]=0        
+
+        for exit in self.visibleExits:
+            person.visible_exits[self.ID, exit.oid]=1
 
     def moveToAgent(self):
         dest = None
@@ -905,15 +976,9 @@ class person(object):
         return self.physicSF
 
 
-    def updateSee(self, agents, walls): #WALLBLOCKHERDING):
-
-        '''
-        for idaj, aj in enumerate(agents):
-            if self is aj:
-                idai = idaj
-                break
-        '''
+    def updateSeeList(self, agents, walls): #WALLBLOCKHERDING):
         
+        self.seeothers=[]
         for idaj, aj in enumerate(agents):
             if aj.inComp == 0:
                 continue
@@ -957,6 +1022,13 @@ class person(object):
                 else:
                     see_i2j =True
                     person.see_flag[self.ID, aj.ID]=1
+        
+        
+        #############################################
+        # Update seeorhters list
+        for idaj, aj in enumerate(agents):
+            if person.see_flag[self.ID, aj.ID]:
+                self.seeothers.append(aj)
 
 
     def updateAttentionList(self, agents, walls): #, WALLBLOCKHERDING):
@@ -964,22 +1036,22 @@ class person(object):
         #######################################################
         # Compute interaction of agents:  Find the agents who draw ai's attention
         ########################################################
-        for idaj, aj in enumerate(agents):
-            if self is aj:
-                idai = idaj
-                break
+        #for idaj, aj in enumerate(agents):
+        #    if self is aj:
+        #        idai = idaj
+        #        break
                 
         self.others=[]
-        self.seeothers=[]
         #self.physicF = np.array([0.0,0.0])
         for idaj, aj in enumerate(agents):
             
-            if aj.inComp == 0:
+            # All the list are initialized as np.zeros((self.num_agents, self.num_agents))
+            if aj.inComp == 0: # List value = 0 if aj.inComp=0
                 person.comm[self.ID, aj.ID] = 0
                 person.talk[self.ID, aj.ID] = 0
                 continue
 
-            if aj is self:
+            if aj is self: # List value = 1 if aj is ai
                 person.comm[self.ID, aj.ID] = 1
                 person.talk[self.ID, aj.ID] = 1
                 continue
@@ -998,11 +1070,6 @@ class person(object):
             anisoF = self.lamb + (1-self.lamb)*(1+cos(phiij))*0.5
             #print >> f, "anisotropic factor", anisoF, "/n"
             
-            #############################################
-            # Update seeorhters list
-            if person.see_flag[self.ID, aj.ID]:
-                self.seeothers.append(aj)
-
             ######################################################################
             # There are several persons around you.  Which draws your attention?  
             ######################################################################
@@ -1012,29 +1079,20 @@ class person(object):
                 self.others.append(aj)
             else: 
                 person.comm[self.ID, aj.ID] = 0
-
             # Loop of idaj,aj ends here
             ###########################
 
-
-    def updateSocial(self, agents, GROUPBEHAVIOR, debug=False):
-
-        self.socialF = np.array([0.0,0.0])
-        #for idaj, aj in enumerate(agents):
-        for aj in self.seeothers: #enumerate(self.seeothers):
+    def updateTalkList(self, debug=False):
+        
+        for aj in self.others:
 
             if aj.inComp == 0:
                 continue
             if aj is self:
                 continue
-             
-            # Traditional Social Force in Helbing et. al., 2000
-            self.socialF += self.socialForce(aj)
-            #peopleInter += self.socialForce(aj)*anisoF
-
-        for aj in self.others:
-
-            #idaj=aj.ID
+            # No talk to oneself
+            # No talk to any agent not in the computational loop
+                
             if debug:
                 print ('others ID', aj.ID)
                         
@@ -1065,34 +1123,81 @@ class person(object):
                 self.tau = self.moving_tau
                 person.talk[self.ID, aj.ID]=0
 
+
+    def adaptSocialForce(self, agents, GROUPBEHAVIOR, debug=False):
+
+        self.socialF = np.array([0.0,0.0])
+        #for idaj, aj in enumerate(agents):
+        for aj in self.seeothers: #enumerate(self.seeothers):
+
+            if aj.inComp == 0:
+                continue
+            if aj is self:
+                continue
+             
+            # Traditional Social Force in Helbing et. al., 2000
+            self.socialF += self.socialForce(aj)
+            #peopleInter += self.socialForce(aj)*anisoF
+
+        for aj in self.others:
+
+            if aj.inComp == 0:
+                continue
+            if aj is self:
+                continue
+                
+            if debug:
+                print ('others ID', aj.ID)
+
             ####################################
             # Turn on or off group social force
             ####################################
             if GROUPBEHAVIOR:
-                self.socialF += self.groupForce(aj, person.DFactor[self.ID, aj.ID], person.AFactor[self.ID, aj.ID], person.BFactor[self.ID, aj.ID])
+                vij_actualV = np.linalg.norm(self.actualV - aj.actualV)
+                phiij = vectorAngleCos(self.actualV, (aj.pos - self.pos))
+                anisoF = self.lamb + (1-self.lamb)*(1+cos(phiij))*0.5
+        
+                self.socialF += self.groupForce(aj, person.DFactor[self.ID, aj.ID], person.AFactor[self.ID, aj.ID], person.BFactor[self.ID, aj.ID]) + 6.0*vij_actualV*anisoF # The force term of vij_acutalV is not that useful
 
             #########################################
             # Opinion dynamics for tpre feature: Opinion Exchange
             #########################################
             #if dij < self.interactionRange:
             #    self.tpre = (1-self.p)*self.tpre + self.p*aj.tpre
-                
-        if len(self.others)>0:
-            otherMovingDir, otherMovingSpeed_average, otherTpre = self.opinionDynamics()
-            self.tpre = (1-self.p)*self.tpre + self.p*otherTpre
 
         return self.socialF
 
     # Interactive Opinion Dynamics Starts here
     # Opinion Exchange in Pair
-    def opinionExchange(self, other, mode=1.0):
-        otherV= (1-mode)*other.desiredV + mode*other.actualV
-        self.desiredV = (1-self.p)*self.desiredV + self.p*otherV
+    def opinionExchange(self): #, other, mode=1.0):
+        
+        #otherV= (1-mode)*other.desiredV + mode*other.actualV
+        
+        otherMovingDir = np.array([0.0, 0.0])
+        otherMovingSpeed = 0.0
+        otherTpre = 0.0
+        
+        temp = np.random.multinomial(1, person.CFactor[self.ID, :], size=1)
+        print(self.ID)
+        print(person.CFactor[self.ID, :])
+        print(temp)
+        #if len(self.exits)>0:
+        other_index = np.argmax(temp)
+        
+        for aj in self.others:
+            if other_index == aj.ID:
+                otherMovingDir = normalize(aj.actualV) #/DFactor[idai, idaj]*AFactor[idai, idaj]
+                otherMovingSpeed = np.linalg.norm(aj.actualV) #/DFactor[idai, idaj]*AFactor[idai, idaj]
+                otherTpre = aj.tpre
+                
+        
+        if len(self.others)>0:
+            self.tpre = (1-self.p)*self.tpre + self.p*otherTpre
         #DFactor[idai, idaj] = (1-ai.p)*DFactor[idai, idaj]+ai.p*DFactor[idaj, idai]
         #AFactor[idai, idaj] = (1-ai.p)*AFactor[idai, idaj]+ai.p*AFactor[idaj, idai]
         #BFactor[idai, idaj] = (1-ai.p)*BFactor[idai, idaj]+ai.p*BFactor[idaj, idai]
         #ai.desiredV = (1-ai.p)*ai.desiredV + ai.p*aj.desiredV
-        return
+        #return None
 
 
     #####################################
@@ -1134,7 +1239,10 @@ class person(object):
         #num = 1
         #otherV = other.actualV
         
-        return otherMovingDir, otherMovingSpeed/otherMovingNum, otherTpre
+        #return otherMovingDir, otherMovingSpeed/otherMovingNum, otherTpre
+        if len(self.others)>0:
+            #otherMovingDir, otherMovingSpeed_average, otherTpre = self.opinionDynamics()
+            self.tpre = (1-self.p)*self.tpre + self.p*otherTpre
     
 
     def findDoorDir(self, direction):
