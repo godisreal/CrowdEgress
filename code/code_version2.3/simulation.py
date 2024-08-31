@@ -100,7 +100,7 @@ class simulation(object):
         self.TIMECOUNT = True
         self.WALLBLOCKHERDING = True
         self.TESTFORCE = True
-        self.TPREMODE = 3        ### Instructinn: 1 -- DesiredV = 0  2 -- Motive Force =0: 
+        self.TPREMODE = 2        ### Instructinn: 1 -- DesiredV = 0  2 -- Motive Force =0: 
         self.GROUPBEHAVIOR = True     # Enable the group social force
         self.SELFREPULSION = True      # Enable self repulsion
         self.DEBUG = True
@@ -2187,6 +2187,8 @@ class simulation(object):
             if self.SELFREPULSION:
                 selfRepulsion = ai.adaptSelfRep(person.DFactor[idai, idai], person.AFactor[idai, idai], person.BFactor[idai, idai])#*ai.direction
                 #selfRepulsion = ai.adaptSelfRep()
+            else:
+                selfRepulsion = np.array([0.0, 0.0])
 
             peopleInter = ai.adaptSocialForce(self.agents, self.GROUPBEHAVIOR, True)
             #ai.opinionDynamics()

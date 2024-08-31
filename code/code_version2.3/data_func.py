@@ -194,6 +194,9 @@ def readDoorProb(FileName, doorIndex, showdata=True):
         plt.title("exit index:"+str(doorIndex))
         plt.grid()
         plt.legend(loc='best')
+        temp=FileName.split('.')
+        fnamePNG = temp[0]+'_exitprob.png'
+        plt.savefig(fnamePNG)
         plt.show()
     return matrix
 
