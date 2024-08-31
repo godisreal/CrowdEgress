@@ -56,7 +56,7 @@ class GUI(object):
         
         self.window = Tk()
         self.window.title('crowd egress simulator')
-        self.window.geometry('960x600')
+        self.window.geometry('900x600')
 
         self.statusStr = ""
         self.statusText = StringVar(self.window, value=self.statusStr) # at this point, statusStr = ""
@@ -76,7 +76,6 @@ class GUI(object):
         self.frameSoc = Frame(self.window)
         self.frameParameters = Frame(self.window)
         self.frameData = Frame(self.window)
-        self.frameCSV = Frame(self.window)
         self.frameGuide = Frame(self.window)
         #self.frameExit = Frame(self.window)
         #self.frameSettings = Frame(self.window)
@@ -104,11 +103,11 @@ class GUI(object):
 
         self.notebook.add(self.frameRun,text="QuickStart")
         self.notebook.add(self.frameParameters,text="Parameters")
-        self.notebook.add(self.frameFlow,text="MeshFlow")
+        self.notebook.add(self.frameFlow,text="EgressFlow")
         #self.notebook.add(self.frameInformation,text="Information")
-        self.notebook.add(self.frameSoc,text="EvacAgent")       
+        self.notebook.add(self.frameSoc,text="EvacAgent")
+        #self.notebook.add(self.frameExit,text="WayFinding")        
         self.notebook.add(self.frameData,text="DataTool")
-        self.notebook.add(self.frameCSV,text="CSVTool") 
         self.notebook.add(self.frameGuide,text="Readme")
         #self.notebook.add(self.frameSettings,text="Settings")
         self.notebook.pack(expand=NO, fill=BOTH, padx=5, pady=5 ,side=TOP)
@@ -146,60 +145,44 @@ class GUI(object):
         self.lb_fds.pack()
 
 
-        self.buttonSelectFDS =Button(self.frameRun, text='choose fds file for FDS data', command=self.selectFDSFile)
-        #self.buttonSelectFDS.place(x=2, y=60)
-        self.buttonSelectFDS.pack() #place(x=20, y=146)
-        self.showHelp(self.buttonSelectFDS, "Select fds file to set up the compartment geometry for the simulation")
-        
-
-        self.buttonSelectCSV =Button(self.frameRun, text='choose csv file for EVAC data', command=self.selectEvacFile)
+        self.buttonSelectCSV =Button(self.frameRun, text='choose csv file for EVAC data', command=self.selectEvacFile, width=38)
         #self.buttonSelectCSV.place(x=2, y=120)
-        self.buttonSelectCSV.pack() #place(x=20, y=176)
+        self.buttonSelectCSV.pack()
         self.showHelp(self.buttonSelectCSV, "Select .csv file to set up the agent parameters for the simulation")
         #Button(window, text='choose csv file for door data', command=lambda: selectFile(2)).pack()
 
+        self.buttonSelectFDS =Button(self.frameRun, text='choose fds file for FDS data', command=self.selectFDSFile, width=38)
+        #self.buttonSelectFDS.place(x=2, y=60)
+        self.buttonSelectFDS.pack()
+        self.showHelp(self.buttonSelectFDS, "Select fds file to set up the compartment geometry for the simulation")
+        
         #if CheckVar1.get():
         #    buttonSelectFDS.configure(state=DISABLED)
         #TestV=CheckVar1.get()
         
         #self.buttonRead = Button(self.frameRun, text='read now: read in data', command=self.readData)
         #self.buttonRead.pack()
-        self.buttonGeom = Button(self.frameRun, text='Create/Modify simulation object', command=self.testGeom)
-        self.buttonGeom.pack() #place(x=20, y=206)
+        self.buttonGeom = Button(self.frameRun, text='Create/Modify simulation object', command=self.testGeom, width=38)
+        self.buttonGeom.pack()
         self.showHelp(self.buttonGeom, "Create or modify the simulation data by reading the input file (FDS or CSV files as selected above).  \n Users can easily modify the data such as adding doors, walls or exits.")
 
         #self.buttonDel = Button(self.frameRun, text='delete now: delete simulation data', command=self.deleteGeom)
         #self.buttonDel.pack()
         #self.showHelp(self.buttonDel, "Delete the existing simulation so that users can create a new one.")
  
-        self.buttonFlow = Button(self.frameRun, text='compute egress flow field', command=self.testFlow)
-        self.buttonFlow.pack() #place(x=306, y=206)
+        self.buttonFlow = Button(self.frameRun, text='compute egress flow field', command=self.testFlow, width=38)
+        self.buttonFlow.pack()
         self.showHelp(self.buttonFlow, "Generate the door flow field.  \n Users should first select either the nearest-exit method (default) or exit probablity method")
 
-        self.buttonComp = Button(self.frameRun, text='compute simulation and dump data', command=self.compSim)
-        self.buttonComp.pack() #place(x=306, y=176)
+        self.buttonComp = Button(self.frameRun, text='compute simulation and save data', command=self.compSim, width=38)
+        self.buttonComp.pack()
         #self.buttonComp.grid(row=3, column=1, rowspan=2, ipady=7)
         #self.buttonComp.place(x=397,y=191)
         self.showHelp(self.buttonComp, "Only compute the numerical result without displaying in pygame.  \n Users can use another python program evac-prt5-tool to display the the numerical result.")
         
-        self.buttonStart = Button(self.frameRun, text='compute and visualize simulation', command=self.startSim)
-        self.buttonStart.pack() #place(x=20, y=236)
+        self.buttonStart = Button(self.frameRun, text='compute and visualize simulation', command=self.startSim, width=38)
+        self.buttonStart.pack()
         self.showHelp(self.buttonStart, "Compute the numerical result and display the result timely in pygame.  \n Please select the items in parameter panel to adjust the appearance in pygame window. ")
-
-
-        self.UseFDS_Var = IntVar()
-        self.UseFDS_Var.set(1)
-        self.UseFDS_CB=Checkbutton(self.frameRun, text= 'Use FDS file to create compartment geometry', variable=self.UseFDS_Var, onvalue=1, offvalue=0)
-        self.UseFDS_CB.pack() #place(x=306, y=146)
-        self.showHelp(self.UseFDS_CB, "Use FDS file to create compartment geometry, including walls, doors and exits.")
-
-
-        self.AutoPlot_Var = IntVar()
-        self.AutoPlot_Var.set(1)
-        self.AutoPlot_CB=Checkbutton(self.frameRun, text= 'Automatically plot figures from output data', variable=self.AutoPlot_Var, onvalue=1, offvalue=0)
-        self.AutoPlot_CB.pack() #place(x=306, y=236)
-        self.showHelp(self.AutoPlot_CB, "Plot figures automatically when simulation is complete.")
-
 
         #buttonStart.place(x=5,y=220)
         print(self.fname_FDS, self.fname_EVAC)
@@ -231,31 +214,44 @@ class GUI(object):
 
         self.SHOWFORCE_Var = IntVar()
         self.SHOWFORCE_Var.set(1)
-        self.SHOWFORCE_CB=Checkbutton(self.frameParameters, text= 'Show forces on agents', variable=self.SHOWFORCE_Var, onvalue=1, offvalue=0)
-        self.SHOWFORCE_CB.place(x=2, y=6)
-        self.showHelp(self.SHOWFORCE_CB, "Show various forces on agents with colors in the simulation. \n  Motive Force: Red;  Interpersonal Force: Pink; Wall Force: Purple;  Door Force: Green")
+        self.SHOWFORCE_CB=Checkbutton(self.frameParameters, text= 'Show forces on agents in simulation', variable=self.SHOWFORCE_Var, onvalue=1, offvalue=0)
+        self.SHOWFORCE_CB.place(x=300, y=36)
+        self.showHelp(self.SHOWFORCE_CB, "Show various forces on agents in the simulation. \n  Motive Force: Red;  Interpersonal Force: Pink; Wall Force: Purple;  Door Force: Green")
         
         self.NearExit_Var = IntVar()
         self.NearExit_Var.set(0)
         self.NearExit_CB=Checkbutton(self.frameParameters, text= 'Use nearest exit strategy', variable=self.NearExit_Var, onvalue=1, offvalue=0)
-        self.NearExit_CB.place(x=2, y=66)
+        self.NearExit_CB.place(x=2, y=6)
         self.showHelp(self.NearExit_CB, "Use nearest exit strategy to guide evacuee agents.")
         
         self.DumpData_Var = IntVar()
         self.DumpData_Var.set(1)
-        self.DumpData_CB=Checkbutton(self.frameParameters, text= 'Dump data to a binary file', variable=self.DumpData_Var, onvalue=1, offvalue=0)
+        self.DumpData_CB=Checkbutton(self.frameParameters, text= 'Write simulation data into binary/npz files', variable=self.DumpData_Var, onvalue=1, offvalue=0)
         self.DumpData_CB.place(x=300, y=66)
-        self.showHelp(self.DumpData_CB, "Dump data to a binary file such that it can be visualized by our small program evac-prt5-tool.")        
+        self.showHelp(self.DumpData_CB, "Save simulation data in binary/npz file such that they could be visualized by our data/visualization tools.")        
+        
+        self.UseConfig_Var = IntVar()
+        self.UseConfig_Var.set(0)
+        self.UseConfig_CB=Checkbutton(self.frameParameters, text= 'Use config.txt to overwrite parameters selected in the GUI panels', variable=self.UseConfig_Var, onvalue=1, offvalue=0)
+        self.UseConfig_CB.place(x=2, y=276) #pack() 
+        self.showHelp(self.SHOWFORCE_CB, "Use config.txt to configure simulation object rather than use parameters selected in the GUI panels.")
 
         self.GroupBehavior_Var = IntVar()
         self.GroupBehavior_Var.set(1)
         self.GroupBehavior_CB=Checkbutton(self.frameParameters, text= 'Compute Group Behavior', variable=self.GroupBehavior_Var, onvalue=1, offvalue=0)
-        self.GroupBehavior_CB.place(x=300, y=36)  #(x=300, y=96)
+        #self.GroupBehavior_CB.place(x=2, y=96)  #(x=300, y=96)
         self.showHelp(self.GroupBehavior_CB, "Compute Group Social Force and Self Repulsion.  \n Check this button only if you have specified the group parameters in input file.")  #Uncheck it if you do not know what it means.")  
 
+        self.UseFDS_Var = IntVar()
+        self.UseFDS_Var.set(1)
+        self.UseFDS_CB=Checkbutton(self.frameRun, text= 'Use FDS file to create compartment geometry', variable=self.UseFDS_Var, onvalue=1, offvalue=0)
+        self.UseFDS_CB.pack() #place(x=300, y=96)
+        self.showHelp(self.UseFDS_CB, "Use FDS file to create compartment geometry, including walls, doors and exits.")
 
-        self.lbSoc2 = Label(self.frameParameters, text =  "Optional: Below please input the time interval for simulation step and data output step. \n")
-        self.lbSoc2.place(x=12, y=130)
+        self.lbPara1 = Label(self.frameParameters, text =  "Below please input the time interval for simulation step, data output step. ") 
+        self.lbPara1.place(x=12, y=109)
+        self.lbPara2 = Label(self.frameParameters, text =  "Please specify the final time point if simulation is only computed without visualization.")
+        self.lbPara2.place(x=12, y=127)
 
         self.lb_dtSim = Label(self.frameParameters, text = 'dtSim:')
         self.lb_dtSim.place(x=12, y=152)
@@ -271,27 +267,33 @@ class GUI(object):
         nameEntered_dtDump.insert(0, '0.2')
         nameEntered_dtDump.place(x=269, y=152)
         
-
+        self.lb_tEnd = Label(self.frameParameters, text = 'tEnd:')
+        self.lb_tEnd.place(x=412, y=152)
+        self.tEnd_gui = StringVar()
+        nameEntered_tEnd = Entry(self.frameParameters, width=12, textvariable=self.tEnd_gui)
+        nameEntered_tEnd.insert(0, '19.0')
+        nameEntered_tEnd.place(x=469, y=152)
+        
         self.lb3 = Label(self.frameParameters, text =  "Optional: If fds file is selected, the compartment geometry is created from fds file. \n")
-        self.lb3.place(x=12, y=179)
+        self.lb3.place(x=12, y=187)
 
         self.lb2 = Label(self.frameParameters, text =  "Optional: The single-floor mesh within x-y plane is read from fds file between z_min and z_max. \n")
-        self.lb2.place(x=12, y=200)
+        self.lb2.place(x=12, y=206)
 
         self.lb_zmin = Label(self.frameParameters, text = 'z_min:')
-        self.lb_zmin.place(x=12, y=226)
+        self.lb_zmin.place(x=12, y=236)
         self.zmin_gui = StringVar()
         nameEntered_zmin = Entry(self.frameParameters, width=12, textvariable=self.zmin_gui)
         nameEntered_zmin.insert(0, '0.0')
-        nameEntered_zmin.place(x=62, y=226)
+        nameEntered_zmin.place(x=62, y=236)
         self.showHelp(nameEntered_zmin, "Use FDS file to create compartment geometry, \n and zmin is the lower bound in z axis for one-floor geometry mesh.")
 
         self.lb_zmax = Label(self.frameParameters, text = 'z_max:')
-        self.lb_zmax.place(x=212, y=226)
+        self.lb_zmax.place(x=212, y=236)
         self.zmax_gui = StringVar()
         nameEntered_zmax = Entry(self.frameParameters, width=12, textvariable=self.zmax_gui)
         nameEntered_zmax.insert(0, '3.0')
-        nameEntered_zmax.place(x=262, y=226)
+        nameEntered_zmax.place(x=262, y=236)
         self.showHelp(nameEntered_zmax, "Use FDS file to create compartment geometry, \n and zmax is the upper bound in z axis for one-floor geometry mesh.")        
         ######################################################################################
         # --------------------------------------------
@@ -364,13 +366,13 @@ class GUI(object):
         nameEntered_nyp.place(x=422, y=66)
         self.showHelp(nameEntered_nyp, "Input the number of points in y axis for x-y planary mesh. \n The mesh is refined as the number of points increases, and more computational time will be needed. ")
 
-        self.buttonFlow2 = Button(self.frameFlow, text='compute egress flow field', command=self.testFlow)
+        self.buttonFlow2 = Button(self.frameFlow, text='compute egress flow field', command=self.testFlow, width=56)
         self.buttonFlow2.place(x=6, y=200)
         self.showHelp(self.buttonFlow2, "Generate the door flow field.  \n Users should first select either the nearest-exit method (default) or exit probablity method")
 
         #self.lb_outnpz = Label(self.frameFlow, text = 'The output npz file selected: None!  To show crowd fluid dynamics.')
         #self.lb_outnpz.place(x=12, y=206)        
-        self.buttonCFD = Button(self.frameFlow, text='Read output npz file and show crowd fluid', command=self.selectOutNPZ)
+        self.buttonCFD = Button(self.frameFlow, text='Read output npz file and show crowd fluid', command=self.selectOutNPZ, width=56)
         self.buttonCFD.place(x=6, y=230)
         self.showHelp(self.buttonCFD, "Read output npz file and show the numerical result of crowd fluid dynamics.")
         
@@ -381,97 +383,82 @@ class GUI(object):
         # frameSoc SocialGroup
         # --------------------------------------------
         
-        self.lbSoc1 = Label(self.frameSoc, text =  "Optional: Below please select the type of social interation force. \n 0: Social Force   1: Group Social Force    2: Magnetic force. ")
-        self.lbSoc1.place(x=12, y=30)
+        self.lbSoc1 = Label(self.frameSoc, text =  "Optional: Below please select the type of short-range interation force. \n 0: Social Force  1: Magnetic force. ")
+        self.lbSoc1.place(x=15, y=30)
         
-        self.spin_socialforce = Spinbox(self.frameSoc, from_=0, to=2, width=5, bd=8) 
-        self.spin_socialforce.place(x=656, y=30)
-        self.showHelp(self.spin_socialforce, "Select the different formula of social force: \n 0: Social force; 1: Group Social Force; 2: Magnetic force.  ")  #Uncheck it if you do not know what it means.")
-        
-        self.lbSoc2 = Label(self.frameSoc, text =  "Optional: Below please input the time interval to update attention list and update target door in simulation. \n")
-        self.lbSoc2.place(x=12, y=196)
+        self.spin_socialforce = Spinbox(self.frameSoc, from_=0, to=1, width=5, bd=8) 
+        self.spin_socialforce.place(x=606, y=30)
+        self.showHelp(self.spin_socialforce, "Select the different formula of short-range interation force: \n 0: Social force; 1: Magnetic force.  ")  #Uncheck it if you do not know what it means.")
+
+        self.lbSoc2 = Label(self.frameSoc, text =  "Below please input the time interval to update attention list and update target door in simulation. \n")
+        self.lbSoc2.place(x=12, y=220)
         
         self.lb_dtAtt = Label(self.frameSoc, text = 'dtAtt:')
-        self.lb_dtAtt.place(x=12, y=226)
+        self.lb_dtAtt.place(x=12, y=246)
         self.dtAtt_gui = StringVar()
         nameEntered_dtAtt = Entry(self.frameSoc, width=12, textvariable=self.dtAtt_gui)
         nameEntered_dtAtt.insert(0, '1.0')
-        nameEntered_dtAtt.place(x=62, y=226)
+        nameEntered_dtAtt.place(x=62, y=246)
 
         self.lb_dtExit = Label(self.frameSoc, text = 'dtExit:')
-        self.lb_dtExit.place(x=212, y=226)
+        self.lb_dtExit.place(x=212, y=246)
         self.dtExit_gui = StringVar()
         nameEntered_dtExit = Entry(self.frameSoc, width=12, textvariable=self.dtExit_gui)
         nameEntered_dtExit.insert(0, '1.0')
-        nameEntered_dtExit.place(x=262, y=226)
+        nameEntered_dtExit.place(x=262, y=246)
 
-
-        ##############################################
-        # ============================================
-        # --------------------------------------------
-        # frameData Data Tool
-        # --------------------------------------------
-
-        self.buttonTpre = Button(self.frameData, text='plot pre-movement time from output data', command=self.selectOutBinFile_Tpre)
-        self.buttonTpre.place(x=19, y=89)
+        self.buttonTpre = Button(self.frameSoc, text='plot pre-movement time from output data', command=self.selectOutBinFile_Tpre, width=56)
+        self.buttonTpre.place(x=12, y=89)
         self.showHelp(self.buttonTpre, "Display the pre-movement time offline in matplotlib.  \n Please select the simulation output binary file. ")
 
 
-        self.buttonVideo = Button(self.frameData, text='visualize agent-based simulation output data', command=self.startVideo)
-        self.buttonVideo.place(x=19, y=126)
+        self.buttonVideo = Button(self.frameSoc, text='visualize agent-based simulation output data', command=self.startVideo, width=56)
+        self.buttonVideo.place(x=12, y=126)
         self.showHelp(self.buttonVideo, "Display the simulation result offline in pygame.  \n Please select the simulation output binary file. ")
-
-        
-        self.lb_outtxt = Label(self.frameData, text = 'The output txt file selected: None!  To show probablity distribution of exit selection for each agent.')
-        self.lb_outtxt.place(x=19, y=206)    
-            
-        self.buttonExitProb = Button(self.frameData, text='Read output files and plot the door selection probablity', command=self.selectOutTxtFile_DoorProb)
-        self.buttonExitProb.place(x=19, y=230)
-        self.showHelp(self.buttonExitProb, "Read output files and plot the door selection probablity.")
-
-        self.spin_exitnumber = Spinbox(self.frameData, from_=0, to=100, width=5, bd=8) 
-        self.spin_exitnumber.place(x=596, y=230)
-        self.showHelp(self.spin_exitnumber, "Select the exit index to show the probability.  \n The exit index starts from 0 to the number_of_exit-1. To identify the exit index, please show exit data in TestGeom. ")
 
                 
         ##############################################
         # ============================================
         # --------------------------------------------
-        # frameCSV CSV Mdoel Tool
+        # frameData DataTool
         # --------------------------------------------
-        self.lb_wf = Label(self.frameCSV, text = 'The probablity distribution of exit selection is listed in the table for each agent.')
+        self.lb_wf = Label(self.frameData, text = 'The probablity distribution of exit selection is listed in the table for each agent.')
         self.lb_wf.place(x=12, y=6)
         
-        #self.scrollbar_y = Scrollbar(self.frameCSV, orient=VERTICAL)
-        #self.scrollbar_x = Scrollbar(self.frameCSV, orient=HORIZONTAL)
+        #self.scrollbar_y = Scrollbar(self.frameData, orient=VERTICAL)
+        #self.scrollbar_x = Scrollbar(self.frameData, orient=HORIZONTAL)
         
-        self.table_agent2exit = Treeview(self.frameCSV, height=6, show="headings", columns=('agents', 'data1', 'data2'), selectmode='extended') #, yscrollcommand=self.scrollbar_y.set, xscrollcommand=self.scrollbar_x.set)
+        self.table_agent2exit = Treeview(self.frameData, height=6, show="headings", columns=('agents', 'data'), selectmode='extended') #, yscrollcommand=self.scrollbar_y.set, xscrollcommand=self.scrollbar_x.set)
         self.table_agent2exit.column('agents', width=100)
-        self.table_agent2exit.column('data1', width=100)
-        self.table_agent2exit.column('data2', width=150)
+        self.table_agent2exit.column('data', width=300)
         self.table_agent2exit.heading('agents', text="agents")
-        self.table_agent2exit.heading('data1', text="data_p")
-        self.table_agent2exit.heading('data2', text="exit_prob")
-        self.table_agent2exit.place(x=296, y=30)
+        self.table_agent2exit.heading('data', text="data")
+        self.table_agent2exit.place(x=262, y=36)
 
         #self.scrollbar_y.config(command=self.table_agent2exit.yview)
         #self.scrollbar_x.config(command=self.table_agent2exit.xview)
         #self.scrollbar_y.pack(side=RIGHT, fill=Y)
         #self.scrollbar_x.pack(side=BOTTOM, fill=X)
         
-        self.buttonExitProb =Button(self.frameCSV, text='View exit selection probability', command=self.readData_exitprob)
-        self.buttonExitProb.place(x=13, y=30)
+        self.buttonExitProb =Button(self.frameData, text='View exit selection probability', command=self.readData_exitprob)
+        self.buttonExitProb.place(x=6, y=30)
         #self.buttonTree.pack()
         self.showHelp(self.buttonExitProb, "Show the agent parameters for exit selection probility.")
 
-        self.buttonPD =Button(self.frameCSV, text='View decision balace parameter', command=self.readData_p)
-        self.buttonPD.place(x=13, y=60)
+        self.buttonPD =Button(self.frameData, text='View decision balace parameter', command=self.readData_p)
+        self.buttonPD.place(x=6, y=60)
         self.showHelp(self.buttonPD, "Show the agent parameters for exit selection probility.")
         
+        self.lb_outtxt = Label(self.frameData, text = 'The output txt file selected: None!  To show probablity distribution of exit selection for each agent.')
+        self.lb_outtxt.place(x=12, y=206)    
+            
+        self.buttonExitProb = Button(self.frameData, text='Read output files and plot the door selection probablity', command=self.selectOutTxtFile_DoorProb)
+        self.buttonExitProb.place(x=6, y=230)
+        self.showHelp(self.buttonExitProb, "Read output files and plot the door selection probablity.")
 
-        self.buttonCSVView =Button(self.frameCSV, text='View csv data file', command=self.viewCSV)
-        self.buttonCSVView.place(x=13, y=90)
-        self.showHelp(self.buttonCSVView, "Show the agent data in csv data file.")
+        self.spin_exitnumber = Spinbox(self.frameData, from_=0, to=100, width=5, bd=8) 
+        self.spin_exitnumber.place(x=396, y=230)
+        self.showHelp(self.spin_exitnumber, "Select the exit index to show the probability.  \n The exit index starts from 0 to the number_of_exit-1. To identify the exit index, please show exit data in TestGeom. ")
         
         ##########################################################################3
         # ============================================
@@ -506,20 +493,11 @@ class GUI(object):
         self.textGuide.insert(END, '\n\n<startX, startY>: One diagonal point for rectangular door/exit. \n<endX, endY>:The other diagonal point for rectangular door/exit. \n\n|arrow|: Direction assigned to the door or exit so that agents will be guided when seeing this entity, especially when they do not have any target door or exit. The direction implies if the door or exit provides evacuees with any egress information such as exit signs or not. The value could be +1 for positive x direction, -1 for negative x direction, +2 for positive y direction and -2 for negative y direction. If no direction is given, the value is zero. Please refer to FDS+Evac manual to better understand the direction setting. \n\n|shape|: Only rectangular door or exit in current program; the default shape is rectangular door/exit.  \n\n|inComp|: a boolean variable to indicate if the door/exit is in computation loop or not. Normally it is given true/1. If users want to quickly remove a door/exit in simulation, they could assign it be to false/0 for a quick test.')
         
 
-    # Spinbox callback 
-    #def spin_exitno(self):
-    #    value = self.spin_exitnumber.get()
-        #print(value)
-        #scr.insert(tk.INSERT, value + '\n')
-
 
     def updateCtrlParam(self):
-
-        self.currentSimu.dumpBin = self.DumpData_Var.get()
-        self.currentSimu.autoPlot = self.AutoPlot_Var.get()
-
         #self.currentSimu.SHOWTIME = self.SHOWTIME_Var.get()
         self.currentSimu.SHOWSTRESS = self.SHOWSTRESS_Var.get()
+        self.currentSimu.dumpBin = self.DumpData_Var.get()
         
         if self.SHOWGEOM_Var.get():
             self.currentSimu.SHOWWALLDATA=True
@@ -580,12 +558,13 @@ class GUI(object):
                 self.textInformation.insert(END, 'error: ymin>ymax! Automatic data used!')
         elif self.ymin_gui.get()!='auto' or self.ymax_gui.get()!='auto':
             self.textInformation.insert(END, 'error: ymin and ymax should be float number! Automatic data used!')
-
-        if isfloatnum(self.dtSim_gui.get()) and isfloatnum(self.dtDump_gui.get()):
+            
+        if isfloatnum(self.dtSim_gui.get()) and isfloatnum(self.dtDump_gui.get()) and isfloatnum(self.tEnd_gui.get()):
             self.currentSimu.DT=float(self.dtSim_gui.get())
             self.currentSimu.DT_DumpData=float(self.dtDump_gui.get())
+            self.currentSimu.t_end=float(self.tEnd_gui.get())
         else:
-            self.textInformation.insert(END, 'error: dtAtt and dtExit should be float number! Default data used!')
+            self.textInformation.insert(END, 'error: dtSim, dtDump and tEnd should be float number! Default data used!')
 
         if isfloatnum(self.dtAtt_gui.get()) and isfloatnum(self.dtExit_gui.get()):
             self.currentSimu.DT_OtherList=float(self.dtAtt_gui.get())
@@ -702,7 +681,7 @@ class GUI(object):
         self.currentSimu.preprocessAgent()
         for i in range(self.currentSimu.num_agents):
             #for j in range(self.currentSimu.num_exits):
-            self.table_agent2exit.insert('', i, values=(self.currentSimu.agents[i].ID, self.currentSimu.agents[i].p, self.currentSimu.agent2exit[i,:]))
+            self.table_agent2exit.insert('', i, values=(self.currentSimu.agents[i].ID, self.currentSimu.agent2exit[i,:]))
         self.textInformation.insert(END, '\n'+'agent2exit data: \n '+str(self.currentSimu.agent2exit)+'\n')
 
     def readData_p(self):
@@ -723,10 +702,6 @@ class GUI(object):
         self.textInformation.insert(END, '\n'+'decision parameter p: \n '+str(pArray)+'\n')
 
 
-    def viewCSV(self):
-        print(os.path.join(self.fname_EVAC))
-        os.system('et.exe.lnk '+ os.path.join(self.fname_EVAC))
-
     #def deleteGeom(self):
     #    self.currentSimu = None
 
@@ -740,7 +715,6 @@ class GUI(object):
             self.currentSimu.select_file(self.fname_EVAC, self.fname_FDS, "non-debug")
         else:
             self.currentSimu.select_file(self.fname_EVAC, None, "non-debug")
-        self.currentSimu.preprocessAgent()
         sunpro2 = mp.Process(target=show_geom(self.currentSimu)) 
         sunpro2.start()
         #sunpro2.join()
@@ -751,7 +725,7 @@ class GUI(object):
             self.updateCtrlParam()
             self.currentSimu.preprocessGeom()
             self.currentSimu.preprocessAgent()
-            if len(self.currentSimu.exits)>0 and self.currentSimu.solver!=0:
+            if len(self.currentSimu.exits)>0:
                 self.currentSimu.buildMesh()
                 self.currentSimu.flowMesh()
                 self.currentSimu.computeDoorDirection()
@@ -763,7 +737,7 @@ class GUI(object):
             sunpro1 = mp.Process(target=show_simu(self.currentSimu))
             #sunpro1 = mp.Process(target=self.currentSimu.flowMesh())
             sunpro1.start()
-            sunpro1.join()
+            #sunpro1.join()
 
         #show_geom(myTest)
         #myTest.show_simulation()
@@ -806,7 +780,7 @@ class GUI(object):
         self.updateCtrlParam()
         self.currentSimu.preprocessGeom()
         self.currentSimu.preprocessAgent()
-        if len(self.currentSimu.exits)>0 and self.currentSimu.solver!=0:
+        if len(self.currentSimu.exits)>0:
             self.currentSimu.buildMesh()
             self.currentSimu.flowMesh()
             self.currentSimu.computeDoorDirection()
@@ -817,7 +791,7 @@ class GUI(object):
         self.currentSimu.dataSummary()
         sunpro1 = mp.Process(target=show_simu(self.currentSimu))        
         sunpro1.start()
-        sunpro1.join()
+        #sunpro1.join()
         self.setStatusStr("Simulation not yet started!")
         #show_geom(myTest)
         #myTest.show_simulation()
