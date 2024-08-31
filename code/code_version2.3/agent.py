@@ -62,8 +62,8 @@ class person(object):
         self.dest = np.array([60.0,10.0])
         self.exitInMind = None
         self.exitInMindIndex = None
-        #self.direction = normalize(self.dest - self.pos)
-        self.direction = np.array([0.0, 0.0])
+        self.direction = normalize(self.dest - self.pos)
+        #self.direction = np.array([0.0, 0.0])
         
         # Flow field vectors
         self.pathMapU= []
@@ -925,18 +925,6 @@ class person(object):
         return first #+ second #+ third
 
 
-    def magneticForce(self, other):
-        rij = self.radius + other.radius
-        dij = np.linalg.norm(self.pos - other.pos)
-        nij = (self.pos - other.pos)/dij
-        
-        phiij = vectorAngleCos(self.actualV, (other.pos - self.pos))
-        anisoF = self.lamb + (1-self.lamb)*(1+cos(phiij))*0.5
-        
-        first = 6/(rij-dij)*nij*anisoF
-        return first #+ second #+ third
-
-
     ############################
     # This is re-used now: Pure Physical Force between individuals  
     def physicalSF(self, other, f, debug=False):
@@ -1119,7 +1107,10 @@ class person(object):
             person.talk[self.ID, aj.ID] = 0                        
             if dij<self.interactionRange and self.talk_prob>random.uniform(0.0,1.0): 
             #and 0.6<random.uniform(0.0,1.0):
-                person.DFactor[self.ID, aj.ID]=random.uniform(0.3,0.7)
+                person.DFactor[self.ID, aj.ID]=(1-self.p)*person.DFactor[self.ID, aj.ID]+self.p*person.DFactor[aj.ID, self.ID]
+                #person.AFactor[self.ID, aj.ID]=(1-self.p)*person.AFactor[self.ID, aj.ID]+self.p*person.AFactor[aj.ID, self.ID]
+                #person.BFactor[self.ID, aj.ID]=(1-self.p)*person.BFactor[self.ID, aj.ID]+self.p*person.BFactor[aj.ID, self.ID]
+                #person.DFactor[self.ID, aj.ID]=2.0
                 person.AFactor[self.ID, aj.ID]=600
                 person.BFactor[self.ID, aj.ID]=300
                 self.tau = self.talk_tau
@@ -1165,13 +1156,9 @@ class person(object):
                 vij_actualV = np.linalg.norm(self.actualV - aj.actualV)
                 phiij = vectorAngleCos(self.actualV, (aj.pos - self.pos))
                 anisoF = self.lamb + (1-self.lamb)*(1+cos(phiij))*0.5
-                dij = np.linalg.norm(self.pos - aj.pos)
-                nij = (self.pos - aj.pos)/dij
-                vij = self.actualV - aj.actualV
-                #self.socialF += self.groupForce(aj, person.DFactor[self.ID, aj.ID], person.AFactor[self.ID, aj.ID], person.BFactor[self.ID, aj.ID]) + 6.0*vij_actualV*anisoF # The force term of vij_acutalV is not that useful
-                
-                self.socialF += self.groupForce(aj, person.DFactor[self.ID, aj.ID], person.AFactor[self.ID, aj.ID], person.BFactor[self.ID, aj.ID]) + 560.0*ggg(np.dot(-vij, nij))*nij*anisoF # The force term of vij_acutalV is not that useful
- 
+        
+                self.socialF += self.groupForce(aj, person.DFactor[self.ID, aj.ID], person.AFactor[self.ID, aj.ID], person.BFactor[self.ID, aj.ID]) + 6.0*vij_actualV*anisoF # The force term of vij_acutalV is not that useful
+
             #########################################
             # Opinion dynamics for tpre feature: Opinion Exchange
             #########################################
