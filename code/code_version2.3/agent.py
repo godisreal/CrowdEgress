@@ -1156,6 +1156,7 @@ class person(object):
                 vij_actualV = np.linalg.norm(self.actualV - aj.actualV)
                 phiij = vectorAngleCos(self.actualV, (aj.pos - self.pos))
                 anisoF = self.lamb + (1-self.lamb)*(1+cos(phiij))*0.5
+                dij = np.linalg.norm(self.pos - aj.pos)
         
                 self.socialF += self.groupForce(aj, person.DFactor[self.ID, aj.ID], person.AFactor[self.ID, aj.ID], person.BFactor[self.ID, aj.ID]) + 6.0*vij_actualV*anisoF # The force term of vij_acutalV is not that useful
 

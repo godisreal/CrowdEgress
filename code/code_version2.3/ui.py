@@ -56,7 +56,7 @@ class GUI(object):
         
         self.window = Tk()
         self.window.title('crowd egress simulator')
-        self.window.geometry('700x600')
+        self.window.geometry('960x600')
 
         self.statusStr = ""
         self.statusText = StringVar(self.window, value=self.statusStr) # at this point, statusStr = ""
@@ -76,6 +76,7 @@ class GUI(object):
         self.frameSoc = Frame(self.window)
         self.frameParameters = Frame(self.window)
         self.frameData = Frame(self.window)
+        self.frameCSV = Frame(self.window)
         self.frameGuide = Frame(self.window)
         #self.frameExit = Frame(self.window)
         #self.frameSettings = Frame(self.window)
@@ -103,11 +104,11 @@ class GUI(object):
 
         self.notebook.add(self.frameRun,text="QuickStart")
         self.notebook.add(self.frameParameters,text="Parameters")
-        self.notebook.add(self.frameFlow,text="EgressFlow")
+        self.notebook.add(self.frameFlow,text="MeshFlow")
         #self.notebook.add(self.frameInformation,text="Information")
-        self.notebook.add(self.frameSoc,text="EvacAgent")
-        #self.notebook.add(self.frameExit,text="WayFinding")        
+        self.notebook.add(self.frameSoc,text="EvacAgent")       
         self.notebook.add(self.frameData,text="DataTool")
+        self.notebook.add(self.frameCSV,text="CSVTool") 
         self.notebook.add(self.frameGuide,text="Readme")
         #self.notebook.add(self.frameSettings,text="Settings")
         self.notebook.pack(expand=NO, fill=BOTH, padx=5, pady=5 ,side=TOP)
@@ -145,17 +146,18 @@ class GUI(object):
         self.lb_fds.pack()
 
 
+        self.buttonSelectFDS =Button(self.frameRun, text='choose fds file for FDS data', command=self.selectFDSFile)
+        #self.buttonSelectFDS.place(x=2, y=60)
+        self.buttonSelectFDS.pack() #place(x=20, y=146)
+        self.showHelp(self.buttonSelectFDS, "Select fds file to set up the compartment geometry for the simulation")
+        
+
         self.buttonSelectCSV =Button(self.frameRun, text='choose csv file for EVAC data', command=self.selectEvacFile)
         #self.buttonSelectCSV.place(x=2, y=120)
-        self.buttonSelectCSV.pack()
+        self.buttonSelectCSV.pack() #place(x=20, y=176)
         self.showHelp(self.buttonSelectCSV, "Select .csv file to set up the agent parameters for the simulation")
         #Button(window, text='choose csv file for door data', command=lambda: selectFile(2)).pack()
 
-        self.buttonSelectFDS =Button(self.frameRun, text='choose fds file for FDS data', command=self.selectFDSFile)
-        #self.buttonSelectFDS.place(x=2, y=60)
-        self.buttonSelectFDS.pack()
-        self.showHelp(self.buttonSelectFDS, "Select fds file to set up the compartment geometry for the simulation")
-        
         #if CheckVar1.get():
         #    buttonSelectFDS.configure(state=DISABLED)
         #TestV=CheckVar1.get()
@@ -163,7 +165,7 @@ class GUI(object):
         #self.buttonRead = Button(self.frameRun, text='read now: read in data', command=self.readData)
         #self.buttonRead.pack()
         self.buttonGeom = Button(self.frameRun, text='Create/Modify simulation object', command=self.testGeom)
-        self.buttonGeom.pack()
+        self.buttonGeom.pack() #place(x=20, y=206)
         self.showHelp(self.buttonGeom, "Create or modify the simulation data by reading the input file (FDS or CSV files as selected above).  \n Users can easily modify the data such as adding doors, walls or exits.")
 
         #self.buttonDel = Button(self.frameRun, text='delete now: delete simulation data', command=self.deleteGeom)
@@ -171,18 +173,33 @@ class GUI(object):
         #self.showHelp(self.buttonDel, "Delete the existing simulation so that users can create a new one.")
  
         self.buttonFlow = Button(self.frameRun, text='compute egress flow field', command=self.testFlow)
-        self.buttonFlow.pack()
+        self.buttonFlow.pack() #place(x=306, y=206)
         self.showHelp(self.buttonFlow, "Generate the door flow field.  \n Users should first select either the nearest-exit method (default) or exit probablity method")
 
-        self.buttonComp = Button(self.frameRun, text='compute simulation and dump binary data', command=self.compSim)
-        self.buttonComp.pack()
+        self.buttonComp = Button(self.frameRun, text='compute simulation and dump data', command=self.compSim)
+        self.buttonComp.pack() #place(x=306, y=176)
         #self.buttonComp.grid(row=3, column=1, rowspan=2, ipady=7)
         #self.buttonComp.place(x=397,y=191)
         self.showHelp(self.buttonComp, "Only compute the numerical result without displaying in pygame.  \n Users can use another python program evac-prt5-tool to display the the numerical result.")
         
-        self.buttonStart = Button(self.frameRun, text='compute and visualize agent-based simulation', command=self.startSim)
-        self.buttonStart.pack()
+        self.buttonStart = Button(self.frameRun, text='compute and visualize simulation', command=self.startSim)
+        self.buttonStart.pack() #place(x=20, y=236)
         self.showHelp(self.buttonStart, "Compute the numerical result and display the result timely in pygame.  \n Please select the items in parameter panel to adjust the appearance in pygame window. ")
+
+
+        self.UseFDS_Var = IntVar()
+        self.UseFDS_Var.set(1)
+        self.UseFDS_CB=Checkbutton(self.frameRun, text= 'Use FDS file to create compartment geometry', variable=self.UseFDS_Var, onvalue=1, offvalue=0)
+        self.UseFDS_CB.pack() #place(x=306, y=146)
+        self.showHelp(self.UseFDS_CB, "Use FDS file to create compartment geometry, including walls, doors and exits.")
+
+
+        self.AutoPlot_Var = IntVar()
+        self.AutoPlot_Var.set(1)
+        self.AutoPlot_CB=Checkbutton(self.frameRun, text= 'Automatically plot figures from output data', variable=self.AutoPlot_Var, onvalue=1, offvalue=0)
+        self.AutoPlot_CB.pack() #place(x=306, y=236)
+        self.showHelp(self.AutoPlot_CB, "Plot figures automatically when simulation is complete.")
+
 
         #buttonStart.place(x=5,y=220)
         print(self.fname_FDS, self.fname_EVAC)
@@ -191,12 +208,12 @@ class GUI(object):
         # --------------------------------------------
         # frameParameters
         # --------------------------------------------
-        self.SHOWTIME_Var = IntVar()
-        self.SHOWTIME_Var.set(1)
-        self.SHOWTIME_CB=Checkbutton(self.frameParameters, text= 'Show Time in Simulation', variable=self.SHOWTIME_Var, onvalue=1, offvalue=0)
+        #self.SHOWTIME_Var = IntVar()
+        #self.SHOWTIME_Var.set(1)
+        #self.SHOWTIME_CB=Checkbutton(self.frameParameters, text= 'Show Time in Simulation', variable=self.SHOWTIME_Var, onvalue=1, offvalue=0)
         #self.SHOWTIME_CB.pack(side=TOP, padx=2, pady=2)
-        self.SHOWTIME_CB.place(x=2, y=6)
-        self.showHelp(self.SHOWTIME_CB, "Show time counts in the simulation.")
+        #self.SHOWTIME_CB.place(x=2, y=6)
+        #self.showHelp(self.SHOWTIME_CB, "Show time counts in the simulation.")
         
         self.SHOWSTRESS_Var = IntVar()
         self.SHOWSTRESS_Var.set(0)
@@ -214,9 +231,9 @@ class GUI(object):
 
         self.SHOWFORCE_Var = IntVar()
         self.SHOWFORCE_Var.set(1)
-        self.SHOWFORCE_CB=Checkbutton(self.frameParameters, text= 'Show forces on agents in simulation', variable=self.SHOWFORCE_Var, onvalue=1, offvalue=0)
-        self.SHOWFORCE_CB.place(x=300, y=36)
-        self.showHelp(self.SHOWFORCE_CB, "Show various forces on agents in the simulation. \n  Motive Force: Red;  Interpersonal Force: Pink; Wall Force: Purple;  Door Force: Green")
+        self.SHOWFORCE_CB=Checkbutton(self.frameParameters, text= 'Show forces on agents', variable=self.SHOWFORCE_Var, onvalue=1, offvalue=0)
+        self.SHOWFORCE_CB.place(x=2, y=6)
+        self.showHelp(self.SHOWFORCE_CB, "Show various forces on agents with colors in the simulation. \n  Motive Force: Red;  Interpersonal Force: Pink; Wall Force: Purple;  Door Force: Green")
         
         self.NearExit_Var = IntVar()
         self.NearExit_Var.set(0)
@@ -233,19 +250,30 @@ class GUI(object):
         self.GroupBehavior_Var = IntVar()
         self.GroupBehavior_Var.set(1)
         self.GroupBehavior_CB=Checkbutton(self.frameParameters, text= 'Compute Group Behavior', variable=self.GroupBehavior_Var, onvalue=1, offvalue=0)
-        self.GroupBehavior_CB.place(x=2, y=96)  #(x=300, y=96)
+        self.GroupBehavior_CB.place(x=300, y=36)  #(x=300, y=96)
         self.showHelp(self.GroupBehavior_CB, "Compute Group Social Force and Self Repulsion.  \n Check this button only if you have specified the group parameters in input file.")  #Uncheck it if you do not know what it means.")  
 
-        self.UseFDS_Var = IntVar()
-        self.UseFDS_Var.set(1)
-        self.UseFDS_CB=Checkbutton(self.frameParameters, text= 'Use FDS file to create compartment geometry', variable=self.UseFDS_Var, onvalue=1, offvalue=0)
-        self.UseFDS_CB.place(x=300, y=96)
-        self.showHelp(self.UseFDS_CB, "Use FDS file to create compartment geometry, including walls, doors and exits.")
 
-        #print self.SHOWTIME_Var.get()
+        self.lbSoc2 = Label(self.frameParameters, text =  "Optional: Below please input the time interval for simulation step and data output step. \n")
+        self.lbSoc2.place(x=12, y=130)
+
+        self.lb_dtSim = Label(self.frameParameters, text = 'dtSim:')
+        self.lb_dtSim.place(x=12, y=152)
+        self.dtSim_gui = StringVar()
+        nameEntered_dtSim = Entry(self.frameParameters, width=12, textvariable=self.dtSim_gui)
+        nameEntered_dtSim.insert(0, '0.2')
+        nameEntered_dtSim.place(x=62, y=152)
+
+        self.lb_dtDump = Label(self.frameParameters, text = 'dtDump:')
+        self.lb_dtDump.place(x=212, y=152)
+        self.dtDump_gui = StringVar()
+        nameEntered_dtDump = Entry(self.frameParameters, width=12, textvariable=self.dtDump_gui)
+        nameEntered_dtDump.insert(0, '0.2')
+        nameEntered_dtDump.place(x=269, y=152)
+        
 
         self.lb3 = Label(self.frameParameters, text =  "Optional: If fds file is selected, the compartment geometry is created from fds file. \n")
-        self.lb3.place(x=12, y=185)
+        self.lb3.place(x=12, y=179)
 
         self.lb2 = Label(self.frameParameters, text =  "Optional: The single-floor mesh within x-y plane is read from fds file between z_min and z_max. \n")
         self.lb2.place(x=12, y=200)
@@ -353,99 +381,97 @@ class GUI(object):
         # frameSoc SocialGroup
         # --------------------------------------------
         
-        self.lbSoc1 = Label(self.frameSoc, text =  "Optional: Below please select the type of social interation force. \n 0: Traditional Social Force   1: Extended Social Force    2: Magnetic force. ")
+        self.lbSoc1 = Label(self.frameSoc, text =  "Optional: Below please select the type of social interation force. \n 0: Social Force   1: Group Social Force    2: Magnetic force. ")
         self.lbSoc1.place(x=12, y=30)
         
         self.spin_socialforce = Spinbox(self.frameSoc, from_=0, to=2, width=5, bd=8) 
-        self.spin_socialforce.place(x=516, y=30)
-        self.showHelp(self.spin_socialforce, "Select the different formula of social force: \n 0: Traditional social force; 1: Extended social force; 2: Magnetic force.  ")  #Uncheck it if you do not know what it means.")
+        self.spin_socialforce.place(x=656, y=30)
+        self.showHelp(self.spin_socialforce, "Select the different formula of social force: \n 0: Social force; 1: Group Social Force; 2: Magnetic force.  ")  #Uncheck it if you do not know what it means.")
         
-        self.lbSoc2 = Label(self.frameSoc, text =  "Optional: Below please input the time interval for simulation step and data output step. \n")
-        self.lbSoc2.place(x=12, y=160)
-
-        self.lb_dtSim = Label(self.frameSoc, text = 'dtSim:')
-        self.lb_dtSim.place(x=12, y=186)
-        self.dtSim_gui = StringVar()
-        nameEntered_dtSim = Entry(self.frameSoc, width=12, textvariable=self.dtSim_gui)
-        nameEntered_dtSim.insert(0, '0.2')
-        nameEntered_dtSim.place(x=62, y=186)
-
-        self.lb_dtDump = Label(self.frameSoc, text = 'dtDump:')
-        self.lb_dtDump.place(x=212, y=186)
-        self.dtDump_gui = StringVar()
-        nameEntered_dtDump = Entry(self.frameSoc, width=12, textvariable=self.dtDump_gui)
-        nameEntered_dtDump.insert(0, '0.2')
-        nameEntered_dtDump.place(x=262, y=186)
-
         self.lbSoc2 = Label(self.frameSoc, text =  "Optional: Below please input the time interval to update attention list and update target door in simulation. \n")
-        self.lbSoc2.place(x=12, y=220)
+        self.lbSoc2.place(x=12, y=196)
         
         self.lb_dtAtt = Label(self.frameSoc, text = 'dtAtt:')
-        self.lb_dtAtt.place(x=12, y=246)
+        self.lb_dtAtt.place(x=12, y=226)
         self.dtAtt_gui = StringVar()
         nameEntered_dtAtt = Entry(self.frameSoc, width=12, textvariable=self.dtAtt_gui)
         nameEntered_dtAtt.insert(0, '1.0')
-        nameEntered_dtAtt.place(x=62, y=246)
+        nameEntered_dtAtt.place(x=62, y=226)
 
         self.lb_dtExit = Label(self.frameSoc, text = 'dtExit:')
-        self.lb_dtExit.place(x=212, y=246)
+        self.lb_dtExit.place(x=212, y=226)
         self.dtExit_gui = StringVar()
         nameEntered_dtExit = Entry(self.frameSoc, width=12, textvariable=self.dtExit_gui)
         nameEntered_dtExit.insert(0, '1.0')
-        nameEntered_dtExit.place(x=262, y=246)
+        nameEntered_dtExit.place(x=262, y=226)
 
-        self.buttonTpre = Button(self.frameSoc, text='plot pre-movement time from output data', command=self.selectOutBinFile_Tpre)
-        self.buttonTpre.place(x=12, y=89)
+
+        ##############################################
+        # ============================================
+        # --------------------------------------------
+        # frameData Data Tool
+        # --------------------------------------------
+
+        self.buttonTpre = Button(self.frameData, text='plot pre-movement time from output data', command=self.selectOutBinFile_Tpre)
+        self.buttonTpre.place(x=19, y=89)
         self.showHelp(self.buttonTpre, "Display the pre-movement time offline in matplotlib.  \n Please select the simulation output binary file. ")
 
 
-        self.buttonVideo = Button(self.frameSoc, text='visualize agent-based simulation output data', command=self.startVideo)
-        self.buttonVideo.place(x=12, y=126)
+        self.buttonVideo = Button(self.frameData, text='visualize agent-based simulation output data', command=self.startVideo)
+        self.buttonVideo.place(x=19, y=126)
         self.showHelp(self.buttonVideo, "Display the simulation result offline in pygame.  \n Please select the simulation output binary file. ")
+
+        
+        self.lb_outtxt = Label(self.frameData, text = 'The output txt file selected: None!  To show probablity distribution of exit selection for each agent.')
+        self.lb_outtxt.place(x=19, y=206)    
+            
+        self.buttonExitProb = Button(self.frameData, text='Read output files and plot the door selection probablity', command=self.selectOutTxtFile_DoorProb)
+        self.buttonExitProb.place(x=19, y=230)
+        self.showHelp(self.buttonExitProb, "Read output files and plot the door selection probablity.")
+
+        self.spin_exitnumber = Spinbox(self.frameData, from_=0, to=100, width=5, bd=8) 
+        self.spin_exitnumber.place(x=596, y=230)
+        self.showHelp(self.spin_exitnumber, "Select the exit index to show the probability.  \n The exit index starts from 0 to the number_of_exit-1. To identify the exit index, please show exit data in TestGeom. ")
 
                 
         ##############################################
         # ============================================
         # --------------------------------------------
-        # frameData DataTool
+        # frameCSV CSV Mdoel Tool
         # --------------------------------------------
-        self.lb_wf = Label(self.frameData, text = 'The probablity distribution of exit selection is listed in the table for each agent.')
+        self.lb_wf = Label(self.frameCSV, text = 'The probablity distribution of exit selection is listed in the table for each agent.')
         self.lb_wf.place(x=12, y=6)
         
-        #self.scrollbar_y = Scrollbar(self.frameData, orient=VERTICAL)
-        #self.scrollbar_x = Scrollbar(self.frameData, orient=HORIZONTAL)
+        #self.scrollbar_y = Scrollbar(self.frameCSV, orient=VERTICAL)
+        #self.scrollbar_x = Scrollbar(self.frameCSV, orient=HORIZONTAL)
         
-        self.table_agent2exit = Treeview(self.frameData, height=6, show="headings", columns=('agents', 'data'), selectmode='extended') #, yscrollcommand=self.scrollbar_y.set, xscrollcommand=self.scrollbar_x.set)
+        self.table_agent2exit = Treeview(self.frameCSV, height=6, show="headings", columns=('agents', 'data1', 'data2'), selectmode='extended') #, yscrollcommand=self.scrollbar_y.set, xscrollcommand=self.scrollbar_x.set)
         self.table_agent2exit.column('agents', width=100)
-        self.table_agent2exit.column('data', width=300)
+        self.table_agent2exit.column('data1', width=100)
+        self.table_agent2exit.column('data2', width=150)
         self.table_agent2exit.heading('agents', text="agents")
-        self.table_agent2exit.heading('data', text="data")
-        self.table_agent2exit.place(x=262, y=36)
+        self.table_agent2exit.heading('data1', text="data_p")
+        self.table_agent2exit.heading('data2', text="exit_prob")
+        self.table_agent2exit.place(x=296, y=30)
 
         #self.scrollbar_y.config(command=self.table_agent2exit.yview)
         #self.scrollbar_x.config(command=self.table_agent2exit.xview)
         #self.scrollbar_y.pack(side=RIGHT, fill=Y)
         #self.scrollbar_x.pack(side=BOTTOM, fill=X)
         
-        self.buttonExitProb =Button(self.frameData, text='View exit selection probability', command=self.readData_exitprob)
-        self.buttonExitProb.place(x=6, y=30)
+        self.buttonExitProb =Button(self.frameCSV, text='View exit selection probability', command=self.readData_exitprob)
+        self.buttonExitProb.place(x=13, y=30)
         #self.buttonTree.pack()
         self.showHelp(self.buttonExitProb, "Show the agent parameters for exit selection probility.")
 
-        self.buttonPD =Button(self.frameData, text='View decision balace parameter', command=self.readData_p)
-        self.buttonPD.place(x=6, y=60)
+        self.buttonPD =Button(self.frameCSV, text='View decision balace parameter', command=self.readData_p)
+        self.buttonPD.place(x=13, y=60)
         self.showHelp(self.buttonPD, "Show the agent parameters for exit selection probility.")
         
-        self.lb_outtxt = Label(self.frameData, text = 'The output txt file selected: None!  To show probablity distribution of exit selection for each agent.')
-        self.lb_outtxt.place(x=12, y=206)    
-            
-        self.buttonExitProb = Button(self.frameData, text='Read output files and plot the door selection probablity', command=self.selectOutTxtFile_DoorProb)
-        self.buttonExitProb.place(x=6, y=230)
-        self.showHelp(self.buttonExitProb, "Read output files and plot the door selection probablity.")
 
-        self.spin_exitnumber = Spinbox(self.frameData, from_=0, to=100, width=5, bd=8) 
-        self.spin_exitnumber.place(x=396, y=230)
-        self.showHelp(self.spin_exitnumber, "Select the exit index to show the probability.  \n The exit index starts from 0 to the number_of_exit-1. To identify the exit index, please show exit data in TestGeom. ")
+        self.buttonCSVView =Button(self.frameCSV, text='View csv data file', command=self.viewCSV)
+        self.buttonCSVView.place(x=13, y=90)
+        self.showHelp(self.buttonCSVView, "Show the agent data in csv data file.")
         
         ##########################################################################3
         # ============================================
@@ -466,7 +492,7 @@ class GUI(object):
 
         self.textGuide.insert(END, '\n\n{Agents}: Agents are the core entity in computation process. They interact with each other to form collective behavior of crowd. They also interact with above types of entities to form egress motion toward exits. The resulting program is essentially a multi-agent simulation of pedestrian crowd. Each agent is modeled by extending the well-known social force model. The model is further advanced by integrating several features including pre-evacuation behavior, group behavior, way-finding behavior and so forth.')  
 
-        self.textGuide.insert(END, '\n\n<name>: Name assigned to each agent and it is arbitrarily given by users and optionally visualized in the simulation window (pygame screen).  The names of agents are given in the first column of the data array.  Users may leave this column blank if no names are assigned.  \n\n<InitalX, InitialY>: Initial position of an agent in 2D planar space. \n\n<InitialVx, InitialVy>: Initial velocity of an agent in 2D planar space.  \n\n|tau|: Tau parameter in the social force model, or as usually called relaxation time in many-particle systems or statistical physics, and it critically affects how fast the actual velocity converges to the desired velocity.  \n\n|tpre|: Time period for pre-evacuation stage. \n\n<p>: Parameter p in opinion dynamics, and it indicates how an agent opinion decision is impacted by surrounding others, and it critically affects herding effect in collective behavior. The measurement of this parameter is within [0, 1], and an agent opinion/decision completely follow others if p=1.  In contrast, if the agent makes decision only based on his or her own opinion, the parameter p=0, and this usually implies that the agent is a leader in a group.  \n\n<pMode>: This parameter affects how parameter p is dynamically changing.  Currently there are three values to be selected: random, fixed or stress.  If ‘random’ is selected, it means that parameter p is randomly generated in the interval of [0, 1].  If ‘fixed’ is selected, parameter p is given by the initial value in the input csv file.  If ‘stress’ is selected, then a computational model is used adapt the parameter p dynamically to surroundings.  The mode of stress has some problem and it is not used in code version 2.3.  \n\n<p2>: This parameter affects how much an agent tends to make a decision based on the information timely collected from the srrounding facilities such as the distance to the target exits or received guidance from broadcast.  The measurement of this parameter is within [0, 1], and an agent opinion/decision completely follows the received information if p2=1.  In contrast, if the agent makes decision only based on his or her past experience and the new information is completely ignored, the parameter p2=0.   \n\n<talkRange>: The range to determin when agents have opinion exchange.  Such interaction could also be understood as herding effect or group opinion dynamics, which means agents exchange opinions by talking. \n\n|aType|: The type of way-finding behaviors.  Some agents may actively search for exits while others may just follow the crowd.  In current simulation all agents follow the egress flow field, and thus this parameter is not actually used in existing version of code.  \n\n|inComp|: a boolean variable to indicate if the agent is in computation loop or not. Normally it is given true. If users want to remove an agent in simulation, they could assign it be to false for test. \n\n<talkProb>: The probability to determin if agents have opinion exchange.  Such interaction could also be understood as herding effect or agents exchange opinions by talking. \n\n|mass|: The mass of agents. \n\n<radius>: The radius of agents.'  )
+        self.textGuide.insert(END, '\n\n<name>: Name assigned to each agent and it is arbitrarily given by users and optionally visualized in the simulation window (pygame screen).  The names of agents are given in the first column of the data array.  Users may leave this column blank if no names are assigned.  \n\n<InitalX, InitialY>: Initial position of an agent in 2D planar space. \n\n<InitialVx, InitialVy>: Initial velocity of an agent in 2D planar space.  \n\n|tau|: Tau parameter in the social force model, or as usually called relaxation time in many-particle systems or statistical physics, and it critically affects how fast the actual velocity converges to the desired velocity.  \n\n|tpre|: Time period for pre-evacuation stage. \n\n<p>: Parameter p in opinion dynamics, and it indicates how an agent opinion decision is impacted by surrounding others, and it critically affects herding effect in collective behavior. The measurement of this parameter is within [0, 1], and an agent opinion/decision completely follow others if p=1.  In contrast, if the agent makes decision only based on his or her own opinion, the parameter p=0, and this usually implies that the agent is a leader in a group.  \n\n<pMode>: This parameter affects how parameter p is dynamically changing.  Currently there are three values to be selected: random, fixed or stress.  If random is selected, it means that parameter p is randomly generated in the interval of [0, 1].  If fixed is selected, parameter p is given by the initial value in the input csv file.  If stress is selected, then a computational model is used adapt the parameter p dynamically to surroundings.  The mode of stress has some problem and it is not used in code version 2.3.  \n\n<p2>: This parameter affects how much an agent tends to make a decision based on the information timely collected from the srrounding facilities such as the distance to the target exits or received guidance from broadcast.  The measurement of this parameter is within [0, 1], and an agent opinion/decision completely follows the received information if p2=1.  In contrast, if the agent makes decision only based on his or her past experience and the new information is completely ignored, the parameter p2=0.   \n\n<talkRange>: The range to determin when agents have opinion exchange.  Such interaction could also be understood as herding effect or group opinion dynamics, which means agents exchange opinions by talking. \n\n|aType|: The type of way-finding behaviors.  Some agents may actively search for exits while others may just follow the crowd.  In current simulation all agents follow the egress flow field, and thus this parameter is not actually used in existing version of code.  \n\n|inComp|: a boolean variable to indicate if the agent is in computation loop or not. Normally it is given true. If users want to remove an agent in simulation, they could assign it be to false for test. \n\n<talkProb>: The probability to determin if agents have opinion exchange.  Such interaction could also be understood as herding effect or agents exchange opinions by talking. \n\n|mass|: The mass of agents. \n\n<radius>: The radius of agents.'  )
         
         self.textGuide.insert(END, '\n\nThe walls, doors and exits are alternatively specified by FDS input files. Users are welcome to use existing FDS input files to create compartment geometries. In current version only one-floor crowd simulation is supported. So if there are multiple evacuation meshes in FDS input files, they should all belong to the same z interval in the vertical direction (z axis). By using FDS input files the walls are created by \&OBST, and the doors are specified by \&HOLE or \&DOOR. The exits are obtained from \&EXIT in FDS input files. If users want to find more about how FDS define a compartment area, please refer to FDS UserGuide for more information.  If users do not use FDS input files, the above entities can alternatively be specified by using csv files as introduced below.')
         
@@ -488,9 +514,12 @@ class GUI(object):
 
 
     def updateCtrlParam(self):
-        self.currentSimu.SHOWTIME = self.SHOWTIME_Var.get()
-        self.currentSimu.SHOWSTRESS = self.SHOWSTRESS_Var.get()
+
         self.currentSimu.dumpBin = self.DumpData_Var.get()
+        self.currentSimu.autoPlot = self.AutoPlot_Var.get()
+
+        #self.currentSimu.SHOWTIME = self.SHOWTIME_Var.get()
+        self.currentSimu.SHOWSTRESS = self.SHOWSTRESS_Var.get()
         
         if self.SHOWGEOM_Var.get():
             self.currentSimu.SHOWWALLDATA=True
@@ -673,7 +702,7 @@ class GUI(object):
         self.currentSimu.preprocessAgent()
         for i in range(self.currentSimu.num_agents):
             #for j in range(self.currentSimu.num_exits):
-            self.table_agent2exit.insert('', i, values=(self.currentSimu.agents[i].ID, self.currentSimu.agent2exit[i,:]))
+            self.table_agent2exit.insert('', i, values=(self.currentSimu.agents[i].ID, self.currentSimu.agents[i].p, self.currentSimu.agent2exit[i,:]))
         self.textInformation.insert(END, '\n'+'agent2exit data: \n '+str(self.currentSimu.agent2exit)+'\n')
 
     def readData_p(self):
@@ -694,6 +723,10 @@ class GUI(object):
         self.textInformation.insert(END, '\n'+'decision parameter p: \n '+str(pArray)+'\n')
 
 
+    def viewCSV(self):
+        print(os.path.join(self.fname_EVAC))
+        os.system('et.exe.lnk '+ os.path.join(self.fname_EVAC))
+
     #def deleteGeom(self):
     #    self.currentSimu = None
 
@@ -707,6 +740,7 @@ class GUI(object):
             self.currentSimu.select_file(self.fname_EVAC, self.fname_FDS, "non-debug")
         else:
             self.currentSimu.select_file(self.fname_EVAC, None, "non-debug")
+        self.currentSimu.preprocessAgent()
         sunpro2 = mp.Process(target=show_geom(self.currentSimu)) 
         sunpro2.start()
         #sunpro2.join()
@@ -717,7 +751,7 @@ class GUI(object):
             self.updateCtrlParam()
             self.currentSimu.preprocessGeom()
             self.currentSimu.preprocessAgent()
-            if len(self.currentSimu.exits)>0:
+            if len(self.currentSimu.exits)>0 and self.currentSimu.solver!=0:
                 self.currentSimu.buildMesh()
                 self.currentSimu.flowMesh()
                 self.currentSimu.computeDoorDirection()
@@ -729,7 +763,7 @@ class GUI(object):
             sunpro1 = mp.Process(target=show_simu(self.currentSimu))
             #sunpro1 = mp.Process(target=self.currentSimu.flowMesh())
             sunpro1.start()
-            #sunpro1.join()
+            sunpro1.join()
 
         #show_geom(myTest)
         #myTest.show_simulation()
@@ -772,7 +806,7 @@ class GUI(object):
         self.updateCtrlParam()
         self.currentSimu.preprocessGeom()
         self.currentSimu.preprocessAgent()
-        if len(self.currentSimu.exits)>0:
+        if len(self.currentSimu.exits)>0 and self.currentSimu.solver!=0:
             self.currentSimu.buildMesh()
             self.currentSimu.flowMesh()
             self.currentSimu.computeDoorDirection()
@@ -783,7 +817,7 @@ class GUI(object):
         self.currentSimu.dataSummary()
         sunpro1 = mp.Process(target=show_simu(self.currentSimu))        
         sunpro1.start()
-        #sunpro1.join()
+        sunpro1.join()
         self.setStatusStr("Simulation not yet started!")
         #show_geom(myTest)
         #myTest.show_simulation()

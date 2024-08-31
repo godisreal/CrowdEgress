@@ -21,7 +21,14 @@ from math_func import *
 from data_func import *
 from agent import *
 import sys, os
-import matplotlib.pyplot as plt
+try:
+    import matplotlib.pyplot as plt
+except:
+    print("Warning: matplotlib cannot be imported.  Unable to plot figures!")
+    if sys.version_info[0] == 2: 
+        raw_input("Please check!")
+    else:
+        input("please check!")
 
 #from math_func import *
 
@@ -780,16 +787,16 @@ def show_geom(simu, debug=False):
                             print('exit2door is not defined in the input csv file.  Please check!')
                             
             elif event.type == pygame.KEYDOWN:
-                #if event.key == pygame.K_1:
-                #    simu.SHOWWALLDATA = not simu.SHOWWALLDATA
+                if event.key == pygame.K_1:
+                    simu.SHOWWALLDATA = not simu.SHOWWALLDATA
                 if event.key == pygame.K_2:
                     simu.SHOWDOORDATA = not simu.SHOWDOORDATA
                 elif event.key == pygame.K_3:
                     simu.SHOWEXITDATA = not simu.SHOWEXITDATA
-                elif event.key == pygame.K_1:
-                    simu.SHOWMESH = not simu.SHOWMESH
-                elif event.key == pygame.K_5:
+                elif event.key == pygame.K_4:
                     simu.SHOWNAME = not simu.SHOWNAME
+                elif event.key == pygame.K_5:
+                    simu.SHOWMESH = not simu.SHOWMESH
                 elif event.key == pygame.K_SPACE:
                     #updateWallData(simu.walls, 'wallDataRev.csv')
                     #updateDoorData(simu.doors, 'doorDataRev.csv')
@@ -1005,8 +1012,8 @@ def show_geom(simu, debug=False):
         screen.blit(text_surface, [600,3]) #+xyShift)        
         text_surface=myfont.render('ySpace:'+str(ySpace), True, white, black)
         screen.blit(text_surface, [700,3]) #+xyShift) 
-        #text_surface=myfont.render('solver:'+str(simu.solver), True, white, black)
-        #screen.blit(text_surface, [800,3]) #+xyShift) 
+        text_surface=myfont.render('solver:'+str(simu.solver), True, white, black)
+        screen.blit(text_surface, [800,3]) #+xyShift) 
                                                                 
         pygame.display.flip()
         clock.tick(20)
@@ -1987,19 +1994,25 @@ def show_simu(simu):
         npzP, npzD, npzC, npzB, npzA, \
         npzVD, npzVE, npzEP, npzRadius, npzMass)
        
-    #np.histogram() ??
     
-    #if len(simu.exits)>0:
-        #plt.bar(np.arange(len(simu.exits)), simu.exitUsage)
-        #plt.title("Exit Usage Histogram:")
-        #plt.grid()
-        #plt.legend(loc='best')
-        #plt.xlabel("Exit_Index")
-        #plt.ylabel("Num_of_Agents")
-        #plt.show()
-    
-    visualizeTpre(simu.outDataName +'.bin')
-    
+    if simu.autoPlot:
+        try:
+            visualizeTpre(simu.outDataName +'.bin')
+            
+            #np.histogram() ??
+            
+            #if len(simu.exits)>0:
+                #plt.bar(np.arange(len(simu.exits)), simu.exitUsage)
+                #plt.title("Exit Usage Histogram:")
+                #plt.grid()
+                #plt.legend(loc='best')
+                #plt.xlabel("Exit_Index")
+                #plt.ylabel("Num_of_Agents")
+                #plt.show()
+        except:
+            input("Unable to plot figures from output data!  Please check!")
+
+
     simu.ZOOMFACTOR = ZOOMFACTOR
     simu.xSpace = xSpace
     simu.ySpace = ySpace
@@ -3003,7 +3016,10 @@ def visualizeEvac(fname, evacfile=None, fdsfile=None, ZOOMFACTOR=10.0, xSpace=20
             npzComm_t = npzComm[T_INDEX,:,:]
             npzTalk_t = npzTalk[T_INDEX,:,:]
             npzP_t = npzP[T_INDEX,:,:]
+            npzC_t = npzC[T_INDEX,:,:]
             npzD_t = npzD[T_INDEX,:,:]
+            npzB_t = npzB[T_INDEX,:,:]
+            npzA_t = npzA[T_INDEX,:,:]
         #############################
         ######### Drawing Process ######
         
@@ -3016,13 +3032,13 @@ def visualizeEvac(fname, evacfile=None, fdsfile=None, ZOOMFACTOR=10.0, xSpace=20
         if SHOWTIME:
             myfont=pygame.font.SysFont("arial",14)
             time_surface=myfont.render("TimeInterval:" + format(TimeInterval, ".3f"), True, yellow, black)
-            screen.blit(time_surface, [620,560]) #[750,350]*ZOOMFACTOR)
+            screen.blit(time_surface, [726,560]) #[750,350]*ZOOMFACTOR)
             myfont=pygame.font.SysFont("arial",14)
             time_surface=myfont.render("Simulation Time:" + format(Time_t, ".3f"), True, yellow, black)
-            screen.blit(time_surface, [620,580]) #[750,350]*ZOOMFACTOR)
+            screen.blit(time_surface, [726,580]) #[750,350]*ZOOMFACTOR)
             if npzflag:
                 time_surface=myfont.render("Simulation Time (npz):" + str(npzTime_t), True, white, black)
-                screen.blit(time_surface, [620,600]) #[750,350]*ZOOMFACTOR)
+                screen.blit(time_surface, [726,600]) #[750,350]*ZOOMFACTOR)
             
         drawWalls(screen, walls, ZOOMFACTOR, SHOWWALLDATA, xSpace, ySpace)
         #drawPATH(screen, holes, green, ZOOMFACTOR, SHOWDOORDATA, xSpace, ySpace)
@@ -3058,6 +3074,8 @@ def visualizeEvac(fname, evacfile=None, fdsfile=None, ZOOMFACTOR=10.0, xSpace=20
             if XYZ_t[2][idai]<Zmin or XYZ_t[2][idai]>Zmax:
                 continue
             #scPos = np.array([0, 0])
+            scPosPhy = [XYZ_t[0][idai], XYZ_t[1][idai]]
+            
             scPos = [0, 0]
             scPos[0] = int(XYZ_t[0][idai]*ZOOMFACTOR+xSpace)
             scPos[1] = int(XYZ_t[1][idai]*ZOOMFACTOR+ySpace)
@@ -3115,9 +3133,9 @@ def visualizeEvac(fname, evacfile=None, fdsfile=None, ZOOMFACTOR=10.0, xSpace=20
             
             if tpre > Time_t:
                 try:
-                    pygame.draw.circle(screen, red, scPos, int(npzRadius[TAG_t[idai]]*ZOOMFACTOR), LINEWIDTH+1)
+                    pygame.draw.circle(screen, tan, scPos, int(npzRadius[TAG_t[idai]]*ZOOMFACTOR), LINEWIDTH+2)
                 except:
-                    pygame.draw.circle(screen, red, scPos, int(0.3*ZOOMFACTOR), LINEWIDTH+1)
+                    pygame.draw.circle(screen, tan, scPos, int(0.3*ZOOMFACTOR), LINEWIDTH+2)
             else:
                 try:
                     pygame.draw.circle(screen, tan, scPos, int(npzRadius[TAG_t[idai]]*ZOOMFACTOR), LINEWIDTH)
@@ -3156,15 +3174,9 @@ def visualizeEvac(fname, evacfile=None, fdsfile=None, ZOOMFACTOR=10.0, xSpace=20
 
                 myfont=pygame.font.SysFont("arial",16)
                 text_surface=myfont.render("@subF:"+format(np.linalg.norm(subF), ".3f")+str(subF), True, black, white)
-                screen.blit(text_surface, mouse_pos3+[0.0, 56.0])
+                screen.blit(text_surface, mouse_pos3+[0.0, 159.0])
                 text_surface=myfont.render("@objF:"+format(np.linalg.norm(objF), ".3f")+str(objF), True, black, white)
-                screen.blit(text_surface, mouse_pos3+[0.0, 79.0])
-                text_surface=myfont.render("@motiveF:"+format(np.linalg.norm(motiveF), ".3f")+str(motiveF), True, black, white)
-                screen.blit(text_surface, mouse_pos3+[0.0, 97.0])
-                text_surface=myfont.render("@socialF:"+format(np.linalg.norm(groupF), ".3f")+str(groupF), True, black, white)
-                screen.blit(text_surface, mouse_pos3+[0.0, 116.0])
-                text_surface=myfont.render("@selfrepF:"+format(np.linalg.norm(selfrepF), ".3f")+str(selfrepF), True, black, white)
-                screen.blit(text_surface, mouse_pos3+[0.0, 136.0])
+                screen.blit(text_surface, mouse_pos3+[0.0, 179.0])
 
                 print(str(TAG_t[idai])+'num_see_others:'+str(INFO_t[16][idai]))
                 print(str(TAG_t[idai])+'num_others:'+str(INFO_t[17][idai]))
@@ -3173,11 +3185,19 @@ def visualizeEvac(fname, evacfile=None, fdsfile=None, ZOOMFACTOR=10.0, xSpace=20
                     print('See List:\n'+str(TAG_t[idai])+str(npzSee_t[TAG_t[idai],:]))
                     print('Communication List:\n'+str(TAG_t[idai])+str(npzComm_t[TAG_t[idai],:])) #[TAG_t[idai],:]))
                     print('Talk List:\n'+str(TAG_t[idai])+str(npzTalk_t[TAG_t[idai],:]))
-                
-                    text_surface=myfont.render("See List:    "+str(npzSee_t[TAG_t[idai],:]), True, black, white)
-                    screen.blit(text_surface, mouse_pos3+[0.0, 155.0])
-                    text_surface=myfont.render("Comm List:"+str(npzComm_t[TAG_t[idai],:]), True, black, white)
-                    screen.blit(text_surface, mouse_pos3+[0.0, 176.0])
+
+                if npzflag:
+                    text_surface=myfont.render("npzD:"+str(np.round(npzD_t[TAG_t[idai],:],2)), True, black, white)
+                    screen.blit(text_surface, mouse_pos3+[0.0, 97.0])
+                    text_surface=myfont.render("npzA:"+str(npzA_t[TAG_t[idai],:]), True, black, white)
+                    screen.blit(text_surface, mouse_pos3+[0.0, 116.0])
+                    text_surface=myfont.render("npzB:"+str(npzB_t[TAG_t[idai],:]), True, black, white)
+                    screen.blit(text_surface, mouse_pos3+[0.0, 136.0])
+
+                    text_surface=myfont.render("See List:         "+str(npzSee_t[TAG_t[idai],:]), True, black, white)
+                    screen.blit(text_surface, mouse_pos3+[0.0, 55.0])
+                    text_surface=myfont.render("Attention List:"+str(npzComm_t[TAG_t[idai],:]), True, black, white)
+                    screen.blit(text_surface, mouse_pos3+[0.0, 76.0])
                     #text_surface=myfont.render("Talk List :"+str(npzTalk_t[TAG_t[idai],:]), True, black, white)
                     #screen.blit(text_surface, mouse_pos3+[0.0, 196.0])
                                     
@@ -3208,28 +3228,59 @@ def visualizeEvac(fname, evacfile=None, fdsfile=None, ZOOMFACTOR=10.0, xSpace=20
                 
                 myfont=pygame.font.SysFont("arial",16)
                 text_surface=myfont.render('agentID:'+str(TAG_t[idai]), True, (0,0,0), (255,255,255))
-                screen.blit(text_surface, [26.0, 500.0])
-                text_surface=myfont.render('agent position:' \
-                 + format(XYZ_t[0,idai], ".3f") + "   " \
-                 + format(XYZ_t[1,idai], ".3f") + "   " \
-                 + format(XYZ_t[2,idai], ".3f"), True, (0,0,0), (255,255,255))
-                screen.blit(text_surface, [206.0, 500.0])
+                screen.blit(text_surface, [726.0, 20.0])
+                text_surface=myfont.render("tpre:"+format(tpre, ".3f"), True, black, white)
+                screen.blit(text_surface, [726.0, 40.0])
+                text_surface=myfont.render("exit:"+str(exitSelected), True, black, white)
+                screen.blit(text_surface, [726.0, 60.0])
+                myfont=pygame.font.SysFont("arial",16)        
+                text_surface=myfont.render("@subF:"+format(np.linalg.norm(subF), ".3f"), True, black, white)
+                screen.blit(text_surface, [726.0, 85.0])
+                text_surface=myfont.render("@objF:"+format(np.linalg.norm(objF), ".3f"), True, black, white)
+                screen.blit(text_surface, [726.0, 105.0])
+                text_surface=myfont.render("@motiveF:"+format(np.linalg.norm(motiveF), ".3f"), True, black, white)
+                screen.blit(text_surface, [726.0, 125.0])
+                text_surface=myfont.render("@socialF:"+format(np.linalg.norm(groupF), ".3f"), True, black, white)
+                screen.blit(text_surface, [726.0, 145.0])
+                text_surface=myfont.render("@selfrepF:"+format(np.linalg.norm(selfrepF), ".3f"), True, black, white)
+                screen.blit(text_surface, [726.0, 165.0])
                 
                 if npzflag:
                     #text_surface=myfont.render("See List:"+str(npzSee_t[TAG_t[idai],:]), True, black, white)
                     #screen.blit(text_surface, [206.0, 500.0])
-                    text_surface=myfont.render("Comm List:"+str(npzComm_t[TAG_t[idai],:]), True, black, white)
-                    screen.blit(text_surface, [206.0, 519.0])
-                    text_surface=myfont.render("Talk List:    "+str(npzTalk_t[TAG_t[idai],:]), True, black, white)
-                    screen.blit(text_surface, [206.0, 539.0])
-                    text_surface=myfont.render("P Array:      "+str(np.round(npzP_t[TAG_t[idai],:], 2)), True, black, white)
-                    screen.blit(text_surface, [206.0, 559.0])
+                    text_surface=myfont.render("Atttion List: "+str(npzComm_t[TAG_t[idai],:]), True, black, white)
+                    screen.blit(text_surface, [206.0, 580.0])
+                    text_surface=myfont.render("Talk List:      "+str(npzTalk_t[TAG_t[idai],:]), True, black, white)
+                    screen.blit(text_surface, [206.0, 600.0])
+                    text_surface=myfont.render("P Array:        "+str(np.round(npzP_t[TAG_t[idai],:], 2)), True, black, white)
+                    screen.blit(text_surface, [206.0, 620.0])
+
+                    text_surface=myfont.render("position:"+str(np.round(scPosPhy,2)), True, black, white)
+                    screen.blit(text_surface, np.round(scPos, 2)+[0.0, 37.0])
+
+                    text_surface=myfont.render("See List:         "+str(npzSee_t[TAG_t[idai],:]), True, black, white)
+                    screen.blit(text_surface,  np.round(scPos, 2)+[0.0, 55.0])
+                    text_surface=myfont.render("Attention List:"+str(npzComm_t[TAG_t[idai],:]), True, orange, white)
+                    screen.blit(text_surface,  np.round(scPos, 2)+[0.0, 76.0])
+
+                    text_surface=myfont.render("npzD:"+str(np.round(npzD_t[TAG_t[idai],:],2)), True, orange, white)
+                    screen.blit(text_surface, np.round(scPos, 2)+[0.0, 97.0])
+                    text_surface=myfont.render("npzA:"+str(npzA_t[TAG_t[idai],:]), True, black, white)
+                    screen.blit(text_surface, np.round(scPos, 2)+[0.0, 116.0])
+                    text_surface=myfont.render("npzB:"+str(npzB_t[TAG_t[idai],:]), True, black, white)
+                    screen.blit(text_surface, np.round(scPos, 2)+[0.0, 136.0])
+
+                    #text_surface=myfont.render("See List:    "+str(npzSee_t[TAG_t[idai],:]), True, black, white)
+                    #screen.blit(text_surface, scPos+[0.0, 155.0])
+                    #text_surface=myfont.render("Attention List:"+str(npzComm_t[TAG_t[idai],:]), True, black, white)
+                    #screen.blit(text_surface, scPos+[0.0, 176.0])
+                    
         
-                myfont=pygame.font.SysFont("arial",16)        
-                text_surface=myfont.render("@subF:"+format(np.linalg.norm(subF), ".3f"), True, black, white)
-                screen.blit(text_surface, [26.0, 519.0])
-                text_surface=myfont.render("@objF:"+format(np.linalg.norm(objF), ".3f"), True, black, white)
-                screen.blit(text_surface, [26.0, 539.0])
+                text_surface=myfont.render('agent position:' \
+                 + format(XYZ_t[0,idai], ".3f") + "   " \
+                 + format(XYZ_t[1,idai], ".3f") + "   " \
+                 + format(XYZ_t[2,idai], ".3f"), True, (0,0,0), (255,255,255))
+                screen.blit(text_surface, [206.0, 560.0])
                 
                 myfont=pygame.font.SysFont("arial",16)
                 text_surface=myfont.render('agentID:'+str(TAG_t[idai]), True, (0,0,0), (255,255,255))
@@ -3239,12 +3290,8 @@ def visualizeEvac(fname, evacfile=None, fdsfile=None, ZOOMFACTOR=10.0, xSpace=20
                 screen.blit(text_surface, [26.0, 580.0])
                 text_surface=myfont.render("@socialF:"+format(np.linalg.norm(groupF), ".3f"), True, black, white)
                 screen.blit(text_surface, [26.0, 600.0])
-                text_surface=myfont.render("@selfrepF:"+format(np.linalg.norm(selfrepF), ".3f"), True, black, white)
+                text_surface=myfont.render("@Communication:"+str(num_others), True, black, white)
                 screen.blit(text_surface, [26.0, 620.0])
-                text_surface=myfont.render("exit:"+str(exitSelected), True, black, white)
-                screen.blit(text_surface, [126.0, 560.0])
-                text_surface=myfont.render("tpre:"+format(tpre, ".3f"), True, black, white)
-                screen.blit(text_surface, [126.0, 500.0])
                 #text_surface=myfont.render("objF:"+str(int(np.linalg.norm(objF))), True, black, white)
                 #screen.blit(text_surface, [206.0, 560.0])
             

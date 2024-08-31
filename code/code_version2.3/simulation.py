@@ -104,6 +104,7 @@ class simulation(object):
         self.GROUPBEHAVIOR = True     # Enable the group social force
         self.SELFREPULSION = True      # Enable self repulsion
         self.DEBUG = True
+
         #self.DEBUGFORCE = False
         #self.DEBUGTAR = False
         #self.GUI = True
@@ -140,6 +141,7 @@ class simulation(object):
 
         self.fpath = None # Input file path
         
+        self.autoPlot = True
         self.dumpBin = True # Boolean Flag
         #self.fbin = None    # File pointer
         #self.fnameBin = None  # Binary file path and name
@@ -478,7 +480,14 @@ class simulation(object):
                     
                 if re.match('DT_ChangeDoor', line):
                     temp =  line.split('=')
-                    self.DT_ChangeDoor = float(temp[1].strip())  
+                    self.DT_ChangeDoor = float(temp[1].strip()) 
+
+                if re.match('TEND', line):
+                    temp =  line.split('=')
+                    try:
+                        self.t_end = float(temp[1].strip())
+                    except:
+                        self.t_end = float(100.00)
                 
                 # Mesh parameters
                 if re.match('xmin', line):

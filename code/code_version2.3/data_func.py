@@ -18,6 +18,7 @@
 # Author: WP
 # Email: wp2204@gmail.com
 
+import os, sys
 import pygame
 import pygame.draw
 import numpy as np
@@ -34,7 +35,14 @@ import csv
 #from ctypes import *
 import struct
 import time
-import matplotlib.pyplot as plt
+try:
+    import matplotlib.pyplot as plt
+except:
+    print("Warning: matplotlib cannot be imported.  Unable to plot figures!")
+    if sys.version_info[0] == 2: 
+        raw_input("Please check!")
+    else:
+        input("please check!")
 
 
 def readStepTxt(FileName, showdata=True):
@@ -1651,6 +1659,11 @@ def dump_evac(agents, fileName, T, debug=True):
     Q_ratioV=[]
     Q_stressLevel=[]
     
+    Q_doorFx=[]
+    Q_doorFy=[]
+    
+    Q_wallFx=[]
+    Q_wallFy=[]
     
     for agent in agents:
         if agent.inComp == 0:
@@ -1700,6 +1713,12 @@ def dump_evac(agents, fileName, T, debug=True):
         
         Q_ratioV.append(agent.ratioV)
         Q_stressLevel.append(agent.stressLevel)
+
+        Q_doorFx.append(agent.doorF[0])
+        Q_doorFy.append(agent.doorF[1])
+        
+        Q_wallFx.append(agent.wallrepF[0])
+        Q_wallFy.append(agent.wallrepF[1])
         
     NPLIM=np.size(tag)
     # ??? what happens if tag is an empty list
@@ -1911,6 +1930,23 @@ def compute_simu(simu):
         npzP, npzD, npzC, npzB, npzA, \
         npzVD, npzVE, npzEP, npzRadius, npzMass)
         
+    if simu.autoPlot:
+        
+        try:
+            visualizeTpre(simu.outDataName +'.bin')
+            
+            #np.histogram() ??
+            
+            if len(simu.exits)>0:
+                plt.bar(np.arange(len(simu.exits)), simu.exitUsage)
+                plt.title("Exit Usage Histogram:")
+                plt.grid()
+                plt.legend(loc='best')
+                plt.xlabel("Exit_Index")
+                plt.ylabel("Num_of_Agents")
+                plt.show()
+        except:
+            input("Unable to plot figures from output data!  Please check!")
 
 
 if __name__ == '__main__':
