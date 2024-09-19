@@ -45,96 +45,6 @@ except:
         input("please check!")
 
 
-def readStepTxt(FileName, showdata=True):
-    findStep=False
-
-    T= []
-    XYZ=[]
-    TAG=[]
-    FEATRUE=[]
-    
-    for line in open(FileName):
-        if re.match('&SimulationTime:', line):
-            findStep=True
-            dataTemp=line.split(':')
-            Time = float(dataTemp[1].strip())
-            T.append(Time)
-            
-            x=[]
-            y=[]
-            z=[]
-            tag=[]
-            
-            Q_actualVx=[]
-            Q_actualVy=[]
-            Q_desiredVx=[]
-            Q_desiredVy=[]
-            
-            Q_motiveFx=[]
-            Q_motiveFy=[]
-            
-            Q_socialFx=[]
-            Q_socialFy=[]
-            Q_selfrepFx=[]
-            Q_selfrepFy=[]
-            
-        if  findStep:
-            if re.search('Agent:', line):
-                dataTemp=line.split(':')
-                tag.append(float(dataTemp[1].strip()))
-
-            if re.search('Position:', line):
-                dataTemp=line.split(':')
-                xy=dataTemp[1]
-                temp =  re.split(r'[\s\,]+', xy)
-                x.append(float(temp[1].strip().lstrip('[')))
-                y.append(float(temp[2].strip().rstrip(']')))
-                z.append(1.6)
-
-            if re.search('Velocity:', line):
-                dataTemp=line.split(':')
-                vel=dataTemp[2]
-                temp =  re.split(r'[\s\,]+', vel)
-                Q_actualVx.append(float(temp[1].lstrip('[').strip()))
-                Q_actualVy.append(float(temp[2].strip().rstrip(']')))
-                
-            if re.search('&EndofStep', line):
-                findStep = False
-
-                NPLIM=np.size(tag)
-                xyz=x+y+z #+ap1+ap2+ap3+ap4
-                Q = Q_actualVx+Q_actualVy +Q_desiredVx+Q_desiredVy + Q_motiveFx+Q_motiveFy +Q_socialFx+Q_socialFy + +Q_selfrepFx+Q_selfrepFy
-
-                # process timestep data
-                XYZ.append(xyz)
-                TAG.append(tag)
-                FEATRUE.append(Q)
-                
-            '''
-            xyz  = np.array(readFRec(fin,'f'))
-            tag  = np.array(readFRec(fin,'I'))
-            q    = np.array(readFRec(fin,'f'))
-
-            #print >> outfile, "g", q, "\n"
-            if mode=='evac':
-                xyz.shape = (7,nplim) # evac data: please check dump_evac() in evac.f90
-            else: 
-                xyz.shape = (3,nplim) # particle data: please check dump_part() in dump.f90
-            
-            q.shape   = (n_quant, nplim)
-            
-            if wrtxt:
-                outfile.write("Time:" + str(Time) + "\n")
-                outfile.write("xyz:" + str(xyz) + "\n") 
-                outfile.write("tag:" + str(tag) + "\n")           
-                outfile.write( "q:" + str(q) + "\n")
-            '''
-    
-    #np.savez( outfn + ".npz", T, XYZ, TAG)
-    #return (np.array(T), np.hstack(Q), q_labels, q_units)
-    return T, XYZ, TAG, FEATRUE  #, n_part, version, n_quant
-
-
 def readDoorProb(FileName, doorIndex, showdata=True):
     findMESH=False
     doorProb=[]
@@ -1248,11 +1158,41 @@ def readEXIT(FileName, Keyword='&EXIT', Zmin=0.0, Zmax=3.0, outputFile=None, deb
     return exits
 
 
+
+def updateAgentData(agents, outputFile, inputFile=None):
+    try:
+        with open(outputFile, mode='a+', newline='') as agent_test_file:
+            csv_writer = csv.writer(agent_test_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+            csv_writer.writerow([])
+            if inputFile is not None:
+                csv_writer.writerow([inputFile])
+            csv_writer.writerow(['Agent data in TestGeom: '])
+            csv_writer.writerow(['time:', time.strftime('%Y-%m-%d_%H_%M_%S')])
+            csv_writer.writerow(['&Agent', '1/iniX', '2/iniY', '3/iniVx', '4/iniVy', '5/tau', '6/tpre', '7/p, 8/pMode, 9/pp2, 10/talkRange, 11/aType, 12/inComp, 13/talkRange'])
+            index_temp=0
+            for agent in agents:
+                csv_writer.writerow([str(agent.name), str(agent.pos[0]), str(agent.pos[1]), str(agent.actualV[0]), str(agent.actualV[1]), str(agent.tau), str(agent.tpre), str(agent.p), str(agent.pMode), str(agent.pp2), str(agent.interactionRange), str(agent.aType), str(agent.inComp), str(agent.talk_tau)])
+                index_temp=index_temp+1
+    except:
+        with open(outputFile, mode='wb+') as agent_test_file:
+            csv_writer = csv.writer(agent_test_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+            csv_writer.writerow([])
+            if inputFile is not None:
+                csv_writer.writerow([inputFile])
+            csv_writer.writerow(['Agent data in TestGeom: '])
+            csv_writer.writerow(['time:', time.strftime('%Y-%m-%d_%H_%M_%S')])
+            csv_writer.writerow(['&Agent', '1/iniX', '2/iniY', '3/iniVx', '4/iniVy', '5/tau', '6/tpre', '7/p, 8/pMode, 9/pp2, 10/talkRange, 11/aType, 12/inComp, 13/talkRange'])
+            index_temp=0
+            for agent in agents:
+                csv_writer.writerow([str(agent.name), str(agent.pos[0]), str(agent.pos[1]), str(agent.actualV[0]), str(agent.actualV[1]), str(agent.tau), str(agent.tpre), str(agent.p), str(agent.pMode), str(agent.pp2), str(agent.interactionRange), str(agent.aType), str(agent.inComp), str(agent.talk_tau)])
+                index_temp=index_temp+1
+          
+
 def updateDoorData(doors, outputFile, inputFile=None):
     try:
         with open(outputFile, mode='a+', newline='') as door_test_file:
             csv_writer = csv.writer(door_test_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-            csv_writer.writerow([''])
+            csv_writer.writerow([])
             if inputFile is not None:
                 csv_writer.writerow([inputFile])
             csv_writer.writerow(['DOOR/PATH data in TestGeom: '])
@@ -1265,7 +1205,7 @@ def updateDoorData(doors, outputFile, inputFile=None):
     except:
         with open(outputFile, mode='wb+') as door_test_file:
             csv_writer = csv.writer(door_test_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-            csv_writer.writerow([''])
+            csv_writer.writerow([])
             if inputFile is not None:
                 csv_writer.writerow([inputFile])
             csv_writer.writerow(['DOOR/PATH data in TestGeom: '])
@@ -1281,7 +1221,7 @@ def updateExitData(doors, outputFile, inputFile=None):
     try:
         with open(outputFile, mode='a+', newline='') as exit_test_file:
             csv_writer = csv.writer(exit_test_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-            csv_writer.writerow([''])
+            csv_writer.writerow([])
             if inputFile is not None:
                 csv_writer.writerow([inputFile])
             csv_writer.writerow(['EXIT data in TestGeom: '])
@@ -1294,7 +1234,7 @@ def updateExitData(doors, outputFile, inputFile=None):
     except:
         with open(outputFile, mode='wb+') as exit_test_file:
             csv_writer = csv.writer(exit_test_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-            csv_writer.writerow([''])
+            csv_writer.writerow([])
             if inputFile is not None:
                 csv_writer.writerow([inputFile])
             csv_writer.writerow(['EXIT data in TestGeom: '])
@@ -1310,7 +1250,7 @@ def updateWallData(walls, outputFile, inputFile=None):
     try:
         with open(outputFile, mode='a+', newline='') as wall_test_file:
             csv_writer = csv.writer(wall_test_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-            csv_writer.writerow([''])
+            csv_writer.writerow([])
             if inputFile is not None:
                 csv_writer.writerow([inputFile])
             csv_writer.writerow(['WALL/OBST data in TestGeom: '])
@@ -1323,7 +1263,7 @@ def updateWallData(walls, outputFile, inputFile=None):
     except:
         with open(outputFile, mode='wb+') as wall_test_file:
             csv_writer = csv.writer(wall_test_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-            csv_writer.writerow([''])
+            csv_writer.writerow([])
             if inputFile is not None:
                 csv_writer.writerow([inputFile])
             csv_writer.writerow(['WALL/OBST data in TestGeom: '])
@@ -1361,7 +1301,7 @@ def updateExit2Doors(exit2doors, outputFile, inputFile=None):
     try:
         with open(outputFile, mode='a+', newline='') as exit2door_file:
             csv_writer = csv.writer(exit2door_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-            csv_writer.writerow([''])
+            csv_writer.writerow([])
             if inputFile is not None:
                 csv_writer.writerow([inputFile])
             csv_writer.writerow(['exit2door data in TestGeom: '])
@@ -1373,7 +1313,7 @@ def updateExit2Doors(exit2doors, outputFile, inputFile=None):
     except:
         with open(outputFile, mode='wb+') as exit2door_file:
             csv_writer = csv.writer(exit2door_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-            csv_writer.writerow([''])
+            csv_writer.writerow([])
             if inputFile is not None:
                 csv_writer.writerow([inputFile])
             csv_writer.writerow(['exit2door data in TestGeom: '])
