@@ -584,7 +584,13 @@ class simulation(object):
         print('Working Folder: '+str(self.fpath)) #+ '\n')
 
         print('\n')
+        
+        updateAgentData(self.agents, FN_Temp)
+        updateWallData(self.walls, FN_Temp)
+        updateDoorData(self.doors, FN_Temp)
+        updateExitData(self.exits, FN_Temp)
 
+        f.write('\n')
         f.write('Display a summary of input data as below.\n')
         f.write('number of agents in input file: '+str(self.num_agents)+ '\n')
         f.write('number of walls in input file: '+str(self.num_walls)+ '\n')
@@ -2024,7 +2030,7 @@ class simulation(object):
                         otherSpeed = 0.0
                         #otherMovingNum = 0
                         if len(ai.others)!=0: #and tt>ai.tpre:
-                            otherDir, otherSpeed, otherTpre = ai.opinionDynamics()
+                            otherDir, otherSpeed = ai.opinionDynamics()
                             ai.direction = (1-ai.p)*ai.direction + ai.p*otherDir
                             ai.desiredSpeed = (1-ai.p)*ai.desiredSpeed + ai.p*otherSpeed
                             ai.desiredV = ai.desiredSpeed*ai.direction
@@ -2191,8 +2197,8 @@ class simulation(object):
                 selfRepulsion = np.array([0.0, 0.0])
 
             peopleInter = ai.adaptSocialForce(self.agents, self.GROUPBEHAVIOR, True)
-            #ai.opinionDynamics()
-            ai.opinionExchange()
+            ai.opinionDynamics()
+            #ai.opinionExchange()
             ai.updateTalkList()
             #peopleInter = + ai.adaptPhyForce(self.agents)
             

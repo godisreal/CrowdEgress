@@ -110,50 +110,6 @@ def drawWalls(screen, walls, ZOOMFACTOR=10.0, SHOWDATA=False, xSpace=0.0, ySpace
                 #screen.blit(text_surface, endPos*ZOOMFACTOR+xyShift)
 
 
-def drawSingleWall(screen, wall, ZOOMFACTOR=10.0, SHOWDATA=False, xSpace=0.0, ySpace=0.0, lw=2.0):
-
-    xyShift = np.array([xSpace, ySpace])
-    if wall.inComp == 0:
-        print('Error: Draw a wall that is not in Computation!\n')
-        return
-    
-    if wall.mode=='line':
-        startPos = np.array([wall.params[0],wall.params[1]]) #+xyShift
-        endPos = np.array([wall.params[2],wall.params[3]]) #+xyShift
-        startPx = startPos*ZOOMFACTOR #+np.array([xSpace, ySpace])
-        endPx = endPos*ZOOMFACTOR #+np.array([xSpace, ySpace])
-        pygame.draw.line(screen, red, startPx+xyShift, endPx+xyShift, lw)
-        
-
-        if SHOWDATA:
-            myfont=pygame.font.SysFont("arial",14)
-            text_surface=myfont.render(str(startPos), True, purple, (255,255,255))
-            screen.blit(text_surface, startPos*ZOOMFACTOR +xyShift)
-            text_surface=myfont.render(str(endPos), True, purple, (255,255,255))
-            screen.blit(text_surface, endPos*ZOOMFACTOR +xyShift)
-
-    elif wall.mode=='rect':
-        x= ZOOMFACTOR*wall.params[0]
-        y= ZOOMFACTOR*wall.params[1]
-        w= ZOOMFACTOR*(wall.params[2] - wall.params[0])
-        h= ZOOMFACTOR*(wall.params[3] - wall.params[1])
-        
-        pygame.draw.rect(screen, red, [x+xSpace, y+ySpace, w, h], lw)
-
-        if SHOWDATA:
-            pass
-            startPos = np.array([wall.params[0],wall.params[1]])
-            endPos = np.array([wall.params[2],wall.params[3]])
-
-            myfont=pygame.font.SysFont("arial",10)
-
-            #text_surface=myfont.render(str(startPos), True, purple, (255,255,255))
-            #screen.blit(text_surface, startPos*ZOOMFACTOR+xyShift)
-
-            #text_surface=myfont.render(str(endPos), True, purple, (255,255,255))
-            #screen.blit(text_surface, endPos*ZOOMFACTOR+xyShift)
-    
-
     ####################
     # Drawing the doors
     ####################
@@ -198,45 +154,6 @@ def drawDoors(screen, doors, ZOOMFACTOR=10.0, SHOWDATA=False, xSpace=0.0, ySpace
             screen.blit(text_surface, door.pos*ZOOMFACTOR+xyShift)
 
 
-def drawSingleDoor(screen, door, ZOOMFACTOR=10.0, SHOWDATA=False, xSpace=0.0, ySpace=0.0, lw=2.0):
-
-    xyShift = np.array([xSpace, ySpace])
-    if door.inComp == 0:
-        print('Error: Draw a door that is not in Computation!\n')
-        return
-    
-    #startPos = np.array([door[0], door[1]])
-    #endPos = np.array([door[2], door[3]])
-
-    startPos = np.array([door.params[0],door.params[1]]) #+xyShift
-    endPos = np.array([door.params[2],door.params[3]]) #+xyShift
-
-    #Px = [0, 0]
-    #Px[0] = int(Pos[0]*ZOOMFACTOR)
-    #Px[1] = int(Pos[1]*ZOOMFACTOR)
-    #pygame.draw.circle(screen, red, Px, LINESICKNESS)
-
-    x= ZOOMFACTOR*door.params[0] 
-    y= ZOOMFACTOR*door.params[1] 
-    w= ZOOMFACTOR*(door.params[2] - door.params[0])
-    h= ZOOMFACTOR*(door.params[3] - door.params[1])
-        
-    pygame.draw.rect(screen, green, [x+ xSpace, y+ ySpace, w, h], lw)
-
-    if SHOWDATA:
-        
-        myfont=pygame.font.SysFont("arial",10)
-        text_surface=myfont.render(str(startPos), True, blue, (255,255,255))
-        screen.blit(text_surface, startPos*ZOOMFACTOR+xyShift)
-
-        #text_surface=myfont.render(str(endPos), True, blue, (255,255,255))
-        #screen.blit(text_surface, endPos*ZOOMFACTOR+xyShift)
-
-        myfont=pygame.font.SysFont("arial",13)
-        text_surface=myfont.render('Door:'+str(door.oid)+'/'+str(door.name)+'/'+str(door.arrow), True, green, black)
-        screen.blit(text_surface, door.pos*ZOOMFACTOR+xyShift)
-
-
     ####################
     # Drawing the exits
     ####################
@@ -276,42 +193,6 @@ def drawExits(screen, exits, ZOOMFACTOR=10.0, SHOWDATA=False, xSpace=0.0, ySpace
             myfont=pygame.font.SysFont("arial",13)
             text_surface=myfont.render('Exit:'+str(exit.oid)+'/'+str(exit.name)+'/'+str(exit.arrow), True, red, white)
             screen.blit(text_surface, exit.pos*ZOOMFACTOR + xyShift)
-
-
-def drawSingleExit(screen, exit, ZOOMFACTOR=10.0, SHOWDATA=False, xSpace=0.0, ySpace=0.0, lw=2.0):
-
-    xyShift = np.array([xSpace, ySpace])
-    if exit.inComp == 0:
-        print('Error: Draw an exit that is not in Computation!\n')
-        return
-
-    startPos = np.array([exit.params[0],exit.params[1]]) #+xyShift
-    endPos = np.array([exit.params[2],exit.params[3]]) #+xyShift
-
-    #Px = [0, 0]
-    #Px[0] = int(Pos[0]*ZOOMFACTOR)
-    #Px[1] = int(Pos[1]*ZOOMFACTOR)
-    #pygame.draw.circle(screen, red, Px, LINESICKNESS)
-
-    x= ZOOMFACTOR*exit.params[0]
-    y= ZOOMFACTOR*exit.params[1]
-    w= ZOOMFACTOR*(exit.params[2] - exit.params[0])
-    h= ZOOMFACTOR*(exit.params[3] - exit.params[1])
-        
-    pygame.draw.rect(screen, orange, [x+ xSpace, y+ ySpace, w, h], lw)
-
-    if SHOWDATA:
-
-        myfont=pygame.font.SysFont("arial",10)
-        text_surface=myfont.render(str(startPos), True, blue, (255,255,255))
-        screen.blit(text_surface, startPos*ZOOMFACTOR + xyShift)
-
-        #text_surface=myfont.render(str(endPos), True, blue, (255,255,255))
-        #screen.blit(text_surface, endPos*ZOOMFACTOR + xyShift)
-
-        myfont=pygame.font.SysFont("arial",13)
-        text_surface=myfont.render('Exit:'+str(exit.oid)+'/'+str(exit.name)+'/'+str(exit.arrow), True, red, white)
-        screen.blit(text_surface, exit.pos*ZOOMFACTOR + xyShift)
 
 
 def drawDirection(screen, door, arrow, ZOOMFACTOR=10.0, xSpace=0.0, ySpace=0.0):
@@ -832,8 +713,6 @@ def show_geom(simu, debug=False):
                             geomRev = True
                         
 
-
-
         ####################################
         # Drawing the geometries: walls, doors, exits
         ####################################
@@ -1239,13 +1118,6 @@ def show_flow(simu):
                     #updateDoorData(simu.doors, os.path.join(simu.fpath, 'bldDataRev.csv'))
                     #updateExitData(simu.exits, os.path.join(simu.fpath, 'bldDataRev.csv'))
 
-                #elif event.key == pygame.K_v:
-                #    simu.SHOWVELOCITY = not simu.SHOWVELOCITY
-                #elif event.key == pygame.K_i:
-                #    simu.SHOWINDEX = not simu.SHOWINDEX
-                #elif event.key == pygame.K_d:
-                #    simu.DRAWDOORFORCE = not simu.DRAWDOORFORCE
-
                 elif event.key == pygame.K_1:
                     simu.SHOWWALLDATA = not simu.SHOWWALLDATA
                 elif event.key == pygame.K_2:
@@ -1427,20 +1299,7 @@ def show_flow(simu):
                 #endPosDV[0] = int(agent.pos[0]*ZOOMFACTOR + agent.desiredV[0]*ZOOMFACTOR+xSpace)
                 #endPosDV[1] = int(agent.pos[1]*ZOOMFACTOR + agent.desiredV[1]*ZOOMFACTOR+ySpace)
                 endPosDV = (agent.pos+agent.desiredV)*ZOOMFACTOR+xyShift
-            
-            for idaj, agentOther in enumerate(simu.agents):
-                scPosOther = [0, 0]
-                scPosOther[0] = int(agentOther.pos[0]*ZOOMFACTOR+xSpace)
-                scPosOther[1] = int(agentOther.pos[1]*ZOOMFACTOR+ySpace)
-                
-                if person.comm[idai, idaj] == 1 and simu.SHOWINTELINE: 
-                    pygame.draw.line(screen, blue, scPos, scPosOther, 2)
-                    pygame.draw.line(screen, green, scPos, scPosDir, 4)
-
-                if person.talk[idai, idaj] == 1 and simu.SHOWINTELINE: 
-                    pygame.draw.line(screen, red, scPos, scPosOther, 3)
-                    pygame.draw.line(screen, green, scPos, scPosDir, 4)
-            
+        
             #print(scPos)
         '''
         
@@ -2083,323 +1942,6 @@ if __name__=="__main__":
         clock.tick(20)
 
 
-def show_agents_npz(filename, evacfile=None, fdsfile=None, ZOOMFACTOR=10.0, xSpace=20.0, ySpace=20.0, Zmin=0.0, Zmax=3.0, debug=True):
-    
-    # Read in data from filename
-    agentdata=np.load(filename)
-    npzTime = agentdata["arr_0"]
-    npzAgent = agentdata["arr_1"]
-    
-    if debug:
-        print('\n Basic info: \n')
-        print('Time points:', np.size(npzTime), '\n')
-        print('Time points for agents:', np.size(npzAgent), '\n')
-
-    T_END = len(npzTime)
-    if debug:
-        print ("Length of time axis in npz data file/T_END:", T_END)
-        print ("T_Initial=", npzTime[0])
-        print ("T_Final=", npzTime[T_END-1])
-    T_INDEX=0
-
-    if evacfile!="" and evacfile!="None" and evacfile is not None:
-        walls = readWalls(evacfile)  #readWalls(FN_Walls) #readWalls("obstData2018.csv")
-        doors = readDoors(evacfile)
-        exits = readExits(evacfile)
-
-    if fdsfile!="" and fdsfile!="None" and fdsfile is not None:
-        #meshes, evacZmin, evacZmax = readMESH(fdsfile, 'evac')
-        #N_meshes = len(meshes)
-        #evacZoffset=0.5*(evacZmin+evacZmax)
-        
-        walls=readOBST(fdsfile, '&OBST', Zmin, Zmax)
-        doors=readPATH(fdsfile, '&HOLE', Zmin, Zmax) #+readPATH(fdsfile, '&DOOR', Zmin, Zmax)
-        exits=readEXIT(fdsfile, '&EXIT', Zmin, Zmax)
-        #doors=doors+readPATH(fdsfile, '&DOOR', Zmin, Zmax)
-        #entries=readPATH(fdsfile, '&ENTRY', Zmin, Zmax)
-    
-    MODETRAJ=False
-    SHOWTIME=True
-
-    SHOWVELOCITY=True
-    SHOWINDEX=True
-    SHOWFORCE=True
-    SHOWSTRESS=True
-    
-    SHOWWALLDATA=True
-    SHOWDOORDATA=True
-    SHOWEXITDATA=True
-    
-    PAUSE=True
-    REWIND=False
-    FORWARD=False
-    TimeInterval=20
-    
-    pygame.init()
-    screen = pygame.display.set_mode([800, 550])
-    pygame.display.set_caption('Visualize data file for agent-based simulation')
-    clock = pygame.time.Clock()
-    #screen.fill(white)
-
-    #myfont=pygame.font.SysFont("arial",16)
-    #text_surface=myfont.render("No2",True, (0,0,0), (255,255,255))
-    #screen.blit(text_surface, (16,20))
-
-    running = True
-    while running:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                running = False
-                pygame.display.quit()
-            elif event.type == pygame.MOUSEBUTTONDOWN:
-                (mouseX, mouseY) = pygame.mouse.get_pos()
-                #button = pygame.mouse.get_pressed()            
-            # elif event.type == pygame.MOUSEBUTTONUP:
-            elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_PAGEUP:
-                    ZOOMFACTOR = ZOOMFACTOR +1
-                elif event.key == pygame.K_PAGEDOWN:
-                    ZOOMFACTOR = max(6.0, ZOOMFACTOR -1)
-                    
-                elif event.key == pygame.K_t:
-                    MODETRAJ = not MODETRAJ
-                elif event.key == pygame.K_SPACE:
-                    PAUSE = not PAUSE
-                elif event.key == pygame.K_HOME:
-                    REWIND = True
-                    PAUSE = True
-                    #xSpace=xSpace-10
-                elif event.key == pygame.K_END:
-                    FORWARD = True
-                    PAUSE = True
-                    #xSpace=xSpace+10
-                    
-                elif event.key == pygame.K_v:
-                    SHOWVELOCITY = not SHOWVELOCITY
-                elif event.key == pygame.K_i:
-                    SHOWINDEX = not SHOWINDEX
-                elif event.key == pygame.K_f:
-                    SHOWFORCE = not SHOWFORCE
-                #elif event.key == pygame.K_r:
-                #    DRAWSELFREPULSION = not DRAWSELFREPULSION
-                
-                elif event.key == pygame.K_1:
-                    SHOWWALLDATA = not SHOWWALLDATA
-                elif event.key == pygame.K_2:
-                    SHOWDOORDATA = not SHOWDOORDATA
-                elif event.key == pygame.K_3:
-                    SHOWEXITDATA = not SHOWEXITDATA
-                #elif event.key == pygame.K_s:
-                #    SHOWSTRESS = not SHOWSTRESS
-                
-                elif event.key == pygame.K_UP:
-                    ySpace=ySpace-10
-                elif event.key == pygame.K_DOWN:
-                    ySpace=ySpace+10
-                elif event.key == pygame.K_LEFT:
-                    xSpace=xSpace-10
-                elif event.key == pygame.K_RIGHT:
-                    xSpace=xSpace+10
-
-                elif event.key ==pygame.K_PERIOD:
-                    TimeInterval = TimeInterval + 10
-                elif event.key == pygame.K_COMMA:
-                    TimeInterval = TimeInterval - 10                    
-
-        if MODETRAJ == False:
-            screen.fill([0,0,0])
-
-        #Time  = readFRec(fin,'f')  # Time index
-        if T_INDEX == None or T_INDEX==T_END-1:
-            #print("Simulation End!")
-            #running=False
-            #pygame.display.quit()
-            #PAUSE=True
-            T_INDEX=0
-        else:
-            if PAUSE==False:
-                T_INDEX = T_INDEX+1
-            else:
-                if REWIND and T_INDEX>0:
-                    T_INDEX = T_INDEX-1
-                if FORWARD and T_INDEX<T_END-1:
-                    T_INDEX = T_INDEX+1
-        #nplim = readFRec(fin,'I')  # Number of particles in the PART class
-        
-        Time_t = npzTime[T_INDEX]
-        agent_t = npzAgent[T_INDEX]
-
-        #############################
-        ######### Drawing Process ######
-        xyShift = np.array([xSpace, ySpace])
-
-        ####################
-        # Showing Time
-        ####################
-        if SHOWTIME:
-            myfont=pygame.font.SysFont("arial",14)
-            time_surface=myfont.render("Simulation Time:" + str(Time_t), True, yellow, black)
-            screen.blit(time_surface, [620,300]) #[750,350]*ZOOMFACTOR)
-
-        drawWalls(screen, walls, ZOOMFACTOR, SHOWWALLDATA, xSpace, ySpace)
-        #drawPATH(screen, holes, green, ZOOMFACTOR, SHOWDOORDATA, xSpace, ySpace)
-        drawExits(screen, exits, ZOOMFACTOR, SHOWEXITDATA, xSpace, ySpace)
-        drawDoors(screen, doors, ZOOMFACTOR, SHOWDOORDATA, xSpace, ySpace)
-        #drawPATH(screen, entries, purple, ZOOMFACTOR, SHOWEXITDATA, xSpace, ySpace)
-
-        # This is due to readFRec:.  Let x become [x] when x is a scalar 
-        #if np.size(TAG_t)==1:
-        #    TAG_t = np.array([TAG_t])
-            
-        #if debug:
-        #    print ("Show TAG_t: ", TAG_t)
-        
-        # Show Mouse Position
-        (mouseX3, mouseY3) = pygame.mouse.get_pos()
-        mouse_pos3 = np.array([mouseX3, mouseY3])
-        #pygame.mouse.set_visible(False)
-        #pygame.mouse.get_pressed() -> button1, button2, button3
-        
-        # Show Mouse Absolute and Relative Positions on the Screen
-        myfont=pygame.font.SysFont("arial",16)
-        text_surface=myfont.render(str((mouse_pos3-xyShift)*(1/ZOOMFACTOR)), True, black, white)
-        screen.blit(text_surface, mouse_pos3+[0.0, 18.0])
-        text_surface=myfont.render(str(mouse_pos3), True, tan, white)
-        screen.blit(text_surface, mouse_pos3+[0.0, 36.0])
-
-        for idai, agent in enumerate(agent_t):
-            
-            if agent.inComp == 0:
-                continue
-            
-            #scPos = np.array([0, 0])
-            scPos = [0, 0]
-            scPos[0] = int(agent.pos[0]*ZOOMFACTOR+xSpace)
-            scPos[1] = int(agent.pos[1]*ZOOMFACTOR+ySpace)
-            
-            #temp = int(100*agent.ratioV)
-            #AGENTCOLOR = [0,0,temp]
-            color_para = [0, 0, 0]
-            color_para[0] = int(255*min(1, agent.ratioV))
-            if Time_t < agent.tpre:
-                pygame.draw.circle(screen, color_para, scPos, int(agent.radius*ZOOMFACTOR), LINEWIDTH+2)
-            else:
-                pygame.draw.circle(screen, color_para, scPos, int(agent.radius*ZOOMFACTOR), LINEWIDTH)
-            #int(agent.radius*ZOOMFACTOR), LINEWIDTH)
-
-            '''
-            if simu.THREECIRCLES:
-                leftS = [0, 0]
-                leftShoulder = agent.shoulders()[0]
-                leftS[0] = int(leftShoulder[0]*ZOOMFACTOR+xSpace)
-                leftS[1] = int(leftShoulder[1]*ZOOMFACTOR+ySpace)
-            
-                rightS = [0, 0]
-                rightShoulder = agent.shoulders()[1]	
-                rightS[0] = int(rightShoulder[0]*ZOOMFACTOR+xSpace)
-                rightS[1] = int(rightShoulder[1]*ZOOMFACTOR+ySpace)
-                
-                #print ('shoulders:', leftS, rightS)
-                pygame.draw.circle(screen, color_para, leftS, agent.size/2, 3)
-                pygame.draw.circle(screen, color_para, rightS, agent.size/2, 3)
-            '''
-            
-            if SHOWVELOCITY:
-                #endPosV = [0, 0]
-                #endPosV[0] = int(agent.pos[0]*ZOOMFACTOR + agent.actualV[0]*ZOOMFACTOR+xSpace)
-                #endPosV[1] = int(agent.pos[1]*ZOOMFACTOR + agent.actualV[1]*ZOOMFACTOR+ySpace)
-                endPosV = (agent.pos+agent.actualV)*ZOOMFACTOR+xyShift
-            
-                #endPosDV = [0, 0]
-                #endPosDV[0] = int(agent.pos[0]*ZOOMFACTOR + agent.desiredV[0]*ZOOMFACTOR+xSpace)
-                #endPosDV[1] = int(agent.pos[1]*ZOOMFACTOR + agent.desiredV[1]*ZOOMFACTOR+ySpace)
-                endPosDV = (agent.pos+agent.desiredV)*ZOOMFACTOR+xyShift
-            
-                #stressShow = 0
-                #stressShow = int(255*agent.ratioV)
-                #pygame.draw.line(screen, blue, leftS, rightS, 3)
-                pygame.draw.line(screen, tan, scPos, endPosV, 2)
-                pygame.draw.line(screen, yellow, scPos, endPosDV, 2)
-
-            if SHOWFORCE:
-                #endPosV = [0, 0]
-                #endPosV[0] = int(agent.pos[0]*ZOOMFACTOR + agent.actualV[0]*ZOOMFACTOR+xSpace)
-                #endPosV[1] = int(agent.pos[1]*ZOOMFACTOR + agent.actualV[1]*ZOOMFACTOR+ySpace)
-                endPosWF = (agent.pos+agent.wallrepF)*ZOOMFACTOR+xyShift
-            
-                #pygame.draw.line(screen, blue, scPos, endPosV, 2)
-                #pygame.draw.line(screen, [230,220,160], scPos, endPosWF, 2)
-                pygame.draw.line(screen, purple, scPos, endPosWF, 2)
-                #khaki = 240,230,140
-
-            #if DRAWDOORFORCE:
-                endPosDF = (agent.pos+agent.doorF)*ZOOMFACTOR+xyShift
-                pygame.draw.line(screen, green, scPos, endPosDF, 2)
-
-            #if DRAWGROUPFORCE:
-                endPosGF = (agent.pos+agent.socialF)*ZOOMFACTOR+xyShift
-                pygame.draw.line(screen, lightpink, scPos, endPosGF, 2)
-
-            #if DRAWSELFREPULSION:
-                endPosRF = (agent.pos+agent.selfrepF)*ZOOMFACTOR+xyShift
-                pygame.draw.line(screen, cyan, scPos, endPosRF, 2)
-                
-            '''
-            for idaj, agentOther in enumerate(agent_t):
-                scPosOther = [0, 0]
-                scPosOther[0] = int(agentOther.pos[0]*ZOOMFACTOR+xSpace)
-                scPosOther[1] = int(agentOther.pos[1]*ZOOMFACTOR+ySpace)
-                
-                agentPer = agent.pos+0.8*normalize(agentOther.pos - agent.pos)
-                scPosDir = [0, 0]
-                scPosDir[0] = int(agentPer[0]*ZOOMFACTOR+xSpace)
-                scPosDir[1] = int(agentPer[1]*ZOOMFACTOR+ySpace)
-                
-                #leftShoulder, rightShoulder = agent.shoulders()
-                #leftS = [int(leftShoulder[0]*ZOOMFACTOR), int(leftShoulder[1]*ZOOMFACTOR)]
-                #rightS = [int(rightShoulder[0]*ZOOMFACTOR), int(rightShoulder[1]*ZOOMFACTOR)]
-                
-                if person.comm[idai, idaj] == 1: #and SHOWINTELINE: 
-                    pygame.draw.line(screen, lightpink, scPos, scPosOther, 2)
-                    #pygame.draw.circle(screen, blue, scPosDir, 2, 2)
-                    #pygame.draw.line(screen, blue, scPosDir, rightS, 2)
-                    #pygame.draw.line(screen, blue, scPosDir, leftS, 2)
-                    pygame.draw.line(screen, green, scPos, scPosDir, 4)
-
-                if person.talk[idai, idaj] == 1: #and SHOWINTELINE: 
-                    pygame.draw.line(screen, magenta, scPos, scPosOther, 3)
-                    pygame.draw.line(screen, green, scPos, scPosDir, 4)
-            '''
-            #print(scPos)
-            
-            if SHOWINDEX:
-                #tt = pygame.time.get_ticks()/1000-t_pause
-                myfont=pygame.font.SysFont("arial",14)
-                if Time_t < agent.tpre:
-                    text_surface=myfont.render(str(idai), True, (255,0,0), (255,255,255))
-                else: 
-                    text_surface=myfont.render(str(idai), True, (0,0,0), (255,255,255))
-                screen.blit(text_surface, agent.pos*ZOOMFACTOR+xyShift)
-
-            if SHOWSTRESS:
-                myfont=pygame.font.SysFont("arial",14)
-                text_surface=myfont.render(format(agent.ratioV, "3f"), True, (0,0,0), (255,255,255))
-                screen.blit(text_surface, agent.pos*ZOOMFACTOR+xyShift+[0,6])
-        
-        
-        # The Zoom and xSpace ySpace Info
-        myfont=pygame.font.SysFont("arial",14)
-        text_surface=myfont.render('ZOOM:'+str(ZOOMFACTOR), True, black, white)
-        screen.blit(text_surface, [500,3]) #+xyShift)
-        text_surface=myfont.render('xSpace:'+str(xSpace), True, black, white)
-        screen.blit(text_surface, [600,3]) #+xyShift)        
-        text_surface=myfont.render('ySpace:'+str(ySpace), True, black, white)
-        screen.blit(text_surface, [700,3]) #+xyShift) 
-        
-        pygame.display.flip()
-        clock.tick(TimeInterval)
-        
-
 def visualizeCrowdfluid(filename, debug=True):
     
     temp=os.path.split(filename)
@@ -2556,8 +2098,6 @@ def visualizeCrowdfluid(filename, debug=True):
                     SHOWGHOSTBLD = not SHOWGHOSTBLD
                 elif event.key == pygame.K_2:
                     SHOWUVDesired = not SHOWUVDesired
-
-
 
 
         screen.fill(BACKGROUNDCOLOR)
@@ -2885,6 +2425,11 @@ def visualizeEvac(fname, evacfile=None, fdsfile=None, ZOOMFACTOR=10.0, xSpace=20
         walls = readWalls(fnameCSV)
         doors = readDoors(fnameCSV)
         exits = readExits(fnameCSV)
+
+    elif os.path.exists(fnameTXT):
+        walls = readWalls(fnameTXT)
+        doors = readDoors(fnameTXT)
+        exits = readExits(fnameTXT)
         
     
     MODETRAJ=False
