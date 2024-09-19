@@ -11,6 +11,7 @@ if sys.version_info[0] == 3: # Python 3
     from tkinter.ttk import Notebook
     from tkinter.ttk import Treeview
     import tkinter.filedialog as tkf
+    import tkinter.messagebox as msg
 else:
     # Python 2
     from Tkinter import *
@@ -18,6 +19,7 @@ else:
     from ttk import Treeview
     from ttk import Entry
     import tkFileDialog as tkf
+    import tkMessageBox as msg
 
 
 class GUI(object):
@@ -58,6 +60,18 @@ class GUI(object):
         self.window.title('crowd egress simulator')
         self.window.geometry('900x600')
 
+        self.menubar = Menu(self.window, bg="lightgrey", fg="black")
+        self.window.config(menu=self.menubar)
+        
+        self.file_menu = Menu(self.menubar, tearoff=0, bg="lightgrey", fg="black")
+        self.file_menu.add_command(label="Open", command=self.selectEvacFile, accelerator="Ctrl+O")
+        #self.file_menu.add_command(label="Edit", command=file_edit, accelerator="Ctrl+E")
+        self.file_menu.add_command(label="Save", command=self.file_save, accelerator="Ctrl+S")
+        self.menubar.add_cascade(label="File", menu=self.file_menu)
+
+        self.window.bind("<Control-s>", self.file_save)
+        self.window.bind("<Control-o>", self.selectEvacFile)
+
         self.statusStr = ""
         self.statusText = StringVar(self.window, value=self.statusStr) # at this point, statusStr = ""
         # added "self.rootWindow" above by Hiroki Sayama 10/09/2018
@@ -81,12 +95,12 @@ class GUI(object):
         #self.frameSettings = Frame(self.window)
 
         scrollInfo = Scrollbar(self.window)#frameInformation)
-        self.textInformation = Text(self.window, width=45,height=6,bg='lightgray',wrap=WORD,font=("Courier",10))
+        self.textInformation = Text(self.window, width=45,height=6,bg='lightgray', fg="black", wrap=WORD,font=("Courier",10))
         scrollInfo.pack(side=RIGHT, fill=Y)
         self.textInformation.pack(side=LEFT,fill=BOTH,expand=YES)
         scrollInfo.config(command=self.textInformation.yview)
         self.textInformation.config(yscrollcommand=scrollInfo.set)
-        self.textInformation.insert(END, 'QuickStart: \nStep1: Please select csv file or fds file to read in evac data and compartement geometry data!\n')
+        self.textInformation.insert(END, '\n\nQuickStart: \nStep1: Please select csv file or fds file to read in evac data and compartement geometry data!\n')
         self.textInformation.insert(END, 'Step2: Create simulation object!\n')
         self.textInformation.insert(END, 'Step3: Compute and visualize simulation!\n')
         self.textInformation.insert(END, '\nWhen simulation starts, please try to press the following keys in your keybroad, and you will see the effects on the screen. \n')
@@ -100,6 +114,21 @@ class GUI(object):
         self.textInformation.insert(END, str(self.fname_EVAC)+"\n")
         self.textInformation.insert(END, str(self.fname_FDS)+"\n")
 
+        try:
+            with open(self.fname_EVAC, "r") as file_contents:
+                file_lines = file_contents.readlines()
+                #file_lines_t = re.sub(r',', '\t', file_lines)
+                if len(file_lines) > 0:
+                    for index, line in enumerate(file_lines):
+                        index = float(index) + 1.0
+                        line=re.sub(r',,', '', line)
+                        print(line)
+                        line_t = re.sub(r',', ',\t', line)
+                        #print(line_t)
+                        self.textInformation.insert(index, line_t)
+            self.window.title(" - ".join(["CrowdEgress Simulation", self.fname_EVAC]))
+        except:
+            pass
 
         self.notebook.add(self.frameRun,text="QuickStart")
         self.notebook.add(self.frameParameters,text="Parameters")
@@ -178,7 +207,7 @@ class GUI(object):
         self.buttonComp.pack()
         #self.buttonComp.grid(row=3, column=1, rowspan=2, ipady=7)
         #self.buttonComp.place(x=397,y=191)
-        self.showHelp(self.buttonComp, "Only compute the numerical result without displaying in pygame.  \n Users can use another python program evac-prt5-tool to display the the numerical result.")
+        self.showHelp(self.buttonComp, "Only compute the numerical result without displaying in pygame.  \n Users can use data-tools to display the the numerical result.")
         
         self.buttonStart = Button(self.frameRun, text='compute and visualize simulation', command=self.startSim, width=38)
         self.buttonStart.pack()
@@ -234,12 +263,12 @@ class GUI(object):
         self.UseConfig_Var.set(0)
         self.UseConfig_CB=Checkbutton(self.frameParameters, text= 'Use config.txt to overwrite parameters selected in the GUI panels', variable=self.UseConfig_Var, onvalue=1, offvalue=0)
         self.UseConfig_CB.place(x=2, y=276) #pack() 
-        self.showHelp(self.SHOWFORCE_CB, "Use config.txt to configure simulation object rather than use parameters selected in the GUI panels.")
+        self.showHelp(self.UseConfig_CB, "Use config.txt to configure simulation object rather than use parameters selected in the GUI panels.")
 
         self.GroupBehavior_Var = IntVar()
-        self.GroupBehavior_Var.set(1)
+        self.GroupBehavior_Var.set(0)
         self.GroupBehavior_CB=Checkbutton(self.frameParameters, text= 'Compute Group Behavior', variable=self.GroupBehavior_Var, onvalue=1, offvalue=0)
-        #self.GroupBehavior_CB.place(x=2, y=96)  #(x=300, y=96)
+        self.GroupBehavior_CB.place(x=2, y=66)  #(x=300, y=96)
         self.showHelp(self.GroupBehavior_CB, "Compute Group Social Force and Self Repulsion.  \n Check this button only if you have specified the group parameters in input file.")  #Uncheck it if you do not know what it means.")  
 
         self.UseFDS_Var = IntVar()
@@ -460,13 +489,20 @@ class GUI(object):
         self.spin_exitnumber.place(x=396, y=230)
         self.showHelp(self.spin_exitnumber, "Select the exit index to show the probability.  \n The exit index starts from 0 to the number_of_exit-1. To identify the exit index, please show exit data in TestGeom. ")
         
+        self.buttonCSVView =Button(self.frameData, text='View csv data file', command=self.viewCSV)
+        self.buttonCSVView.place(x=6, y=90)
+        self.showHelp(self.buttonCSVView, "Show the agent data in csv data file.")
+        
+        self.window.bind("<Control-w>", self.viewCSV)
+
+        
         ##########################################################################3
         # ============================================
         # --------------------------------------------
         # frameGuide
         # --------------------------------------------
         scrollInfo = Scrollbar(self.frameGuide)
-        self.textGuide = Text(self.frameGuide, width=45,height=13,bg='white',wrap=WORD,font=("Courier",10))
+        self.textGuide = Text(self.frameGuide, width=45,height=13,bg='black',wrap=WORD,font=("Courier",10))
         #self.textGuide = Text(self.frameGuide, width=45,height=13,bg='lightgrey',wrap=WORD,font=("Courier",10))
         scrollInfo.pack(side=RIGHT, fill=Y)
         self.textGuide.pack(side=LEFT,fill=BOTH,expand=YES)
@@ -492,7 +528,18 @@ class GUI(object):
 
         self.textGuide.insert(END, '\n\n<startX, startY>: One diagonal point for rectangular door/exit. \n<endX, endY>:The other diagonal point for rectangular door/exit. \n\n|arrow|: Direction assigned to the door or exit so that agents will be guided when seeing this entity, especially when they do not have any target door or exit. The direction implies if the door or exit provides evacuees with any egress information such as exit signs or not. The value could be +1 for positive x direction, -1 for negative x direction, +2 for positive y direction and -2 for negative y direction. If no direction is given, the value is zero. Please refer to FDS+Evac manual to better understand the direction setting. \n\n|shape|: Only rectangular door or exit in current program; the default shape is rectangular door/exit.  \n\n|inComp|: a boolean variable to indicate if the door/exit is in computation loop or not. Normally it is given true/1. If users want to quickly remove a door/exit in simulation, they could assign it be to false/0 for a quick test.')
         
+    def viewCSV(self, event=None):
+        os.system('notepad '+ os.path.join(self.fname_EVAC))
 
+    def file_save(self, event=None):
+        new_file_name = filedialog.asksaveasfilename(filetypes=(("csv files", "*.csv"),("All files", "*.*")), initialdir=self.currentdir)
+        if new_file_name:
+            self.fname_EVAC = new_file_name
+        if self.fname_EVAC:
+            new_contents = self.textInformation.get(1.0, END)
+            with open(self.fname_EVAC, "w") as open_file:
+                new_contents2 = re.sub(',\t', ',', new_contents)
+                open_file.write(new_contents2)
 
     def updateCtrlParam(self):
         #self.currentSimu.SHOWTIME = self.SHOWTIME_Var.get()
@@ -597,11 +644,11 @@ class GUI(object):
     def showHelp(self, widget, text):
         def setText(self):
             self.statusText.set(text)
-            self.status.configure(foreground='black')
+            self.status.configure(bg="black", fg="white")
             
         def showHelpLeave(self):
             self.statusText.set(self.statusStr)
-            self.status.configure(foreground='black')
+            self.status.configure(bg="black", fg="white")
         widget.bind("<Enter>", lambda e : setText(self))
         widget.bind("<Leave>", lambda e : showHelpLeave(self))
         
@@ -617,7 +664,7 @@ class GUI(object):
         self.setStatusStr("Simulation not yet started!")
         self.textInformation.insert(END, '\n'+'FDS Input File Selected:   '+self.fname_FDS+'\n')
 
-    def selectEvacFile(self):
+    def selectEvacFile(self, event=None):
         self.fname_EVAC = tkf.askopenfilename(filetypes=(("csv files", "*.csv"),("All files", "*.*")),initialdir=self.currentdir)
         #temp=self.fname_EVAC.split('/') 
         temp=os.path.basename(self.fname_EVAC)
@@ -626,8 +673,25 @@ class GUI(object):
         #self.textInformation.insert(END, 'fname_EVAC:   '+self.fname_EVAC)
         print('fname', self.fname_EVAC)
         self.setStatusStr("Simulation not yet started!")
-        self.textInformation.insert(END, '\n'+'EVAC Input File Selected:   '+self.fname_EVAC+'\n')
+        self.textInformation.delete(1.0, END)
+        self.textInformation.insert(END, '\n'+'EVAC Input File Selected:   '+self.fname_EVAC+'\n\n')
         self.currentdir = os.path.dirname(self.fname_EVAC)
+
+        try:
+            with open(self.fname_EVAC, "r") as file_contents:
+                file_lines = file_contents.readlines()
+                #file_lines_t = re.sub(r',', '\t', file_lines)
+                if len(file_lines) > 0:
+                    for index, line in enumerate(file_lines):
+                        index = float(index) + 26.0
+                        line=re.sub(r',,', '', line)
+                        line_t = re.sub(r',', ',\t', line)
+                        self.textInformation.insert(index, line_t)
+            self.window.title(" - ".join(["Social Array Simulation", self.fname_EVAC]))
+        except:
+            pass
+
+
 
     def selectOutTxtFile_DoorProb(self):
         #tempdir=os.path.dirname(self.fname_EVAC)
@@ -679,6 +743,8 @@ class GUI(object):
         self.updateCtrlParam()
         self.currentSimu.preprocessGeom()
         self.currentSimu.preprocessAgent()
+        self.table_agent2exit.delete(*self.table_agent2exit.get_children())
+        self.table_agent2exit.update()   
         for i in range(self.currentSimu.num_agents):
             #for j in range(self.currentSimu.num_exits):
             self.table_agent2exit.insert('', i, values=(self.currentSimu.agents[i].ID, self.currentSimu.agent2exit[i,:]))
