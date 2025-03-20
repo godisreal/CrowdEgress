@@ -386,48 +386,6 @@ class passage(object):
             #pass
         #return np.array([0.0, 0.0])
 
-        
-    def doorForce(self, agent):
-        if self.insideDoor(agent.pos)==False:
-            doordir = self.direction()
-            agentdir = self.pos-agent.pos
-            if np.dot(doordir, agentdir)>=0:
-                ri = agent.radius
-                #mid= (np.array([self.params[0], self.params[1]]) + np.array([self.params[2], self.params[3]]))/2.0
-                dist=np.linalg.norm(self.pos - agent.pos)
-                dire = normalize(self.pos-agent.pos)
-
-                first = 1.6*agent.A_WF*np.exp((ri-dist)/agent.B_WF)*dire
-                second = 160*exp((2*ri-dist)/1.8)*dire  #0.2)*dire
-                return first + second
-            else:
-                return np.array([0.0, 0.0])
-        else:
-            if self.arrow == 1 or self.arrow == -1:
-                w1= np.array([self.params[0], self.params[1]])
-                w2 = np.array([self.params[2], self.params[1]])
-                diw, niw = distanceP2L(agent.pos, w1, w2)
-                first = -agent.A_WF*np.exp((agent.diw_desired-diw)/agent.B_WF)*niw
-                #second = -600*exp((2*ri-diw)/0.2)*niw
-
-                w1= np.array([self.params[0], self.params[3]])
-                w2 = np.array([self.params[2], self.params[3]])
-                diw, niw = distanceP2L(agent.pos, w1, w2)
-                second = -agent.A_WF*np.exp((agent.diw_desired-diw)/agent.B_WF)*niw
-                return first + second
-            
-            if self.arrow == 2 or self.arrow == -2:
-                w1= np.array([self.params[0], self.params[1]])
-                w2= np.array([self.params[0], self.params[3]])
-                diw, niw = distanceP2L(agent.pos, w1, w2)
-                first = -agent.A_WF*np.exp((agent.diw_desired-diw)/agent.B_WF)*niw
-
-                w1= np.array([self.params[2], self.params[1]])
-                w2= np.array([self.params[2], self.params[3]])
-                diw, niw = distanceP2L(agent.pos, w1, w2)
-                second = -agent.A_WF*np.exp((agent.diw_desired-diw)/agent.B_WF)*niw
-                return first + second
-
 
     def inside(self, pos):
         if pos[0]>=self.params[0] and pos[0]<=self.params[2] and pos[1]>=self.params[1] and pos[1]<=self.params[3]:

@@ -111,7 +111,7 @@ def readDoorProb(FileName, doorIndex, showdata=True):
     return matrix
 
 
-def readCSV_base(fileName):
+def readCSV_base(fileName, debugFlag=False):
     
     # read .csv file
     csvFile = open(fileName, "r")
@@ -121,22 +121,20 @@ def readCSV_base(fileName):
     for item in reader:
         #print(item)
         strData.append(item)
-
-    #print(strData)
-    #print('np.shape(strData)=', np.shape(strData))
-    #print('\n')
+    
+    if debugFlag:
+        print(strData) 
+        print(strData[1:,1:])
+        print('np.shape(strData)=', np.shape(strData), '\n')
 
     print('\n')
     print('#=======================#')
     print(fileName)
-    dataNP = np.array(strData)
+    #dataNP = np.array(strData)
     #print (dataNP)
-    #print ('np.shape(dataNP)', np.shape(dataNP))
-    #print ('\n')
 
-    #print(strData[1:,1:])
     csvFile.close()
-    return dataNP
+    return strData #dataNP
 
 
 def getData(fileName, strNote):
@@ -190,10 +188,6 @@ def readCSV(fileName, mode='float'):
     for item in reader:
         #print(item)
         strData.append(item)
-
-    #print(strData)
-    #print('np.shape(strData)=', np.shape(strData))
-    #print('\n')
 
     print('\n')
     print('#=======================#')
@@ -425,9 +419,6 @@ def readArrayIndex(tableFeatures, NRow, NColomn, index=0, iniX=1, iniY=1, debug=
 
 def readAgents(FileName, debug=True, marginTitle=1, ini=1):
 
-    #dataFeatures = readCSV_base(FileName)
-    #[Num_Data, Num_Features] = np.shape(dataFeatures)   
-
     agentFeatures, lowerIndex, upperIndex = getData(FileName, '&Ped')
     Num_Agents=len(agentFeatures)-marginTitle
     if Num_Agents <= 0:
@@ -476,7 +467,7 @@ def readAgents(FileName, debug=True, marginTitle=1, ini=1):
             agent.aType = str(agentFeature[ini+10])
             agent.inComp = int(agentFeature[ini+11]) 
         except:
-            agent.interactionRange = 6.0
+            agent.interactionRange = 3.0
             agent.aType = 'active'
             agent.inComp = int(1) 
         
@@ -517,8 +508,6 @@ def addAgent(agents, x_pos, y_pos):
     
 
 def readWalls(FileName, debug=True, marginTitle=1, ini=0):
-    #obstFeatures = readCSV(FileName, "string")
-    #[Num_Obsts, Num_Features] = np.shape(obstFeatures)
 
     obstFeatures, lowerIndex, upperIndex = getData(FileName, '&Wall')
     Num_Obsts=len(obstFeatures)-marginTitle
@@ -596,11 +585,6 @@ def addWall(walls, startPt, endPt, mode='line'):
         wall.params[2]= float(endPt[0])
         wall.params[3]= float(endPt[1])
     if mode == 'rect':
-        #wall.params[0]= float(startPt[0])
-        #wall.params[1]= float(startPt[1])
-        #wall.params[2]= float(endPt[0])
-        #wall.params[3]= float(endPt[1])
-
         wall.params[0]= min(float(startPt[0]),float(endPt[0]))
         wall.params[1]= min(float(startPt[1]),float(endPt[1]))
         wall.params[2]= max(float(startPt[0]),float(endPt[0]))
@@ -758,11 +742,6 @@ def addExit(exits, startPt, endPt, mode='rect'):
     exit = passage()
     
     if mode == 'rect':
-        #exit.params[0]= float(startPt[0])
-        #exit.params[1]= float(startPt[1])
-        #exit.params[2]= float(endPt[0])
-        #exit.params[3]= float(endPt[1])
-
         exit.params[0]= min(float(startPt[0]),float(endPt[0]))
         exit.params[1]= min(float(startPt[1]),float(endPt[1]))
         exit.params[2]= max(float(startPt[0]),float(endPt[0]))
@@ -1402,7 +1381,7 @@ def readFRec(infile,fmt):
 
 #################################
 # The function readPRTfile
-def readPRTfile(fname, max_time=np.Inf, mode='evac'):
+def readPRTfile(fname, max_time=float('inf'), mode='evac'):
 
     fin = open(fname,'rb')
     #if wrtxt:
@@ -1555,6 +1534,7 @@ def intiPrt(fileName, num_agents, debug=True):
             if nq ==19:
                 writeFRec(fileName,'s', "stressLevel") # smv_label
                 writeFRec(fileName,'s', "Null")        # units   
+
 
 #################################################
 # This function is used to dump evac prt5 data file

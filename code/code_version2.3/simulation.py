@@ -156,6 +156,8 @@ class simulation(object):
         self.solver=2
         
         self.bldmesh = None
+        self.bldsoot=None
+        self.bldgas=None
 
         #Human Mesh Data
         self.xmin=None
@@ -179,7 +181,6 @@ class simulation(object):
 
         #self.dx=None
         #self.dy=None
-    
     
     """
     def intiPrt(self, debug=True):
@@ -732,6 +733,8 @@ class simulation(object):
         BLDinfo = build_compartment(x_min, y_min, x_max, y_max, x_points, y_points, self.walls, self.doors, self.exits)
         
         self.bldmesh = BLDinfo
+        self.bldsoot = BLDinfo
+        self.bldgas  = BLDinfo
         f.close()
 
 
@@ -2030,7 +2033,7 @@ class simulation(object):
                         otherSpeed = 0.0
                         #otherMovingNum = 0
                         if len(ai.others)!=0: #and tt>ai.tpre:
-                            otherDir, otherSpeed = ai.opinionDynamics()
+                            ai.opinionDynamics()
                             ai.direction = (1-ai.p)*ai.direction + ai.p*otherDir
                             ai.desiredSpeed = (1-ai.p)*ai.desiredSpeed + ai.p*otherSpeed
                             ai.desiredV = ai.desiredSpeed*ai.direction

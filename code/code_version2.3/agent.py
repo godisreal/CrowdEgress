@@ -1,3 +1,19 @@
+
+#-----------------------------------------------------------------------
+# Copyright (C) 2020, All rights reserved
+#
+# Peng Wang
+#
+#-----------------------------------------------------------------------
+#=======================================================================
+# 
+# DESCRIPTION:
+# This software is part of a python library to assist in developing and
+# analyzing evacuation simulation results from Fire Dynamics Simulator with Evacuation (FDS+Evac).
+# FDS+Evac is an open source software package developed by NIST. The source
+# code is available at: https://github.com/firemodels/fds
+#
+
 # -*-coding:utf-8-*-
 # Author: WP
 # Email: wp2204@gmail.com
@@ -9,6 +25,8 @@ from math import *
 import random
 #from stack import *
 
+############################################
+# The agent-based model of pedestrian crowd
 class person(object):
 
     # Social characteristics of a group of pedestrians (Social Parameters of Crowd)
@@ -28,8 +46,8 @@ class person(object):
     comm = None # Non-language communication
     talk = None     # Language communication
 
-    wall_flag =None
-    see_flag = None
+    wall_flag =None # Matrix to show if there are walls between agents
+    see_flag = None  # Matrix to show if agent i is able to see agent j: (i.e., there are walls between agent i and agent j)
 
     exit_prob = None
     exit_known = None
@@ -1168,9 +1186,9 @@ class person(object):
                 dij = np.linalg.norm(self.pos - aj.pos)
                 nij = (self.pos - aj.pos)/dij
                 vij = self.actualV - aj.actualV
-                self.socialF += self.groupForce(aj, person.DFactor[self.ID, aj.ID], person.AFactor[self.ID, aj.ID], person.BFactor[self.ID, aj.ID]) + 6.0*vij_actualV*anisoF # The force term of vij_acutalV is not that useful
+                #self.socialF += self.groupForce(aj, person.DFactor[self.ID, aj.ID], person.AFactor[self.ID, aj.ID], person.BFactor[self.ID, aj.ID]) + 6.0*vij_actualV*anisoF # The force term of vij_acutalV is not that useful
                 
-                #self.socialF += self.groupForce(aj, person.DFactor[self.ID, aj.ID], person.AFactor[self.ID, aj.ID], person.BFactor[self.ID, aj.ID]) + 160.0*ggg(np.dot(-vij, nij))*nij*anisoF # The force term of vij_acutalV is not that useful
+                self.socialF += self.groupForce(aj, person.DFactor[self.ID, aj.ID], person.AFactor[self.ID, aj.ID], person.BFactor[self.ID, aj.ID]) + 160.0*ggg(np.dot(-vij, nij))*nij*anisoF # The force term of vij_acutalV is not that useful
  
             #########################################
             # Opinion dynamics for tpre feature: Opinion Exchange
@@ -1211,7 +1229,7 @@ class person(object):
         #BFactor[idai, idaj] = (1-ai.p)*BFactor[idai, idaj]+ai.p*BFactor[idaj, idai]
         #ai.desiredV = (1-ai.p)*ai.desiredV + ai.p*aj.desiredV
         #return None
-        return otherMovingDir, otherMovingSpeed
+
 
     #####################################
     # how an agent interacts with others
@@ -1256,8 +1274,7 @@ class person(object):
         if len(self.others)>0:
             #otherMovingDir, otherMovingSpeed_average, otherTpre = self.opinionDynamics()
             self.tpre = (1-self.p)*self.tpre + self.p*otherTpre
-            
-        return otherMovingDir, otherMovingSpeed
+    
 
     def findDoorDir(self, direction):
         if direction == 1:

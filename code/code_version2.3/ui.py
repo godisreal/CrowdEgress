@@ -130,14 +130,14 @@ class GUI(object):
         except:
             pass
 
-        self.notebook.add(self.frameRun,text="QuickStart")
-        self.notebook.add(self.frameParameters,text="Parameters")
-        self.notebook.add(self.frameFlow,text="EgressFlow")
+        self.notebook.add(self.frameRun,text=" [QuickStart] ")
+        self.notebook.add(self.frameParameters,text=" [Parameters] ")
+        self.notebook.add(self.frameFlow,text=" [EgressFlow] ")
         #self.notebook.add(self.frameInformation,text="Information")
-        self.notebook.add(self.frameSoc,text="EvacAgent")
+        self.notebook.add(self.frameSoc,text=" <EvacAgent>  ")
         #self.notebook.add(self.frameExit,text="WayFinding")        
-        self.notebook.add(self.frameData,text="DataTool")
-        self.notebook.add(self.frameGuide,text="Readme")
+        self.notebook.add(self.frameData,text=" <DataTool>  ")
+        self.notebook.add(self.frameGuide,text="  <Readme>  ")
         #self.notebook.add(self.frameSettings,text="Settings")
         self.notebook.pack(expand=NO, fill=BOTH, padx=5, pady=5 ,side=TOP)
         
@@ -886,11 +886,16 @@ class GUI(object):
         self.currentSimu.dataSummary()
         sunpro1 = mp.Process(target=compute_simu(self.currentSimu))        
         sunpro1.start()
-        #sunpro1.join()
-        self.setStatusStr("Simulation not yet started!")
+        #unpro1.join()
+        self.setStatusStr("Simulation Complete!")
+        if self.UseFDS_Var.get():
+            visualizeEvac(self.currentSimu.outDataName + ".bin", self.fname_EVAC, self.fname_FDS, self.ZOOM, self.xSpa, self.ySpa)
+        else:
+            visualizeEvac(self.currentSimu.outDataName + ".bin", self.fname_EVAC, None, self.ZOOM, self.xSpa, self.ySpa)
+        self.currentSimu.destory()
         #show_geom(myTest)
         #myTest.show_simulation()
-        self.currentSimu.quit()
+        #self.currentSimu.quit()
 
     # Only compute the numerical result without displaying in pygame
     def startVideo(self):
@@ -922,11 +927,11 @@ class GUI(object):
                 visualizeEvac(self.fname_OutBIN, self.fname_EVAC, self.fname_FDS, self.ZOOM, self.xSpa, self.ySpa)
             else:
                 visualizeEvac(self.fname_OutBIN, self.fname_EVAC, None, self.ZOOM, self.xSpa, self.ySpa)
-        if temp[1]=='npz':
-            if self.UseFDS_Var.get():
-                show_agents_npz(self.fname_OutBIN, self.fname_EVAC, self.fname_FDS, self.ZOOM, self.xSpa, self.ySpa)
-            else:
-                show_agents_npz(self.fname_OutBIN, self.fname_EVAC, None, self.ZOOM, self.xSpa, self.ySpa)
+        #if temp[1]=='npz':
+        #    if self.UseFDS_Var.get():
+        #        show_agents_npz(self.fname_OutBIN, self.fname_EVAC, self.fname_FDS, self.ZOOM, self.xSpa, self.ySpa)
+        #    else:
+        #        show_agents_npz(self.fname_OutBIN, self.fname_EVAC, None, self.ZOOM, self.xSpa, self.ySpa)
 
 def isfloatnum(aString):
     try:
