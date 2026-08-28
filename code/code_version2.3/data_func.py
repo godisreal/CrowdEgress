@@ -22,13 +22,11 @@ import os, sys
 import pygame
 import pygame.draw
 import numpy as np
-#from agent_model_obst3 import *
 from agent import *
 from obst import *
 #from passage import *
 from math_func import *
 from math import *
-#from config import *
 import re
 import random
 import csv
@@ -112,7 +110,6 @@ def readDoorProb(FileName, doorIndex, showdata=True):
 
 
 def readCSV_base(fileName, debugFlag=False):
-    
     # read .csv file
     csvFile = open(fileName, "r")
     reader = csv.reader(csvFile)
@@ -132,16 +129,13 @@ def readCSV_base(fileName, debugFlag=False):
     print(fileName)
     #dataNP = np.array(strData)
     #print (dataNP)
-
     csvFile.close()
     return strData #dataNP
 
 
 def getData(fileName, strNote):
     dataFeatures = readCSV_base(fileName)
-
     Num_Data = len(dataFeatures)
-    
     IPedStart=0
     Find = False
     #print(dataFeatures)
@@ -174,9 +168,6 @@ def getData(fileName, strNote):
         dataOK = dataFeatures[IPedStart : IPedEnd]
         return dataOK, IPedStart, IPedEnd
 
-    #data_result = np.array(dataOK)
-    #return data_result[1:, 1:]
-    
 
 # This function is not used in this program
 def readCSV(fileName, mode='float'):
@@ -222,8 +213,7 @@ def readCSV(fileName, mode='float'):
     
 
 def arr1D_2D(data, debug=True):
-    #data is in type of 1D array, but it is actually a 2D data format.  
-    
+    #data is in type of 1D array, but it is actually a 2D data format.      
     NRow = len(data)
     NColomn = len(data[1])
     matrix = np.zeros((NRow, NColomn), dtype='|S20')
@@ -283,11 +273,16 @@ def readAgent2Exit(tableFeatures, NRow, NColomn, debug=True):
         print('Data in Table:', '\n', matrixA2E, matrixKW)
     return matrixA2E #, matrixKW
 
-
-def readGroupCABD(tableFeatures, NRow, NColomn, debug=True):
+################################################################################
+# The following three functions are used to read in group data from input file:
+# readGroupCABD readGroupC readGroupABD
+################################################################################
+# read matrix C A B D for group behavior
+################################################################################
+def readGroupSABD(tableFeatures, NRow, NColomn, debug=True):
 
     # NRow and NColomn are the size of data to be extracted from tableFeatures
-    matrixC = np.zeros((NRow, NColomn))
+    matrixS = np.zeros((NRow, NColomn))
     matrixA = np.zeros((NRow, NColomn))
     matrixB = np.zeros((NRow, NColomn))
     matrixD = np.zeros((NRow, NColomn))
@@ -299,27 +294,27 @@ def readGroupCABD(tableFeatures, NRow, NColomn, debug=True):
                 try:
                     #temp=re.split(r'[\s\/]+', tableFeatures[i+1][j+1])
                     temp=re.split(r'\s*[;\|\s]\s*', tableFeatures[i+1][j+1])
-                    matrixC[i,j] = float(temp[0])
+                    matrixS[i,j] = float(temp[0])
                     matrixA[i,j] = float(temp[1])
                     matrixB[i,j] = float(temp[2])
                     matrixD[i,j] = float(temp[3])
                 except:
                     print("Error in reading group data!")
                     input("Please check!")
-                    matrixC[i,j] = 0.0
+                    matrixS[i,j] = 0.0
                     matrixA[i,j] = 0.0
                     matrixB[i,j] = 0.0
                     matrixD[i,j] = 0.0
             else:
-                matrixC[i,j] = 0.0
+                matrixS[i,j] = 0.0
                 matrixA[i,j] = 0.0
                 matrixB[i,j] = 0.0
                 matrixD[i,j] = 0.0
                 
     if debug:
         print(tableFeatures, '\n')
-        print('Data in Table:', '\n', matrixC, matrixA, matrixB, matrixD)
-    return matrixC, matrixA, matrixB, matrixD
+        print('Data in Table:', '\n', matrixS, matrixA, matrixB, matrixD)
+    return matrixS, matrixA, matrixB, matrixD
 
 
 def readGroupABD(tableFeatures, NRow, NColomn, debug=True):
@@ -356,67 +351,56 @@ def readGroupABD(tableFeatures, NRow, NColomn, debug=True):
     return matrixA, matrixB, matrixD
     
 
-def readGroupC(tableFeatures, NRow, NColomn, debug=True):
+def readGroupS(tableFeatures, NRow, NColomn, debug=True):
     # NRow and NColomn are the size of data to be extracted from tableFeatures
-    matrixC = np.zeros((NRow, NColomn))
+    matrixS = np.zeros((NRow, NColomn))
     if tableFeatures[i+1][j+1] and tableFeatures[i+1][j+1] != '0':
         try:    
-            matrixC[i,j] = float(tableFeatures[i+1][j+1])        
+            matrixS[i,j] = float(tableFeatures[i+1][j+1])        
         except:
             print("Error in reading group data!")
             input("Please check!")
-            matrixC[i,j] = 0.0
+            matrixS[i,j] = 0.0
     else:
-        matrixC[i,j] = 0.0
+        matrixS[i,j] = 0.0
                 
     if debug:
         print(tableFeatures, '\n')
-        print('Data in Table:', '\n', matrixC)
-    return matrixC
+        print('Data in Table:', '\n', matrixS)
+    return matrixS
 
-
+# Read array data from tableFeatures and extract the data element at index position
 def readArrayIndex(tableFeatures, NRow, NColomn, index=0, iniX=1, iniY=1, debug=True):
-
-    #tableFeatures, LowerIndex, UpperIndex = getData("newDataForm.csv", '&Ped2Exit')
-
-    #(dataX, dataY) = np.shape(tableFeatures)
+    
+    # NRow and NColomn are the size of data to be extracted from tableFeatures
+    #(dataX, dataY) = np.shape(np.array(tableFeatures))
     #NRow = dataX - iniX
     #NColomn = dataY - iniY
 
     # NRow and NColomn are the size of data to be extracted from tableFeatures
-    matrixC = np.zeros((NRow, NColomn))
-    #matrixB = np.zeros((NRow, NColomn))
-    #matrixD = np.zeros((NRow, NColomn))
-    
+    matrixData = np.zeros((NRow, NColomn))
     for i in range(NRow):
         for j in range(NColomn):
             try:
                 if tableFeatures[i+iniX][j+iniY] and tableFeatures[i+iniX][j+iniY] != '0':
                     #temp=re.split(r'[\s\/]+', tableFeatures[i+1][j+1])
                     temp=re.split(r'\s*[;\|\s]\s*', tableFeatures[i+iniX][j+iniY])
-                    matrixC[i,j] = float(temp[index])
-                    #matrixB[i,j] = float(temp[1])
-                    #matrixD[i,j] = float(temp[2])
+                    matrixData[i,j] = float(temp[index])
                 else:
-                    matrixC[i,j] = 0.0
-                    #matrixB[i,j] = 1.0
-                    #matrixD[i,j] = 1.0
+                    matrixData[i,j] = 0.0
             except:
                 print("Error in reading data!")
                 input("Please check!")
-                matrixC[i,j] = 0.0
-                #matrixB[i,j] = 1.0
-                #matrixD[i,j] = 1.0
+                matrixData[i,j] = 0.0
                 
     if debug:
         print(tableFeatures, '\n')
-        print('Data in Table:', '\n', 'Index Number:', index, '\n', matrixC, '\n\n') #, matrixB, matrixD)
-    return matrixC #, matrixB, matrixD
+        print('Data in Table:', '\n', 'Index Number:', index, '\n', matrixData, '\n\n') #, matrixB, matrixD)
+    return matrixData #, matrixB, matrixD
 
-    
-# The file to record the some output data of the simulation
-# f = open("outData.txt", "w+")
-
+######################################
+# Read agent data from input csv file
+######################################
 def readAgents(FileName, debug=True, marginTitle=1, ini=1):
 
     agentFeatures, lowerIndex, upperIndex = getData(FileName, '&Ped')
@@ -473,7 +457,7 @@ def readAgents(FileName, debug=True, marginTitle=1, ini=1):
         
         try:
             #agent.moving_tau = float(agentFeature[ini+12])
-            agent.tpre_tau = float(agentFeature[ini+12])
+            agent.tpreMode = float(agentFeature[ini+12])
             agent.talk_tau = float(agentFeature[ini+13])
             agent.talk_prob = float(agentFeature[ini+14])
             #agent.pp2 = float(agentFeature[ini+15])
@@ -481,15 +465,14 @@ def readAgents(FileName, debug=True, marginTitle=1, ini=1):
             agent.mass = float(agentFeature[ini+17])
         except:     
             #agent.moving_tau = agent.tau
-            agent.tpre_tau = agent.tau
+            agent.tpreMode = int(1)
             agent.talk_tau = agent.tau
             agent.talk_prob = 0.6
             #agent.pp2 = 0.1
             agent.radius = 0.35
-            agent.mass = 65 
-        
+            agent.mass = 65
+            
         agents.append(agent)
-        
     return agents
 
 
@@ -507,6 +490,9 @@ def addAgent(agents, x_pos, y_pos):
     agents.append(agent)
     
 
+######################################
+# Read wall data from input csv file
+######################################
 def readWalls(FileName, debug=True, marginTitle=1, ini=0):
 
     obstFeatures, lowerIndex, upperIndex = getData(FileName, '&Wall')
@@ -570,11 +556,10 @@ def readWalls(FileName, debug=True, marginTitle=1, ini=0):
         # Walls have no exit signs if arrow is 0
         wall.exitSign = bool(wall.arrow)
         walls.append(wall)
-        
     return walls
 
-
-#This function addWall() is created for users to add wall in testGeom()
+#######################################################################################
+#This function addWall() is created for users to add wall in testGeom() in draw_func.py
 def addWall(walls, startPt, endPt, mode='line'):
     num = len(walls)
     wall = obst()
@@ -603,6 +588,9 @@ def addWall(walls, startPt, endPt, mode='line'):
     walls.append(wall)
 
 
+######################################
+# Read door data from input csv file
+######################################
 def readDoors(FileName, debug=True, marginTitle=1, ini=0):
     #doorFeatures = readCSV(FileName, "string")
     #[Num_Doors, Num_Features] = np.shape(doorFeatures)
@@ -657,8 +645,7 @@ def readDoors(FileName, debug=True, marginTitle=1, ini=0):
         
     return doors
 
-
-#This function addDoor() is created for users to add door in testGeom()
+#This function addDoor() is created for users to add door in testGeom() in draw_func.py
 def addDoor(doors, startPt, endPt, mode='rect'):
     num = len(doors)
     door = passage()
@@ -690,6 +677,9 @@ def addDoor(doors, startPt, endPt, mode='rect'):
 #    print >>f, '\nError on input data: doors or agent2doors \n'
 
 
+######################################
+# Read exit data from input csv file
+######################################
 def readExits(FileName, debug=True, marginTitle=1, ini=0):
     #exitFeatures = readCSV(FileName, "string")
     #[Num_Exits, Num_Features] = np.shape(exitFeatures)
@@ -732,11 +722,11 @@ def readExits(FileName, debug=True, marginTitle=1, ini=0):
         exit.oid = index
         index = index+1
         exits.append(exit)
-        
+
     return exits
 
 
-#This function addDoor() is created for users to add door in testGeom()
+#This function addDoor() is created for users to add door in testGeom() in draw_func.py
 def addExit(exits, startPt, endPt, mode='rect'):
     num = len(exits)
     exit = passage()
@@ -763,7 +753,7 @@ def addExit(exits, startPt, endPt, mode='rect'):
 
     
 
-##############################################
+##############################################################
 # This function will be used to read CHID from FDS input file
 def readCHID(FileName):
 
@@ -808,8 +798,7 @@ def readMesh(FileName):
                 # The second or other MESH lines are ignored
     return None
 
-
-
+# This function will be used to read T_END from FDS input file
 def readTEnd(FileName):
     
     findTIME=False
@@ -1748,6 +1737,8 @@ def compute_simu(simu):
         if simu.t_sim > 0.0:
             simu.simulation_update_agent_position()
         simu.simulation_step2022(f)
+        simu.simulation_update_agent_desiredV(f)
+        simu.simulation_update_agent_force(f)
         #simu.t_sim = simu.t_sim + simu.DT  # Maybe it should be in step()
         pass
         
@@ -1755,7 +1746,7 @@ def compute_simu(simu):
         f.write('Current simulation time:'+str(simu.t_sim)+'\n')
         
         # Dump agent binary data file
-        if simu.dumpBin and simu.t_sim > simu.tt_DumpData:
+        if simu.dumpBin and simu.t_sim >= simu.tt_DumpData:
             dump_evac(simu.agents, fbin, simu.t_sim)
             simu.tt_DumpData = simu.tt_DumpData + simu.DT_DumpData
             npzTime.append(simu.t_sim)

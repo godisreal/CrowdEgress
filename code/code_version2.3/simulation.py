@@ -103,6 +103,8 @@ class simulation(object):
         self.TPREMODE = 2        ### Instructinn: 1 -- DesiredV = 0  2 -- Motive Force =0: 
         self.GROUPBEHAVIOR = True     # Enable the group social force
         self.SELFREPULSION = True      # Enable self repulsion
+        self.INTERACTION = 0
+        self.OPINIONMODEL = 0
         self.DEBUG = True
 
         #self.DEBUGFORCE = False
@@ -1031,7 +1033,7 @@ class simulation(object):
 
                 print('iii', ipos, 'jjj', jpos)
                 print('floor and ceil check:', ifloor, iceil, jfloor, jceil)
-                fwrite('floor and ceil check:'+str([ifloor, iceil, jfloor, jceil])+'\n')
+                f.write('floor and ceil check:'+str([ifloor, iceil, jfloor, jceil])+'\n')
 
                 Usum=0.0 #np.array([0.0, 0.0])
                 Vsum=0.0 #np.array([0.0, 0.0])
@@ -1435,9 +1437,11 @@ class simulation(object):
 
         if self.GROUPBEHAVIOR:
             # Initialize Desired Interpersonal Distance
-            tableFeatures, LowerIndex, UpperIndex = getData(self.FN_EVAC, '&groupCABD')
+            tableFeatures, LowerIndex, UpperIndex = getData(self.FN_EVAC, '&groupSABD')
+            if len(tableFeatures)<=0:
+                tableFeatures, LowerIndex, UpperIndex = getData(self.FN_EVAC, '&groupCABD')
             if len(tableFeatures)>0:
-                person.CFactor_Init, person.AFactor_Init, person.BFactor_Init, person.DFactor_Init = readGroupCABD(tableFeatures, len(self.agents), len(self.agents))
+                person.CFactor_Init, person.AFactor_Init, person.BFactor_Init, person.DFactor_Init = readGroupSABD(tableFeatures, len(self.agents), len(self.agents))
                 ###=== Group Behavior is simulated ===
                 self.GROUPBEHAVIOR = True
             else:
@@ -1451,9 +1455,11 @@ class simulation(object):
                         person.BFactor_Init = np.zeros((self.num_agents, self.num_agents))
                         person.DFactor_Init = np.zeros((self.num_agents, self.num_agents))
                         
-                    tableFeatures, LowerIndex, UpperIndex = getData(self.FN_EVAC, '&groupC')
+                    tableFeatures, LowerIndex, UpperIndex = getData(self.FN_EVAC, '&groupS')
+                    if len(tableFeatures)<=0:
+                        tableFeatures, LowerIndex, UpperIndex = getData(self.FN_EVAC, '&groupC')
                     if len(tableFeatures)>0:
-                        person.CFactor_Init = readGroupC(tableFeatures, len(self.agents), len(self.agents))
+                        person.CFactor_Init = readGroupS(tableFeatures, len(self.agents), len(self.agents))
                         self.GROUPBEHAVIOR = True
                     else:
                         person.CFactor_Init = np.zeros((self.num_agents, self.num_agents))
@@ -1675,20 +1681,7 @@ class simulation(object):
             # Whether ai is in computation
             if ai.inComp == 0:
                 continue
-            
-            # Calculate Positions
-            ai.pos = ai.pos + ai.actualV*self.DT
-            #print(ai.pos)
-        return None
-        
-        
-    def simulation_update_agent_velocity(self):
-        for idai,ai in enumerate(self.agents):
-            
-            # Whether ai is in computation
-            if ai.inComp == 0:
-                continue
-                
+
             ai.accl = ai.sumF/ai.mass
             
             # Store velocity last time point
@@ -1697,10 +1690,20 @@ class simulation(object):
             
             # Calculate agent velocity
             ai.actualV = ai.actualV + ai.accl*self.DT
-            
-            #ai.vel = ai.pos + ai.actualV*self.DT
+
+            ###########################################
+            # Solution to Overspeed: Agents will not move too fast
+            ai.actualSpeed = np.linalg.norm(ai.actualV)
+            if (ai.actualSpeed >= ai.maxSpeed):
+                ai.actualV = ai.actualV*ai.maxSpeed/ai.actualSpeed
+                #ai.actualV[0] = ai.actualV[0]*ai.maxSpeed/ai.actualSpeed
+                #ai.actualV[1] = ai.actualV[1]*ai.maxSpeed/ai.actualSpeed
+
+            # Calculate Positions
+            ai.pos = ai.pos + ai.actualV*self.DT
+            #print(ai.pos)
         return None
-    
+        
 
     
     def simulation_step2022(self, f):
@@ -1715,7 +1718,7 @@ class simulation(object):
                 if ai.inComp == 0:
                     continue
                 ai.updateSeeList(self.agents, self.walls) 
-                ai.updateAttentionList(self.agents, self.walls) #, self.WALLBLOCKHERDING)
+                ai.updateAttentionList(self.agents, self.GROUPBEHAVIOR) #, self.WALLBLOCKHERDING)
                 #ai.updatePArray(self.agents)
                 print ('=== ai id ===::', idai)
                 print ('ai.others len:', len(ai.others))
@@ -1733,14 +1736,6 @@ class simulation(object):
                 elif ai.pMode =='fixed':
                     pass
                 
-                # Start to search visible doors
-                #ai.visibleDoors=ai.findVisibleTarget(self.walls, self.doors)
-                ai.updateVisibleDoors(self.walls, self.doors)
-                print ('ai:', ai.ID, 'Length of visibleDoors:', len(ai.visibleDoors))
-            
-                # Start to search visible exits
-                #ai.visibleExits=ai.findVisibleTarget(self.walls, self.exits)
-                ai.updateVisibleExits(self.walls, self.exits)
                 
             person.CFactor=person.CFactor_Init*person.comm
             CArray=person.CFactor_Init*person.comm
@@ -1749,17 +1744,25 @@ class simulation(object):
                     continue
                 if np.sum(CArray[idai,:])>0:
                     CArray[idai,:] = CArray[idai,:]/np.sum(CArray[idai,:])
-                for idaj,aj in enumerate(self.agents):
-                    if idaj == idai:
-                        person.PFactor[idai,idaj]=1-ai.p
-                    else:
-                        person.PFactor[idai,idaj] = CArray[idai,idaj]*ai.p
+                    for idaj,aj in enumerate(self.agents):
+                        if idaj == idai:
+                            person.PFactor[idai,idaj]=1-ai.p
+                        else:
+                            person.PFactor[idai,idaj] = CArray[idai,idaj]*ai.p
+                else:
+                    for idaj,aj in enumerate(self.agents):
+                        if idaj == idai:
+                            person.PFactor[idai,idaj] = 1.0
+                            #person.PFactor[idai,idaj] = 1-ai.p
+                        else:
+                            person.PFactor[idai,idaj] = 0.0
+
                         
             person.CFactor=CArray
             
-            print("person.see_flag:\n", person.see_flag)
-            print("person.comm:\n", person.comm)
-            print("person.talk:\n", person.talk)
+            print("person. see list:\n", person.see_flag)
+            print("person. attention list:\n", person.comm)
+            print("person. talk list:\n", person.talk)
             #print("person.DFactor:\n", person.DFactor)
             print("person.CFactor:\n", person.CFactor)
             print("person.PFactor:\n", person.PFactor)
@@ -1769,9 +1772,9 @@ class simulation(object):
             f.write('\n\n&SimuTime\n')
             f.write('\n\n&AttentionList\n')
             f.write('SimulationTime=' + str(self.t_sim)+'\n')
-            f.write("person.see_flag:\n"+str(person.see_flag)+'\n')
-            f.write("person.comm:\n"+str(person.comm)+'\n')
-            f.write("person.talk:\n"+str(person.talk)+'\n')
+            f.write("person. see list:\n"+str(person.see_flag)+'\n')
+            f.write("person. attention list:\n"+str(person.comm)+'\n')
+            f.write("person.talk list:\n"+str(person.talk)+'\n')
             #f.write("person.DFactor:\n"+str(person.DFactor))
             f.write("person.CFactor:\n"+str(person.CFactor)+'\n')
             f.write("person.PFactor:\n"+str(person.PFactor)+'\n')
@@ -1815,7 +1818,16 @@ class simulation(object):
             f.write('\n')
             f.write('\n')
             #f.close()
-            
+
+            # Start to search visible doors
+            #ai.visibleDoors=ai.findVisibleTarget(self.walls, self.doors)
+            ai.updateVisibleDoors(self.walls, self.doors)
+            print ('ai:', ai.ID, 'Length of visibleDoors:', len(ai.visibleDoors))
+        
+            # Start to search visible exits
+            #ai.visibleExits=ai.findVisibleTarget(self.walls, self.exits)
+            ai.updateVisibleExits(self.walls, self.exits)
+
             #Visible_exits are known exits           
             person.exit_konwn = person.visible_exits + person.exit_known
             (M,N)=np.shape(person.exit_konwn)
@@ -1889,7 +1901,62 @@ class simulation(object):
             print('Simulation Time:', self.t_sim)
             print(person.exit_prob)
             
+            
+        f.write('\n\n&SimulationTime:' + str(self.t_sim)+'\n')
+        for idai,ai in enumerate(self.agents):
+        
+            # Whether ai is in computation
+            if ai.inComp == 0:
+                continue
 
+            # Stress indicator is used (Or known as ratioV)
+            if ai.desiredSpeed != 0: 
+                ai.ratioV = ai.actualSpeed/ai.desiredSpeed
+            else: 
+                ai.ratioV = 1
+            ai.stressLevel = 1 - ai.ratioV
+            ai.test = 0.0 #??
+            
+            ai.updateStress(flag='accumulate')
+            #ai.updateAttentionList(self.agents, self.GROUPBEHAVIOR)
+            #ai.updateTalkList(self.agents)
+            
+            if self.OPINIONMODEL == 0:
+                ai.opinionDynamics()
+            elif self.OPINIONMODEL == 1:
+                ai.opinionExchange()
+       
+            ###########################################
+            ## Output time when agents reach the safety
+            if self.solver==0 and self.num_exits==0:
+                if (np.linalg.norm(ai.pos-ai.dest)<=0.2) and (ai.Goal == 0):
+                    print ('Reaching the goal:')
+                    ai.inComp = 0
+                    ai.Goal = 1
+                    ai.timeOut = self.t_sim
+                    ai.tpre = 0.0
+                    print ('Time to Reach the Goal:', ai.timeOut)
+                    f.write('&FinalInfo')
+                    f.write('agent ID'+str(ai.ID)+'\n'+'Time to Reach the Goal:'+str(ai.timeOut))
+            
+
+            ###########################################
+            ## Remove agent when agent reaches the exit
+            else:
+                #for exit in self.exits:
+                for idexit, exit in enumerate(self.exits):
+                    if exit.inComp == 0:
+                        continue
+                    if exit.inside(ai.pos):
+                        ai.inComp = 0
+                        ai.Goal = 1
+                        ai.timeOut = self.t_sim
+                        ai.tpre = 0.0
+                        self.exitUsage[idexit,0] +=1
+                        print ('Time to reach an exit:', ai.timeOut)
+                        f.write('\n\n&FinalInfo\n')
+                        f.write('agent ID'+str(ai.ID)+'\t reach the exit ID'+str(exit.oid)+'\n')
+                        f.write('agent ID'+str(ai.ID)+'\t reaches the exit at time   '+str(ai.timeOut)+'\n')
             '''
             FN_Temp = self.outDataName + ".txt"
             f = open(FN_Temp, "a+")
@@ -1906,6 +1973,8 @@ class simulation(object):
             f.write('\n')
             f.close()
             '''
+
+    def simulation_update_agent_desiredV(self, f):
 
         #f.write('\n\n&Simulation Time:\n')
         f.write('\n\n&SimulationTime:' + str(self.t_sim)+'\n')
@@ -1943,29 +2012,28 @@ class simulation(object):
             ######################
             # Wall force adjusted
             # Stress indicator is used (Or known as ratioV)
-            if ai.desiredSpeed != 0: 
-                ai.ratioV = ai.actualSpeed/ai.desiredSpeed
-            else: 
-                ai.ratioV = 1
-            ai.stressLevel = 1 - ai.ratioV
-            ai.test = 0.0 #??
+            #if ai.desiredSpeed != 0: 
+            #    ai.ratioV = ai.actualSpeed/ai.desiredSpeed
+            #else: 
+            #    ai.ratioV = 1
+            #ai.stressLevel = 1 - ai.ratioV
+            #ai.test = 0.0 #??
             
-            ai.updateStress(flag='instant')
+            #ai.updateStress(flag='accumulate')
             
             #ai.diw_desired = max(0.2, ai.ratioV)*0.6
             #ai.A_WF = 700*max(0.3, ai.ratioV)
             #ai.B_WF = 1.6*max(min(0.6, ai.ratioV),0.2)
             
-            ai.diw_desired = max(0.5, ai.ratioV)*0.6
+            #ai.diw_desired = max(0.5, ai.ratioV)*0.6
             #ai.A_WF = 30*max(0.5, ai.ratioV)
-            ai.B_WF = 2.2*max(min(0.5, ai.ratioV),0.2) 
-            
+            #ai.B_WF = 2.2*max(min(0.5, ai.ratioV),0.2) 
+            #wallInter, doorInter, outsideDoor = ai.adaptWallDoorForce(self.walls, self.doors)
+
             #############################################
-            # Calculate Motive Forces
+            # Calculate Desired Velocity
             # Consider TPRE features
-            #############################################	
-            #tt = pygame.time.get_ticks()/1000-t_pause
-            wallInter, doorInter, outsideDoor = ai.adaptWallDoorForce(self.walls, self.doors)
+            #############################################
             
             #Pre-Evacuation Time Effect
             #tt = pygame.time.get_ticks()/1000 - t_pause
@@ -1983,6 +2051,7 @@ class simulation(object):
                 #ai.sumAdapt += motiveForce*0.2  #PID: Integration Test Here
             
                 if (self.TPREMODE == 2): # Motive Force is zero
+                    ai.desiredV = ai.actualV
                     motiveForce = np.array([0.0, 0.0])
                     ai.motiveF = np.array([0.0, 0.0])
 
@@ -2033,7 +2102,7 @@ class simulation(object):
                         otherSpeed = 0.0
                         #otherMovingNum = 0
                         if len(ai.others)!=0: #and tt>ai.tpre:
-                            ai.opinionDynamics()
+                            otherDir, otherSpeed, otherTpre = ai.opinionDynamics()
                             ai.direction = (1-ai.p)*ai.direction + ai.p*otherDir
                             ai.desiredSpeed = (1-ai.p)*ai.desiredSpeed + ai.p*otherSpeed
                             ai.desiredV = ai.desiredSpeed*ai.direction
@@ -2177,6 +2246,33 @@ class simulation(object):
                     ai.desiredV = ai.desiredSpeed*ai.direction
                     motiveForce = ai.adaptMotiveForce()
 
+
+    def simulation_update_agent_force(self, f):
+
+        #f.write('\n\n&Simulation Time:\n')
+        f.write('\n\n&SimulationTime:' + str(self.t_sim)+'\n')
+        for idai,ai in enumerate(self.agents):
+            
+            # Whether ai is in computation
+            if ai.inComp == 0:
+                continue
+
+            # Stress indicator is used (Or known as ratioV)
+            #if ai.desiredSpeed != 0: 
+            #    ai.ratioV = ai.actualSpeed/ai.desiredSpeed
+            #else: 
+            #    ai.ratioV = 1
+            #ai.stressLevel = 1 - ai.ratioV
+            #ai.test = 0.0 #??
+            
+            #ai.updateStress(flag='accumulate')
+            #ai.updateAttentionList(self.agents, self.GROUPBEHAVIOR)
+            #ai.updateTalkList(self.agents)
+            #if self.OPINIONMODEL == 0:
+            #    ai.opinionDynamics()
+            #elif self.OPINIONMODEL == 1:
+            #    ai.opinionExchange()
+
             #ai.others=list(set(ai.others))
             #################################
             # Herding Effect Computed
@@ -2189,6 +2285,45 @@ class simulation(object):
 
                 #ai.desiredV = (1-ai.p)*ai.desiredV + ai.p*otherMovingDir
 
+            # Calculate Positions
+            #ai.pos = ai.pos + ai.actualV*self.DT
+            #print(ai.pos)
+            #print(accl,ai.actualV,ai.pos)
+            
+            #ai.dest = ai.memory.peek()
+            
+            #ai.direction = normalize(ai.dest - ai.pos)
+            #ai.desiredV = ai.desiredSpeed*ai.direction
+            #ai.desiredV = 0.7*ai.desiredV + 0.3*ai.desiredV_old
+            
+            motiveForce = ai.adaptMotiveForce()
+            peopleInter = np.array([0.0, 0.0])
+            wallInter = np.array([0.0, 0.0])
+            doorInter = np.array([0.0, 0.0])
+            
+            phyInter = np.array([0.0, 0.0])
+            phySFInter = np.array([0.0, 0.0])
+            phyWFInter = np.array([0.0, 0.0])
+            
+            ai.actualSpeed = np.linalg.norm(ai.actualV)
+            ai.desiredSpeed = np.linalg.norm(ai.desiredV)
+            
+            #print >> f, "desired speed of agent i:", ai.desiredSpeed, "/n"
+            #print >> f, "actual speed of agent i:", ai.actualSpeed, "/n"
+            
+            ######################
+            # Wall force adjusted
+            
+            #ai.diw_desired = max(0.2, ai.ratioV)*0.6
+            #ai.A_WF = 700*max(0.3, ai.ratioV)
+            #ai.B_WF = 1.6*max(min(0.6, ai.ratioV),0.2)
+            
+            ai.diw_desired = max(0.5, ai.ratioV)*0.6
+            #ai.A_WF = 30*max(0.5, ai.ratioV)
+            ai.B_WF = 2.2*max(min(0.5, ai.ratioV),0.2) 
+            
+            wallInter, doorInter, outsideDoor = ai.adaptWallDoorForce(self.walls, self.doors)
+
             ########################################################
             # Turn on or off self-repulsion by boolean variable SELFREPULSION
             # Also known as sub-consciousness effect in crowd dynamics
@@ -2199,12 +2334,9 @@ class simulation(object):
             else:
                 selfRepulsion = np.array([0.0, 0.0])
 
-            peopleInter = ai.adaptSocialForce(self.agents, self.GROUPBEHAVIOR, True)
-            ai.opinionDynamics()
-            #ai.opinionExchange()
-            ai.updateTalkList()
             #peopleInter = + ai.adaptPhyForce(self.agents)
-            
+            peopleInter = ai.adaptSocialForce(self.agents, self.GROUPBEHAVIOR, True)
+                
             phySFInter = ai.adaptPhysicSF(self.agents, f)
             phyWFInter = ai.adaptPhysicWF(self.walls)
             phyInter = phySFInter + phyWFInter
@@ -2216,13 +2348,13 @@ class simulation(object):
             ai.sumF = motiveForce + peopleInter + wallInter + doorInter + ai.diss*ai.actualV + selfRepulsion + phyInter #+ ai.sumAdapt + phyInter
  
             # Compute acceleration
-            ai.accl = ai.sumF/ai.mass
+            #ai.accl = ai.sumF/ai.mass
             
             # Store velocity last time point
-            ai.desiredV_old = ai.desiredV
-            ai.actualV_old = ai.actualV
+            #ai.desiredV_old = ai.desiredV
+            #ai.actualV_old = ai.actualV
             # Update agent velocity
-            ai.actualV = ai.actualV + ai.accl*self.DT # consider dt = 0.5
+            #ai.actualV = ai.actualV + ai.accl*self.DT # consider dt = 0.5
 
             #ai.wallrepF = wallInter
             #ai.doorF = doorInter
@@ -2241,7 +2373,7 @@ class simulation(object):
                 f.write('Position:\t'+str(ai.pos)+'\n')
                 f.write('Velocity:\t'+str(np.linalg.norm(ai.actualV)) + ': ['+str(ai.actualV[0])+' , '+str(ai.actualV[1])+']\n')
                 f.write('DesiredVelocity:\t'+str( np.linalg.norm(ai.desiredV))+ ': ['+str(ai.desiredV[0])+ ' , '+str(ai.desiredV[1])+']\n')
-                f.write("@motiveForce:\t"+str( np.linalg.norm(motiveForce))+ ': ['+str(motiveForce[0])+ ' , '+str(motiveForce[1])+']\n')
+                f.write("@mdrivingForce:\t"+str( np.linalg.norm(motiveForce))+ ': ['+str(motiveForce[0])+ ' , '+str(motiveForce[1])+']\n')
                 f.write('@socialForce:\t'+str(np.linalg.norm(peopleInter))+ ': ['+str(peopleInter[0])+ ' , '+str(peopleInter[1])+']\n')
                 f.write('@wallForce:\t'+str(np.linalg.norm(wallInter))+ ': ['+str(wallInter[0])+ ' , '+str(wallInter[1])+']\n')
                 f.write('@doorForce:\t'+str(np.linalg.norm(doorInter))+ ': ['+str(doorInter[0])+ ' , '+str(doorInter[1])+']\n')
@@ -2254,84 +2386,22 @@ class simulation(object):
                 f.write('numOtherSee:'+str(len(ai.seeothers))+'\n')
                 f.write('numOther:'+str(len(ai.others))+'\n')
                 
-                if self.solver == 0 and self.num_exits == 0:
+                if self.solver == 0 or self.num_exits == 0:
                     if goDoor is not None:
                         f.write('goDoor:'+str(goDoor.oid)+'\n')
                     else:
                         f.write('goDoor: None'+'\n')
-                else:
+                elif self.solver ==2:
                     f.write('ExitSelected:'+str(ai.exitInMind.oid)+'\n')
-                
+                else:
+                    f.write('The Nearest Exit is Selected.  No exit selection algorithm is involved.'+'\n')
                 
                 #f.write('visibleDoors:'+str(ai.visibleDoors)+'\n')
                 #f.write('visibleExits:'+str(ai.visibleExits)+'\n')
                 
-            ###########################################
-            # Solution to Overspeed: Agents will not move too fast
-            ai.actualSpeed = np.linalg.norm(ai.actualV)
-            if (ai.actualSpeed >= ai.maxSpeed):
-                ai.actualV = ai.actualV*ai.maxSpeed/ai.actualSpeed
-                #ai.actualV[0] = ai.actualV[0]*ai.maxSpeed/ai.actualSpeed
-                #ai.actualV[1] = ai.actualV[1]*ai.maxSpeed/ai.actualSpeed
-    
-       
-            ###########################################
-            ## Output time when agents reach the safety
-            if self.solver==0 and self.num_exits==0:
-                if (np.linalg.norm(ai.pos-ai.dest)<=0.2) and (ai.Goal == 0):
-                    print ('Reaching the goal:')
-                    #ai.inComp = 0
-                    #ai.Goal = 1
-                    #ai.timeOut = self.t_sim
-                    print ('Time to Reach the Goal:', ai.timeOut)
-                    f.write('&FinalInfo')
-                    f.write('agent ID'+str(ai.ID)+'\n'+'Time to Reach the Goal:'+str(ai.timeOut))
-            
-
-            ###########################################
-            ## Remove agent when agent reaches the exit
-            else:
-                #for exit in self.exits:
-                for idexit, exit in enumerate(self.exits):
-                    if exit.inComp == 0:
-                        continue
-                    if exit.inside(ai.pos):
-                        ai.inComp = 0
-                        ai.Goal = 1
-                        ai.timeOut = self.t_sim
-                        self.exitUsage[idexit,0] +=1
-                        print ('Time to reach an exit:', ai.timeOut)
-                        f.write('\n\n&FinalInfo\n')
-                        f.write('agent ID'+str(ai.ID)+'\t reach the exit ID'+str(exit.oid)+'\n')
-                        f.write('agent ID'+str(ai.ID)+'\t reaches the exit at time   '+str(ai.timeOut)+'\n')
-
-            '''
-            ###########################################
-            ## Output time when agents reach the safety
-            if self.TIMECOUNT and (np.linalg.norm(ai.pos-ai.dest)<=0.2) and (ai.Goal == 0):
-                print ('Reaching the goal:')
-                ai.inComp = 0
-                ai.Goal = 1
-                ai.timeOut = self.t_sim
-                print ('Time to Reach the Goal:', ai.timeOut)
-                #f.write('agent ID'+str(ai.ID)+'\n'+'Time to Reach the Goal:'+str(ai.timeOut))
-            
-
-            ###########################################
-            ## Remove agent when agent reaches the exit    
-            for exit in self.exits:
-                if exit.inComp == 0:
-                    continue
-                if exit.inside(ai.pos):
-                    ai.inComp = 0
-                    ai.Goal = 1
-                    ai.timeOut = self.t_sim
-                    print ('Time to reach an exit:', ai.timeOut)
-                    #f.write('agent ID'+str(ai.ID)+'\n'+'Time to Reach the Goal:'+str(ai.timeOut))
-            '''
-
+        f.write('\n&EndofForceComputation:'+str(self.t_sim)+'\n')
         f.write('\n&EndofStep:'+str(self.t_sim)+'\n')
-        #f.write('SimulationTime=' + str(self.t_sim)+'\n')
+        f.write('SimulationTime=' +str(self.t_sim)+'\n')
         # Update simulation time
         self.t_sim = self.t_sim + self.DT
 

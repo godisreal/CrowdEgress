@@ -727,7 +727,26 @@ def show_geom(simu, debug=False):
         if simu.solver!=0 and simu.SHOWMESH:
             simu.buildMesh()
             show_mesh(screen, simu.xmin, simu.ymin, simu.xmax, simu.ymax, simu.xpt, simu.ypt, simu.bldmesh, ZOOMFACTOR, xSpace, ySpace)
-        
+            
+        myfont=pygame.font.SysFont("arial",16)
+        text_surface=myfont.render('xmin:'+str(simu.xmin), True, white, black)
+        screen.blit(text_surface, [726.0, 238.0])
+        text_surface=myfont.render("xmax:"+str(simu.xmax), True, white, black)
+        screen.blit(text_surface, [726.0, 255.0])
+        text_surface=myfont.render("ymin:"+str(simu.ymin), True, white, black)
+        screen.blit(text_surface, [726.0, 275.0])
+        text_surface=myfont.render("ymax:"+str(simu.ymax), True, white, black)
+        screen.blit(text_surface, [726.0, 295.0])
+        text_surface=myfont.render("xpt:"+str(simu.xpt), True, white, black)
+        screen.blit(text_surface, [726.0, 315.0])
+        text_surface=myfont.render("ypt:"+str(simu.ypt), True, white, black)
+        screen.blit(text_surface, [726.0, 335.0])
+
+        text_surface=myfont.render("dx:"+str(simu.dx), True, white, black)
+        screen.blit(text_surface, [726.0, 355.0])
+        text_surface=myfont.render("dy:"+str(simu.dy), True, white, black)
+        screen.blit(text_surface, [726.0, 375.0])
+
         #####################################
         #### Draw Agents at Initial Positions ###
         #####################################
@@ -882,7 +901,48 @@ def show_geom(simu, debug=False):
         screen.blit(text_surface, mouse_pos3+[0.0, 18.0])
         text_surface=myfont.render(str(mouse_pos3), True, lightblue, black)
         screen.blit(text_surface, mouse_pos3+[0.0, 36.0])
+        
+        if menu_01 or menu_02 or menu_03 or menu_04 or menu_05 or menu_06 or draw_state:
+            pass
+        else:
+            for idai, agent in enumerate(agents):
+                
+                if agent.inComp == 0:
+                    continue
+                
+                scPos = [0, 0]
+                scPos[0] = int(agent.pos[0]*ZOOMFACTOR+xSpace)
+                scPos[1] = int(agent.pos[1]*ZOOMFACTOR+ySpace)
+                
+                if np.linalg.norm(mouse_pos3-scPos)<10.0:
+                    
+                    text_surface=myfont.render("npzP:"+str(np.round(person.PFactor[agent.ID,:],2)), True, black, white)
+                    screen.blit(text_surface, mouse_pos3+[0.0, 57.0])
+                    text_surface=myfont.render("npzC:"+str(person.CFactor[agent.ID,:]), True, black, white)
+                    screen.blit(text_surface, mouse_pos3+[0.0, 76.0])
+                    text_surface=myfont.render("npzA:"+str(person.AFactor[agent.ID,:]), True, black, white)
+                    screen.blit(text_surface, mouse_pos3+[0.0, 96.0])
+                    text_surface=myfont.render("npzB:"+str(person.BFactor[agent.ID,:]), True, black, white)
+                    screen.blit(text_surface, mouse_pos3+[0.0, 116.0])
+                    text_surface=myfont.render("npzD:"+str(person.DFactor[agent.ID,:]), True, black, white)
+                    screen.blit(text_surface, mouse_pos3+[0.0, 136.0])
+                    text_surface=myfont.render("exitProb:"+str(person.exit_prob[agent.ID,:]), True, black, white)
+                    screen.blit(text_surface, mouse_pos3+[0.0, 156.0])
+                    text_surface=myfont.render("exitKw:"+str(person.exit_known[agent.ID,:]), True, black, white)
+                    screen.blit(text_surface, mouse_pos3+[0.0, 176.0])
 
+                    text_surface=myfont.render("tpre:"+format(agent.tpre, ".3f"), True, black, white)
+                    screen.blit(text_surface, mouse_pos3+[0.0, 196.0])
+                    text_surface=myfont.render('tpreR:'+str(agent.tpreMode), True, black, white)
+                    screen.blit(text_surface, mouse_pos3+[0.0, 216.0])
+                    text_surface=myfont.render("exitSelected:"+str(agent.exitInMindIndex), True, black, white)
+                    screen.blit(text_surface, mouse_pos3+[0.0, 236.0])
+                    text_surface=myfont.render('range:'+str(agent.interactionRange), True, black, white)
+                    screen.blit(text_surface, mouse_pos3+[0.0, 256.0])
+                    text_surface=myfont.render('aType:'+str(agent.aType), True, black, white)
+                    screen.blit(text_surface, mouse_pos3+[0.0, 276.0])
+                    
+                    
         # The Zoom and xSpace ySpace Info
         myfont=pygame.font.SysFont("arial",14)
         text_surface=myfont.render('ZOOM:'+str(ZOOMFACTOR), True, white, black)
@@ -893,6 +953,29 @@ def show_geom(simu, debug=False):
         screen.blit(text_surface, [700,3]) #+xyShift) 
         text_surface=myfont.render('solver:'+str(simu.solver), True, white, black)
         screen.blit(text_surface, [800,3]) #+xyShift) 
+
+        myfont=pygame.font.SysFont("arial",16)
+        text_surface=myfont.render('DT:'+str(simu.DT), True, cyan, black)
+        screen.blit(text_surface, [700.0, 53.0])
+        text_surface=myfont.render('T_END:'+str(simu.t_end), True, cyan, black)
+        screen.blit(text_surface, [700.0, 73.0])
+        text_surface=myfont.render('DT Update List:'+str(simu.DT_OtherList), True, cyan, black)
+        screen.blit(text_surface, [700.0, 93.0])
+        text_surface=myfont.render('DT Change Exit:'+str(simu.DT_ChangeDoor), True, cyan, black)
+        screen.blit(text_surface, [700.0, 115.0])
+        text_surface=myfont.render('DT Output Data:'+str(simu.DT_DumpData), True, cyan, black)
+        screen.blit(text_surface, [700.0, 135.0])
+        
+        myfont=pygame.font.SysFont("arial",17)
+        text_surface=myfont.render('GroupSoc:'+str(simu.GROUPBEHAVIOR), True, lightpink, black)
+        screen.blit(text_surface, [700.0, 167.0])
+        text_surface=myfont.render('SelfRep:'+str(simu.SELFREPULSION), True, lightpink, black)
+        screen.blit(text_surface, [700.0, 187.0])
+        if simu.OPINIONMODEL == 0:
+            text_surface=myfont.render('Opinion:'+str(simu.OPINIONMODEL)+' LinearSys', True, lightpink, black)
+        if simu.OPINIONMODEL == 1:
+            text_surface=myfont.render('Opinion:'+str(simu.OPINIONMODEL)+' RandomGossip', True, lightpink, black)
+        screen.blit(text_surface, [700.0, 207.0])
                                                                 
         pygame.display.flip()
         clock.tick(20)
@@ -1517,11 +1600,13 @@ def show_simu(simu):
         if simu.t_sim > 0.0:
             simu.simulation_update_agent_position()
         simu.simulation_step2022(f)
+        simu.simulation_update_agent_desiredV(f)
+        simu.simulation_update_agent_force(f)
         #simu.t_sim = simu.t_sim + simu.DT  # Maybe it should be in step()
         #pass
 
         # Dump agent binary data file
-        if simu.dumpBin and simu.t_sim > simu.tt_DumpData:
+        if simu.dumpBin and simu.t_sim >= simu.tt_DumpData:
             dump_evac(simu.agents, fbin, simu.t_sim)
             simu.tt_DumpData = simu.tt_DumpData + simu.DT_DumpData
             npzTime.append(simu.t_sim)
@@ -1747,6 +1832,7 @@ def show_simu(simu):
                 #stressShow = 0
                 #stressShow = int(255*agent.ratioV)
                 #pygame.draw.line(screen, blue, leftS, rightS, 3)
+                print(endPosV)
                 pygame.draw.line(screen, blue, scPos, endPosV, 2)
                 pygame.draw.line(screen, [255,60,0], scPos, endPosDV, 2)
 
@@ -2311,6 +2397,7 @@ def visualizeTpre(fname, evacfile=None, fdsfile=None, Zmin=0.0, Zmax=3.0, showda
             plt.plot(Time, arrayTpre[i,:], linewidth=2.0, label=str(i))
             #plt.plot(arrayTpre[i,:], linewidth=3.0, label=str(i))
             plt.text(0, arrayTpre[i,0], str(i), fontsize=18)
+        plt.plot(Time, Time, linewidth=3.0, linestyle='-.')
         #plt.plot(arrayTpre)
         plt.title("Pre-movement Time")
         plt.grid()
@@ -2319,9 +2406,9 @@ def visualizeTpre(fname, evacfile=None, fdsfile=None, Zmin=0.0, Zmax=3.0, showda
     return arrayTpre            
 
 
-def visualizeEvac(fname, evacfile=None, fdsfile=None, ZOOMFACTOR=10.0, xSpace=20.0, ySpace=20.0, Zmin=0.0, Zmax=3.0, debug=False):
+def visualizeAgent(fname, evacfile=None, fdsfile=None, ZOOMFACTOR=10.0, xSpace=20.0, ySpace=20.0, Zmin=0.0, Zmax=3.0, debug=False):
     
-    # Because visualizeEvac is a 2D visualizer, we can only show agents in a single floors each time and if there are multiple floors in fds+evac simulation, users should specify which floor they want to visualize.  Otherwise there will be overlap of agents in different floors.  The default values are given by Zmin=0.0 and Zmax=3.0, which means the gound floor approximately.  
+    # Because visualizeAgent is a 2D visualizer, we can only show agents in a single floors each time and if there are multiple floors in fds+evac simulation, users should specify which floor they want to visualize.  Otherwise there will be overlap of agents in different floors.  The default values are given by Zmin=0.0 and Zmax=3.0, which means the gound floor approximately.  
  
      # Therefore It is recommended for users to first open .fds input file to see if there are multiple floors.  User should specify Zmin and Zmax and agents are visualized in z axis between Zmin and Zmax.  
         
@@ -2404,13 +2491,17 @@ def visualizeEvac(fname, evacfile=None, fdsfile=None, ZOOMFACTOR=10.0, xSpace=20
         print ("T_Initial=", Time[0])
         print ("T_Final=", Time[T_END-1])
     T_INDEX=0
-
+    
+    walls=[]
+    doors=[]
+    exits=[]
+    
     if evacfile!="" and evacfile!="None" and evacfile is not None:
         walls = readWalls(evacfile)  #readWalls(FN_Walls) #readWalls("obstData2018.csv")
         doors = readDoors(evacfile)
         exits = readExits(evacfile)
 
-    if fdsfile!="" and fdsfile!="None" and fdsfile is not None:
+    if fdsfile!="" and fdsfile!="None" and fdsfile is not None and len(walls)+len(doors)+len(exits)==0:
         #meshes, evacZmin, evacZmax = readMESH(fdsfile, 'evac')
         #N_meshes = len(meshes)
         #evacZoffset=0.5*(evacZmin+evacZmax)
@@ -2421,12 +2512,12 @@ def visualizeEvac(fname, evacfile=None, fdsfile=None, ZOOMFACTOR=10.0, xSpace=20
         #doors=doors+readPATH(fdsfile, '&DOOR', Zmin, Zmax)
         #entries=readPATH(fdsfile, '&ENTRY', Zmin, Zmax)
     
-    if os.path.exists(fnameCSV):
+    if os.path.exists(fnameCSV) and len(walls)+len(doors)+len(exits)==0:
         walls = readWalls(fnameCSV)
         doors = readDoors(fnameCSV)
         exits = readExits(fnameCSV)
 
-    elif os.path.exists(fnameTXT):
+    elif os.path.exists(fnameTXT) and len(walls)+len(doors)+len(exits)==0:
         walls = readWalls(fnameTXT)
         doors = readDoors(fnameTXT)
         exits = readExits(fnameTXT)
