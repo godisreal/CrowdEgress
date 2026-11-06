@@ -97,11 +97,13 @@ def readDoorProb(FileName, doorIndex, showdata=True):
     #print(timeIndex)
     if showdata:
         for j in range(NColomn):
-            plt.plot(timeIndex, matrix[:,j], linewidth=3.0, label=str(j))
-            plt.text(0,matrix[0,j], str(j), fontsize=18)
-        plt.title("exit index:"+str(doorIndex))
+            plt.plot(timeIndex, matrix[:,j], linewidth=3.0, label='A'+str(j+1))
+            plt.text(0,matrix[0,j], str(j+1), fontsize=17)
+        plt.xticks(fontsize=17)
+        plt.yticks(fontsize=17)
+        plt.title("exit index:"+str(doorIndex), fontsize=17)
         plt.grid()
-        plt.legend(loc='best')
+        plt.legend(loc='best',fontsize=17)
         temp=FileName.split('.')
         fnamePNG = temp[0]+'_exitprob.png'
         plt.savefig(fnamePNG)
@@ -241,6 +243,130 @@ def readFloatArray(tableFeatures, NRow, NColomn, debug=True):
         print('Data in Table:', '\n', matrix)
     return matrix
 
+
+def readCrowdEgressCSV(FileName, debug=True, marginTitle=1):
+
+    #dataFeatures = readCSV_base(FileName)
+    #[Num_Data, Num_Features] = np.shape(dataFeatures)   
+
+    agentFeatures, lowerIndex, upperIndex = getData(FileName, '&Ped')
+    Num_Agents=len(agentFeatures)-marginTitle
+    if Num_Agents <= 0:
+        agentFeatures, lowerIndex, upperIndex = getData(FileName, '&agent')
+        Num_Agents=len(agentFeatures)-marginTitle
+    if Num_Agents <= 0:
+        agentFeatures, lowerIndex, upperIndex = getData(FileName, '&Agent')
+        Num_Agents=len(agentFeatures)-marginTitle
+
+    if debug: 
+        print ('Number of Agents:', Num_Agents, '\n')
+        print ("Features of Agents\n", agentFeatures, "\n")
+
+    agent2exitFeatures, lowerIndex, upperIndex = getData(FileName, '&agent2exit')
+    Num_Agent2Exit=len(agent2exitFeatures)-marginTitle
+    if Num_Agent2Exit <= 0:
+        agent2exitFeatures, lowerIndex, upperIndex = getData(FileName, '&Agent2Exit')
+        Num_Agent2Exit=len(agent2exitFeatures)-marginTitle
+    if Num_Agent2Exit <= 0:
+        agent2exitFeatures, lowerIndex, upperIndex = getData(FileName, '&Ped2Exit')
+        Num_Agent2Exit=len(agent2exitFeatures)-marginTitle
+    if debug:
+        print ('Number of Agent2Exit:', Num_Agent2Exit, '\n')
+        print ('Features of Agent2Exit\n', agent2exitFeatures, "\n")
+
+    agentgroupFeatures, lowerIndex, upperIndex = getData(FileName, '&groupC')
+    Num_AgentGroup=len(agentgroupFeatures)-marginTitle
+    if Num_AgentGroup <= 0:
+        agentgroupFeatures, lowerIndex, upperIndex = getData(FileName, '&groupS')
+        Num_AgentGroup=len(agentgroupFeatures)-marginTitle
+    if Num_AgentGroup <= 0:
+        agentgroupFeatures, lowerIndex, upperIndex = getData(FileName, '&GroupS')
+        Num_AgentGroup=len(agentgroupFeatures)-marginTitle
+    if Num_AgentGroup <= 0:
+        agentgroupFeatures, lowerIndex, upperIndex = getData(FileName, '&groupCABD')
+        Num_AgentGroup=len(agentgroupFeatures)-marginTitle
+    if Num_AgentGroup <= 0:
+        agentgroupFeatures, lowerIndex, upperIndex = getData(FileName, '&groupSABD')
+        Num_AgentGroup=len(agentgroupFeatures)-marginTitle
+    if Num_AgentGroup <= 0:
+        agentgroupFeatures, lowerIndex, upperIndex = getData(FileName, '&GroupSABD')
+        Num_AgentGroup=len(agentgroupFeatures)-marginTitle
+    if Num_AgentGroup <= 0:
+        agentgroupFeatures, lowerIndex, upperIndex = getData(FileName, '&groupABD')
+        Num_AgentGroup=len(agentgroupFeatures)-marginTitle
+    if Num_AgentGroup <= 0:
+        agentgroupFeatures, lowerIndex, upperIndex = getData(FileName, '&GroupABD')
+        Num_AgentGroup=len(agentgroupFeatures)-marginTitle
+    if debug:
+        print ('Number of AgentGroup:', Num_AgentGroup, '\n')
+        print ('Features of AgentGroup\n', agentgroupFeatures, "\n")
+
+    obstFeatures, lowerIndex, upperIndex = getData(FileName, '&Wall')
+    Num_Obsts=len(obstFeatures)-marginTitle
+    if Num_Obsts <= 0:
+        obstFeatures, lowerIndex, upperIndex = getData(FileName, '&wall')
+        Num_Obsts=len(obstFeatures)-marginTitle
+
+    if debug:
+        print ('Number of Walls:', Num_Obsts, '\n')
+        print ("Features of Walls\n", obstFeatures, "\n")
+
+    exitFeatures, lowerIndex, upperIndex = getData(FileName, '&Exit')
+    Num_Exits=len(exitFeatures)-marginTitle
+    if Num_Exits <= 0:
+        exitFeatures, lowerIndex, upperIndex = getData(FileName, '&exit')
+        Num_Exits=len(exitFeatures)-marginTitle
+        
+    if debug: 
+        print ('Number of Exits:', Num_Exits, '\n')
+        print ("Features of Exits\n", exitFeatures, "\n")
+
+    doorFeatures, lowerIndex, upperIndex = getData(FileName, '&Door')
+    Num_Doors=len(doorFeatures)-marginTitle
+    if Num_Doors <= 0:
+        doorFeatures, lowerIndex, upperIndex = getData(FileName, '&door')
+        Num_Doors=len(doorFeatures)-marginTitle
+        
+    if debug:
+        print ('Number of Doors:', Num_Doors, '\n')
+        print ('Features of Doors\n', doorFeatures, "\n")
+        
+    exit2doorFeatures, lowerIndex, upperIndex = getData(FileName, '&Exit2Door')
+    Num_Exit2Door=len(exit2doorFeatures)-marginTitle
+    if Num_Exit2Door <= 0:
+        exit2doorFeatures, lowerIndex, upperIndex = getData(FileName, '&exit2door')
+        Num_Exit2Door=len(doorFeatures)-marginTitle
+
+    if debug:
+        print ('Number of Exit2Door:', Num_Exit2Door, '\n')
+        print ('Features of Exit2Door\n', exit2doorFeatures, "\n")
+
+
+    solverFeature = readTitle(FileName, '&solver')
+    dtFeature = readTitle(FileName, '&DT')
+    dt1Feature = readTitle(FileName, '&DT_OtherList')
+    dt2Feature = readTitle(FileName, '&DT_ChangeDoor')
+    dt3Feature = readTitle(FileName, '&DT_DumpData')
+    tendFeature = readTitle(FileName, '&TEND')
+
+    simuObjFeatures = []
+    if solverFeature:
+        simuObjFeatures.append(solverFeature)
+    if dtFeature:
+        simuObjFeatures.append(dtFeature)
+    if dt1Feature:
+        simuObjFeatures.append(dt1Feature)
+    if dt2Feature:
+        simuObjFeatures.append(dt2Feature)
+    if dt3Feature:
+        simuObjFeatures.append(dt3Feature)
+    if tendFeature:
+        simuObjFeatures.append(tendFeature)
+
+    return agentFeatures, agent2exitFeatures, agentgroupFeatures, obstFeatures, exitFeatures, \
+    doorFeatures, exit2doorFeatures, simuObjFeatures
+
+
 def readAgent2Exit(tableFeatures, NRow, NColomn, debug=True):
 
     #tableFeatures, LowerIndex, UpperIndex = getData("newDataForm.csv", '&Ped2Exit')
@@ -354,15 +480,17 @@ def readGroupABD(tableFeatures, NRow, NColomn, debug=True):
 def readGroupS(tableFeatures, NRow, NColomn, debug=True):
     # NRow and NColomn are the size of data to be extracted from tableFeatures
     matrixS = np.zeros((NRow, NColomn))
-    if tableFeatures[i+1][j+1] and tableFeatures[i+1][j+1] != '0':
-        try:    
-            matrixS[i,j] = float(tableFeatures[i+1][j+1])        
-        except:
-            print("Error in reading group data!")
-            input("Please check!")
-            matrixS[i,j] = 0.0
-    else:
-        matrixS[i,j] = 0.0
+    for i in range(NRow):
+        for j in range(NColomn):
+            if tableFeatures[i+1][j+1] and tableFeatures[i+1][j+1] != '0':
+                try:    
+                    matrixS[i,j] = float(tableFeatures[i+1][j+1])        
+                except:
+                    print("Error in reading group data!")
+                    input("Please check!")
+                    matrixS[i,j] = 0.0
+            else:
+                matrixS[i,j] = 0.0
                 
     if debug:
         print(tableFeatures, '\n')
@@ -447,11 +575,11 @@ def readAgents(FileName, debug=True, marginTitle=1, ini=1):
             agent.pp2 = 0.5
         
         try:
-            agent.interactionRange = float(agentFeature[ini+9])
+            agent.talk_range = float(agentFeature[ini+9])
             agent.aType = str(agentFeature[ini+10])
             agent.inComp = int(agentFeature[ini+11]) 
         except:
-            agent.interactionRange = 3.0
+            agent.talk_range = 3.0
             agent.aType = 'active'
             agent.inComp = int(1) 
         
@@ -1139,7 +1267,7 @@ def updateAgentData(agents, outputFile, inputFile=None):
             csv_writer.writerow(['&Agent', '1/iniX', '2/iniY', '3/iniVx', '4/iniVy', '5/tau', '6/tpre', '7/p, 8/pMode, 9/pp2, 10/talkRange, 11/aType, 12/inComp, 13/talkRange'])
             index_temp=0
             for agent in agents:
-                csv_writer.writerow([str(agent.name), str(agent.pos[0]), str(agent.pos[1]), str(agent.actualV[0]), str(agent.actualV[1]), str(agent.tau), str(agent.tpre), str(agent.p), str(agent.pMode), str(agent.pp2), str(agent.interactionRange), str(agent.aType), str(agent.inComp), str(agent.talk_tau)])
+                csv_writer.writerow([str(agent.name), str(agent.pos[0]), str(agent.pos[1]), str(agent.actualV[0]), str(agent.actualV[1]), str(agent.tau), str(agent.tpre), str(agent.p), str(agent.pMode), str(agent.pp2), str(agent.talk_range), str(agent.aType), str(agent.inComp), str(agent.talk_tau)])
                 index_temp=index_temp+1
     except:
         with open(outputFile, mode='wb+') as agent_test_file:
@@ -1152,7 +1280,7 @@ def updateAgentData(agents, outputFile, inputFile=None):
             csv_writer.writerow(['&Agent', '1/iniX', '2/iniY', '3/iniVx', '4/iniVy', '5/tau', '6/tpre', '7/p, 8/pMode, 9/pp2, 10/talkRange, 11/aType, 12/inComp, 13/talkRange'])
             index_temp=0
             for agent in agents:
-                csv_writer.writerow([str(agent.name), str(agent.pos[0]), str(agent.pos[1]), str(agent.actualV[0]), str(agent.actualV[1]), str(agent.tau), str(agent.tpre), str(agent.p), str(agent.pMode), str(agent.pp2), str(agent.interactionRange), str(agent.aType), str(agent.inComp), str(agent.talk_tau)])
+                csv_writer.writerow([str(agent.name), str(agent.pos[0]), str(agent.pos[1]), str(agent.actualV[0]), str(agent.actualV[1]), str(agent.tau), str(agent.tpre), str(agent.p), str(agent.pMode), str(agent.pp2), str(agent.talk_range), str(agent.aType), str(agent.inComp), str(agent.talk_tau)])
                 index_temp=index_temp+1
           
 
@@ -1442,6 +1570,68 @@ def readPRTfile(fname, max_time=float('inf'), mode='evac'):
     return T, XYZ, TAG, Q, n_part, version, n_quant
 
 
+def intiPrt5Evac(fileName, num_agents, debug=True):
+    
+    n_part=1  # Number of PARTicle classes
+    [n_quant,zero_int]=[0,0]  # Number of particle features
+    
+    #filename=open('test.bin', 'wb+')
+    writeFRec(fileName, 'I', [1])      #! Integer 1 to check Endian-ness
+    writeFRec(fileName, 'I', [676])    # FDS version number
+    writeFRec(fileName, 'I', [n_part]) # Number of PARTicle classes
+    for npc in range(n_part):
+        writeFRec(fileName, 'I', [n_quant, zero_int])
+
+
+#################################################
+# This function is used to dump evac prt5 data file
+# so that the simulation result can be visualized by smokeview
+#################################################
+def dump_prt5Evac(agents, fileName, T, debug=True):
+    
+    num = len(agents)
+    
+    x=[]
+    y=[]
+    z=[]
+    ap1=[]
+    ap2=[]
+    ap3=[]
+    ap4=[]
+    
+    tag=[]
+    
+    for agent in agents:
+        if agent.inComp == 0:
+            continue
+        
+        x.append(agent.pos[0])
+        y.append(agent.pos[1])
+        z.append(1.5)
+
+        # 180* np.arctan2(agent.actualV[1], agent.actualV[0]) /pi
+        #angle = vectorAng(agent.actualV)
+        ap1.append(vectorAng(agent.actualV))        # velocity direction  Agent HR angle is [0,2PI)
+        ap2.append(0.1)     # diameter
+        ap3.append(0.05)    #torso diameter
+        ap4.append(1.0)     # height
+        
+        tag.append(agent.ID)
+        
+    NPLIM=np.size(tag)
+    # ??? what happens if tag is an empty list
+    # if tag is empty, do not write agent data to the binary file
+    xyz=x+y+z+ap1+ap2+ap3+ap4
+    # tag=tag  tag is already OK
+    
+    writeFRec(fileName, 'f', [np.round(T,10)])
+    writeFRec(fileName, 'I', [NPLIM])
+    if NPLIM>0:
+        writeFRec(fileName, 'f', xyz)
+        writeFRec(fileName, 'I', tag)
+        #writeFRec(fileName, 'f', Q)
+
+
 def intiPrt(fileName, num_agents, debug=True):
     
     n_part=1  # Number of PARTicle classes
@@ -1669,8 +1859,11 @@ def compute_simu(simu):
     # Initialize prt file in draw_func.py
     if simu.dumpBin:
         #fbin = open(simu.fpath + '\\' + simu.outDataName +'.bin', 'wb+')
+        
         fbin = open(simu.outDataName +'.bin', 'wb+')
+        fprt5 = open(simu.outDataName +'.prt5', 'wb+')
         intiPrt(fbin, simu.num_agents)
+        intiPrt5Evac(fprt5, simu.num_agents)
         
         npzTime=[]
         npzSee = np.zeros((1, simu.num_agents, simu.num_agents))
@@ -1687,8 +1880,10 @@ def compute_simu(simu):
         npzVE = np.zeros((1, simu.num_agents, simu.num_exits))
         npzEP = np.zeros((1, simu.num_agents, simu.num_exits))
         
-        dump_evac(simu.agents, fbin, simu.t_sim)
-        npzTime.append(simu.t_sim)
+        dump_evac(simu.agents, fbin, np.round(simu.t_sim,2))
+        dump_prt5Evac(simu.agents, fprt5, np.round(simu.t_sim,2))
+        simu.tt_DumpData = simu.tt_DumpData + simu.DT_DumpData
+        npzTime.append(np.round(simu.t_sim,2))
         
         if len(npzTime)==1:
             npzSee[0,:,:]=person.see_flag
@@ -1747,9 +1942,10 @@ def compute_simu(simu):
         
         # Dump agent binary data file
         if simu.dumpBin and simu.t_sim >= simu.tt_DumpData:
-            dump_evac(simu.agents, fbin, simu.t_sim)
+            dump_evac(simu.agents, fbin, np.round(simu.t_sim,2))
+            dump_prt5Evac(simu.agents, fprt5, np.round(simu.t_sim,2))
             simu.tt_DumpData = simu.tt_DumpData + simu.DT_DumpData
-            npzTime.append(simu.t_sim)
+            npzTime.append(np.round(simu.t_sim,2))
             
             if len(npzTime)==1:
                 npzSee[0,:,:]=person.see_flag
@@ -1838,6 +2034,7 @@ def compute_simu(simu):
         
     if simu.dumpBin:
         fbin.close()
+        fprt5.close()
         #np.savez(simu.outDataName +'.npz', npzTime, npzSee, npzComm, npzTalk, npzP, npzD, npzC, npzB, npzA)
         
         np.savez(simu.outDataName +'.npz', npzTime, npzSee, npzComm, npzTalk, \

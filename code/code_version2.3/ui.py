@@ -1129,9 +1129,9 @@ class GUI(object):
         #unpro1.join()
         self.setStatusStr("Simulation Complete!")
         if self.UseFDS_Var.get():
-            visualizeEvac(self.currentSimu.outDataName + ".bin", self.fname_EVAC, self.fname_FDS, self.ZOOM, self.xSpa, self.ySpa)
+            visualizeAgent(self.currentSimu.outDataName + ".bin", self.fname_EVAC, self.fname_FDS, self.ZOOM, self.xSpa, self.ySpa)
         else:
-            visualizeEvac(self.currentSimu.outDataName + ".bin", self.fname_EVAC, None, self.ZOOM, self.xSpa, self.ySpa)
+            visualizeAgent(self.currentSimu.outDataName + ".bin", self.fname_EVAC, None, self.ZOOM, self.xSpa, self.ySpa)
         self.currentSimu.destory()
         #show_geom(myTest)
         #myTest.show_simulation()
@@ -1164,9 +1164,9 @@ class GUI(object):
         temp= self.fname_OutBIN.split('.')
         if temp[1]=='bin':
             if self.UseFDS_Var.get():
-                visualizeEvac(self.fname_OutBIN, self.fname_EVAC, self.fname_FDS, self.ZOOM, self.xSpa, self.ySpa)
+                visualizeAgent(self.fname_OutBIN, self.fname_EVAC, self.fname_FDS, self.ZOOM, self.xSpa, self.ySpa)
             else:
-                visualizeEvac(self.fname_OutBIN, self.fname_EVAC, None, self.ZOOM, self.xSpa, self.ySpa)
+                visualizeAgent(self.fname_OutBIN, self.fname_EVAC, None, self.ZOOM, self.xSpa, self.ySpa)
         #if temp[1]=='npz':
         #    if self.UseFDS_Var.get():
         #        show_agents_npz(self.fname_OutBIN, self.fname_EVAC, self.fname_FDS, self.ZOOM, self.xSpa, self.ySpa)
