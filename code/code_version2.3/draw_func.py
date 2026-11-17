@@ -406,7 +406,7 @@ def show_geom(simu, debug=False):
     
     running = True
     while running: 
-        screen.fill(black)
+        screen.fill(white)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
@@ -432,6 +432,11 @@ def show_geom(simu, debug=False):
                     
                 if button ==(1,0,0):
                     menu_left = False
+
+                if event.button == 4:
+                    ZOOMFACTOR = ZOOMFACTOR +2
+                if event.button == 5:
+                    ZOOMFACTOR = max(6.0, ZOOMFACTOR -2)
 
                 ### Menu No 1:  Output Data ###
                 ### This method is useful to generate menu bar in pygame
@@ -764,11 +769,11 @@ def show_geom(simu, debug=False):
             except:
                 pygame.draw.circle(screen, tan, scPos, int(0.3*ZOOMFACTOR), LINEWIDTH)
 
-            myfont=pygame.font.SysFont("arial",14)
+            myfont=pygame.font.SysFont("arial",36)
             if simu.SHOWNAME:
-                text_surface=myfont.render(str(idai)+'/'+str(agent.name), True, (255,0,0), (255,255,255))
+                text_surface=myfont.render(str(idai+1)+'/'+str(agent.name), True, (255,0,0), (255,255,255))
             else:
-                text_surface=myfont.render(str(idai), True, (255,0,0), (255,255,255))
+                text_surface=myfont.render(str(idai+1), True, (255,0,0), (255,255,255))
             screen.blit(text_surface, agent.pos*ZOOMFACTOR+xyShift)
 
         if move_agent_state:
@@ -937,7 +942,7 @@ def show_geom(simu, debug=False):
                     screen.blit(text_surface, mouse_pos3+[0.0, 216.0])
                     text_surface=myfont.render("exitSelected:"+str(agent.exitInMindIndex), True, black, white)
                     screen.blit(text_surface, mouse_pos3+[0.0, 236.0])
-                    text_surface=myfont.render('range:'+str(agent.interactionRange), True, black, white)
+                    text_surface=myfont.render('range:'+str(agent.talk_range), True, black, white)
                     screen.blit(text_surface, mouse_pos3+[0.0, 256.0])
                     text_surface=myfont.render('aType:'+str(agent.aType), True, black, white)
                     screen.blit(text_surface, mouse_pos3+[0.0, 276.0])
@@ -1449,8 +1454,11 @@ def show_simu(simu):
     # Initialize prt file in draw_func.py
     if simu.dumpBin:
         #fbin = open(simu.fpath + '\\' +simu.outDataName +'.bin', 'wb+')
+
         fbin = open(simu.outDataName +'.bin', 'wb+')
+        fprt5 = open(simu.outDataName +'.prt5', 'wb+')
         intiPrt(fbin, simu.num_agents)
+        intiPrt5Evac(fprt5, simu.num_agents)
         
         npzTime=[]
         npzSee = np.zeros((1, simu.num_agents, simu.num_agents))
@@ -1471,7 +1479,9 @@ def show_simu(simu):
         #npzTalk = [] #np.zeros((simu.num_agents, simu.num_agents, 1))
 
         dump_evac(simu.agents, fbin, simu.t_sim)
-        npzTime.append(simu.t_sim)
+        dump_prt5Evac(simu.agents, fprt5, np.round(simu.t_sim,2))
+        simu.tt_DumpData = simu.tt_DumpData + simu.DT_DumpData
+        npzTime.append(np.round(simu.t_sim,2))
 
         if len(npzTime)==1:
             npzSee[0,:,:]=person.see_flag
@@ -1549,6 +1559,11 @@ def show_simu(simu):
                 (mouseX, mouseY) = pygame.mouse.get_pos()
                 #button = pygame.mouse.get_pressed()            
             # elif event.type == pygame.MOUSEBUTTONUP:
+                if event.button == 4:
+                    ZOOMFACTOR = ZOOMFACTOR +2
+                if event.button == 5:
+                    ZOOMFACTOR = max(6.0, ZOOMFACTOR -2)
+                    
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_PAGEUP:
                     ZOOMFACTOR = ZOOMFACTOR +1
@@ -1607,9 +1622,10 @@ def show_simu(simu):
 
         # Dump agent binary data file
         if simu.dumpBin and simu.t_sim >= simu.tt_DumpData:
-            dump_evac(simu.agents, fbin, simu.t_sim)
+            dump_evac(simu.agents, fbin, np.round(simu.t_sim,2))
+            dump_prt5Evac(simu.agents, fprt5, np.round(simu.t_sim,2))
             simu.tt_DumpData = simu.tt_DumpData + simu.DT_DumpData
-            npzTime.append(simu.t_sim)
+            npzTime.append(np.round(simu.t_sim,2))
             
             if len(npzTime)==1:
                 npzSee[0,:,:]=person.see_flag
@@ -1898,15 +1914,15 @@ def show_simu(simu):
             
             if simu.SHOWINDEX:
                 #tt = pygame.time.get_ticks()/1000-t_pause
-                myfont=pygame.font.SysFont("arial",14)
+                myfont=pygame.font.SysFont("arial",18)
                 if simu.t_sim < agent.tpre:
-                    text_surface=myfont.render(str(idai), True, (255,0,0), (255,255,255))
+                    text_surface=myfont.render(str(idai+1), True, (255,0,0), (255,255,255))
                 else: 
-                    text_surface=myfont.render(str(idai), True, (0,0,0), (255,255,255))
+                    text_surface=myfont.render(str(idai+1), True, (0,0,0), (255,255,255))
                 screen.blit(text_surface, agent.pos*ZOOMFACTOR+xyShift)
 
             if simu.SHOWSTRESS:
-                myfont=pygame.font.SysFont("arial",14)
+                myfont=pygame.font.SysFont("arial",18)
                 text_surface=myfont.render(format(agent.ratioV, ".3f"), True, (0,0,0), (255,255,255))
                 screen.blit(text_surface, agent.pos*ZOOMFACTOR+xyShift+[0,6])
         
@@ -1935,6 +1951,7 @@ def show_simu(simu):
     
     if simu.dumpBin:
         fbin.close()
+        fprt5.close()
         np.savez(simu.outDataName +'.npz', npzTime, npzSee, npzComm, npzTalk, \
         npzP, npzD, npzC, npzB, npzA, \
         npzVD, npzVE, npzEP, npzRadius, npzMass)
@@ -2347,9 +2364,61 @@ def visualizeCrowdfluid(filename, debug=True):
         clock.tick(TimeInterval)
 
 
+def visualizeStress(fname, showdata=True):
+    
+    # Plot pre-movement time by using matplotlib
+ 
+    # np.load has some unexpected problem for latest version of numpy in python3.  Thus I will not use this stuff.  
+    # If anyone wants to help to debug the following lines, I will appreciate.  
+    
+    #prtdata = np.load(fname) #load .npz file
+    #Time = prtdata["arr_0"]
+    #XYZ = prtdata["arr_1"]
+    #TAG = prtdata["arr_2"]
+    #INFO = prtdata["arr_3"]
+    #print("TAG:", TAG)
+     
+    # Extract data from binary data file
+    Time, XYZ, TAG, INFO, n_part, n_agents, n_quant = readPRTfile(fname)
+    T_END = len(Time)
+    print('T_END:', T_END)
+
+    T_INDEX=0
+    arrayStress = np.zeros((n_agents, T_END))  
+             
+    for T_INDEX in range(T_END):
+        Time_t = Time[T_INDEX]
+        XYZ_t = XYZ[T_INDEX]
+        TAG_t = TAG[T_INDEX]
+        INFO_t = INFO[T_INDEX]
+        
+        # This is due to readFRec:.  Let x become [x] when x is a scalar 
+        if np.size(TAG_t)==1:
+            TAG_t = np.array([TAG_t])
+        print(TAG_t)
+        
+        for idai in range(np.size(TAG_t)):
+            #print(TAG_t[idai])
+            arrayStress[int(TAG_t[idai]), T_INDEX] = INFO_t[19][idai]
+    
+    print('Shape of arrayStress:', np.shape(arrayStress))
+    print('arrayStress:', arrayStress)
+    
+    (NRow, NColomn) = np.shape(arrayStress)  
+    if showdata:
+        for i in range(NRow):
+            plt.plot(Time, arrayStress[i,:], linewidth=2.0, label=str(i))
+            #plt.plot(arrayStress[i,:], linewidth=3.0, label=str(i))
+            plt.text(0, arrayStress[i,0], str(i), fontsize=18)
+        #plt.plot(arrayStress)
+        plt.title("Stress Level of Agents")
+        plt.grid()
+        plt.legend(loc='best')
+        plt.show()
+    return arrayStress
 
 
-def visualizeTpre(fname, evacfile=None, fdsfile=None, Zmin=0.0, Zmax=3.0, showdata=True):
+def visualizeTpre(fname, showdata=True):
     
     # Plot pre-movement time by using matplotlib
  
@@ -2394,14 +2463,20 @@ def visualizeTpre(fname, evacfile=None, fdsfile=None, Zmin=0.0, Zmax=3.0, showda
     (NRow, NColomn) = np.shape(arrayTpre)  
     if showdata:
         for i in range(NRow):
-            plt.plot(Time, arrayTpre[i,:], linewidth=2.0, label=str(i))
+            plt.plot(Time, arrayTpre[i,:], linewidth=2.0, label='A'+str(i+1))
             #plt.plot(arrayTpre[i,:], linewidth=3.0, label=str(i))
-            plt.text(0, arrayTpre[i,0], str(i), fontsize=18)
+            plt.text(0, arrayTpre[i,0],str(i+1), fontsize=18)
         plt.plot(Time, Time, linewidth=3.0, linestyle='-.')
         #plt.plot(arrayTpre)
-        plt.title("Pre-movement Time")
+        plt.xticks(fontsize=18)
+        plt.yticks(fontsize=18)
+        plt.title("Pre-Evacuation Time", fontsize=18)
         plt.grid()
-        plt.legend(loc='best')
+        plt.legend(loc='lower right',fontsize=18)
+        #plt.legend(loc='best',fontsize=18)
+        temp=fname.split('.')
+        fnamePNG = temp[0]+'_tpre.png'
+        plt.savefig(fnamePNG)
         plt.show()
     return arrayTpre            
 
@@ -2562,7 +2637,26 @@ def visualizeAgent(fname, evacfile=None, fdsfile=None, ZOOMFACTOR=10.0, xSpace=2
                 pygame.display.quit()
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 (mouseX, mouseY) = pygame.mouse.get_pos()
-                #button = pygame.mouse.get_pressed()            
+                #buttonR = pygame.mouse.get_pressed()
+                #buttonL = pygame.mouse.get_pressed()
+                button = pygame.mouse.get_pressed()
+                print('Three Buttons:', button)#1, button2, button3)
+
+                # The button response has some problem in pygame.
+                # So I will not use it (Not differentiate if it is right key or left key in mouse pressed)
+                if button == (1,0,0):
+                    REWIND = True
+                    PAUSE = True
+                    
+                if button ==(0,0,1):
+                    FORWARD = True
+                    PAUSE = True
+                    
+                if event.button == 4:
+                    ZOOMFACTOR = ZOOMFACTOR +2
+                if event.button == 5:
+                    ZOOMFACTOR = max(6.0, ZOOMFACTOR -2)
+                    
             # elif event.type == pygame.MOUSEBUTTONUP:
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_PAGEUP:
@@ -2781,7 +2875,7 @@ def visualizeAgent(fname, evacfile=None, fdsfile=None, ZOOMFACTOR=10.0, xSpace=2
             if SHOWINDEX:
                 #tt = pygame.time.get_ticks()/1000-t_pause
                 myfont=pygame.font.SysFont("arial",16)
-                text_surface=myfont.render(str(TAG_t[idai]), True, (0,0,0), (255,255,255))
+                text_surface=myfont.render(str(TAG_t[idai]+1), True, (0,0,0), (255,255,255))
                 screen.blit(text_surface, scPos)
 
             if SHOWTPRE:
@@ -2814,15 +2908,21 @@ def visualizeAgent(fname, evacfile=None, fdsfile=None, ZOOMFACTOR=10.0, xSpace=2
                 text_surface=myfont.render("@objF:"+format(np.linalg.norm(objF), ".3f")+str(objF), True, black, white)
                 screen.blit(text_surface, mouse_pos3+[0.0, 179.0])
 
-                print(str(TAG_t[idai])+'num_see_others:'+str(INFO_t[16][idai]))
-                print(str(TAG_t[idai])+'num_others:'+str(INFO_t[17][idai]))
+                print(str(TAG_t[idai]+1)+'num_see_others:'+str(INFO_t[16][idai]))
+                print(str(TAG_t[idai]+1)+'num_others:'+str(INFO_t[17][idai]))
 
                 if npzflag:
-                    print('See List:\n'+str(TAG_t[idai])+str(npzSee_t[TAG_t[idai],:]))
-                    print('Communication List:\n'+str(TAG_t[idai])+str(npzComm_t[TAG_t[idai],:])) #[TAG_t[idai],:]))
-                    print('Talk List:\n'+str(TAG_t[idai])+str(npzTalk_t[TAG_t[idai],:]))
+                    print('See List:\n'+str(TAG_t[idai]+1)+str(npzSee_t[TAG_t[idai],:]))
+                    print('Communication List:\n'+str(TAG_t[idai]+1)+str(npzComm_t[TAG_t[idai],:])) #[TAG_t[idai],:]))
+                    print('Talk List:\n'+str(TAG_t[idai]+1)+str(npzTalk_t[TAG_t[idai],:]))
 
                 if npzflag:
+
+                    text_surface=myfont.render("Attention List:"+str(npzComm_t[TAG_t[idai],:]), True, black, white)
+                    screen.blit(text_surface, mouse_pos3+[0.0, 55.0])
+                    text_surface=myfont.render("npzC:"+str(np.round(npzC_t[TAG_t[idai],:],2)), True, black, white)
+                    screen.blit(text_surface, mouse_pos3+[0.0, 76.0])
+
                     text_surface=myfont.render("npzD:"+str(np.round(npzD_t[TAG_t[idai],:],2)), True, black, white)
                     screen.blit(text_surface, mouse_pos3+[0.0, 97.0])
                     text_surface=myfont.render("npzA:"+str(npzA_t[TAG_t[idai],:]), True, black, white)
@@ -2830,10 +2930,6 @@ def visualizeAgent(fname, evacfile=None, fdsfile=None, ZOOMFACTOR=10.0, xSpace=2
                     text_surface=myfont.render("npzB:"+str(npzB_t[TAG_t[idai],:]), True, black, white)
                     screen.blit(text_surface, mouse_pos3+[0.0, 136.0])
 
-                    text_surface=myfont.render("See List:         "+str(npzSee_t[TAG_t[idai],:]), True, black, white)
-                    screen.blit(text_surface, mouse_pos3+[0.0, 55.0])
-                    text_surface=myfont.render("Attention List:"+str(npzComm_t[TAG_t[idai],:]), True, black, white)
-                    screen.blit(text_surface, mouse_pos3+[0.0, 76.0])
                     #text_surface=myfont.render("Talk List :"+str(npzTalk_t[TAG_t[idai],:]), True, black, white)
                     #screen.blit(text_surface, mouse_pos3+[0.0, 196.0])
                                     
@@ -2855,7 +2951,7 @@ def visualizeAgent(fname, evacfile=None, fdsfile=None, ZOOMFACTOR=10.0, xSpace=2
                 #pygame.draw.circle(screen, IndianRed, scPos, int(0.3*ZOOMFACTOR), 6)
                 #pygame.draw.circle(screen, tan, scPos, int(0.3*ZOOMFACTOR), LINEWIDTH)
                 myfont=pygame.font.SysFont("arial",20)
-                text_surface=myfont.render(str(TAG_t[idai]), True, (0,0,0), orange)
+                text_surface=myfont.render(str(TAG_t[idai]+1), True, (0,0,0), orange)
                 screen.blit(text_surface, scPos)
                 
                 pygame.draw.line(screen, red, scPos, motiveFPos, 2)
@@ -2863,7 +2959,7 @@ def visualizeAgent(fname, evacfile=None, fdsfile=None, ZOOMFACTOR=10.0, xSpace=2
                 pygame.draw.line(screen, cyan, scPos, selfrepFPos, 2)  
                 
                 myfont=pygame.font.SysFont("arial",16)
-                text_surface=myfont.render('agentID:'+str(TAG_t[idai]), True, (0,0,0), (255,255,255))
+                text_surface=myfont.render('agentID:'+str(TAG_t[idai]+1), True, (0,0,0), (255,255,255))
                 screen.blit(text_surface, [726.0, 20.0])
                 text_surface=myfont.render("tpre:"+format(tpre, ".3f"), True, black, white)
                 screen.blit(text_surface, [726.0, 40.0])
@@ -2882,44 +2978,55 @@ def visualizeAgent(fname, evacfile=None, fdsfile=None, ZOOMFACTOR=10.0, xSpace=2
                 screen.blit(text_surface, [726.0, 165.0])
                 
                 if npzflag:
-                    #text_surface=myfont.render("See List:"+str(npzSee_t[TAG_t[idai],:]), True, black, white)
-                    #screen.blit(text_surface, [206.0, 500.0])
+                    text_surface=myfont.render("See List:"+str(npzSee_t[TAG_t[idai],:]), True, black, white)
+                    screen.blit(text_surface, [206.0, 560.0])
                     text_surface=myfont.render("Atttion List: "+str(npzComm_t[TAG_t[idai],:]), True, black, white)
                     screen.blit(text_surface, [206.0, 580.0])
                     text_surface=myfont.render("Talk List:      "+str(npzTalk_t[TAG_t[idai],:]), True, black, white)
                     screen.blit(text_surface, [206.0, 600.0])
                     text_surface=myfont.render("P Array:        "+str(np.round(npzP_t[TAG_t[idai],:], 2)), True, black, white)
                     screen.blit(text_surface, [206.0, 620.0])
+                    
+                    text_surface=myfont.render("npzC:"+str(np.round(npzC_t[TAG_t[idai],:],2)), True, orange, white)
+                    screen.blit(text_surface, [506.0, 560.0])
+                    text_surface=myfont.render("npzA:"+str(npzA_t[TAG_t[idai],:]), True, black, white)
+                    screen.blit(text_surface, [506.0, 580.0])
+                    text_surface=myfont.render("npzB:"+str(npzB_t[TAG_t[idai],:]), True, black, white)
+                    screen.blit(text_surface, [506.0, 600.0])
+                    text_surface=myfont.render("npzD:"+str(np.round(npzD_t[TAG_t[idai],:],2)), True, black, white)
+                    screen.blit(text_surface, [506, 620.0])
 
                     text_surface=myfont.render("position:"+str(np.round(scPosPhy,2)), True, black, white)
                     screen.blit(text_surface, np.round(scPos, 2)+[0.0, 37.0])
 
-                    text_surface=myfont.render("See List:         "+str(npzSee_t[TAG_t[idai],:]), True, black, white)
-                    screen.blit(text_surface,  np.round(scPos, 2)+[0.0, 55.0])
-                    text_surface=myfont.render("Attention List:"+str(npzComm_t[TAG_t[idai],:]), True, orange, white)
-                    screen.blit(text_surface,  np.round(scPos, 2)+[0.0, 76.0])
+                    #text_surface=myfont.render("See List:         "+str(npzSee_t[TAG_t[idai],:]), True, black, white)
+                    #screen.blit(text_surface,  np.round(scPos, 2)+[0.0, 55.0])
+                    #text_surface=myfont.render("Attention List:"+str(npzComm_t[TAG_t[idai],:]), True, orange, white)
+                    #screen.blit(text_surface,  np.round(scPos, 2)+[0.0, 76.0])
 
-                    text_surface=myfont.render("npzD:"+str(np.round(npzD_t[TAG_t[idai],:],2)), True, orange, white)
-                    screen.blit(text_surface, np.round(scPos, 2)+[0.0, 97.0])
-                    text_surface=myfont.render("npzA:"+str(npzA_t[TAG_t[idai],:]), True, black, white)
-                    screen.blit(text_surface, np.round(scPos, 2)+[0.0, 116.0])
-                    text_surface=myfont.render("npzB:"+str(npzB_t[TAG_t[idai],:]), True, black, white)
-                    screen.blit(text_surface, np.round(scPos, 2)+[0.0, 136.0])
+                    #text_surface=myfont.render("npzD:"+str(np.round(npzD_t[TAG_t[idai],:],2)), True, orange, white)
+                    #screen.blit(text_surface, np.round(scPos, 2)+[0.0, 97.0])
+                    #text_surface=myfont.render("npzA:"+str(npzA_t[TAG_t[idai],:]), True, black, white)
+                    #screen.blit(text_surface, np.round(scPos, 2)+[0.0, 116.0])
+                    #text_surface=myfont.render("npzB:"+str(npzB_t[TAG_t[idai],:]), True, black, white)
+                    #screen.blit(text_surface, np.round(scPos, 2)+[0.0, 136.0])
 
                     #text_surface=myfont.render("See List:    "+str(npzSee_t[TAG_t[idai],:]), True, black, white)
                     #screen.blit(text_surface, scPos+[0.0, 155.0])
                     #text_surface=myfont.render("Attention List:"+str(npzComm_t[TAG_t[idai],:]), True, black, white)
                     #screen.blit(text_surface, scPos+[0.0, 176.0])
                     
-        
+                '''
+                # Agent Positions
                 text_surface=myfont.render('agent position:' \
                  + format(XYZ_t[0,idai], ".3f") + "   " \
                  + format(XYZ_t[1,idai], ".3f") + "   " \
                  + format(XYZ_t[2,idai], ".3f"), True, (0,0,0), (255,255,255))
                 screen.blit(text_surface, [206.0, 560.0])
+                '''
                 
                 myfont=pygame.font.SysFont("arial",16)
-                text_surface=myfont.render('agentID:'+str(TAG_t[idai]), True, (0,0,0), (255,255,255))
+                text_surface=myfont.render('agentID:'+str(TAG_t[idai]+1), True, (0,0,0), (255,255,255))
                 screen.blit(text_surface, [26.0, 560.0])
                     
                 text_surface=myfont.render("@motiveF:"+format(np.linalg.norm(motiveF), ".3f"), True, black, white)
